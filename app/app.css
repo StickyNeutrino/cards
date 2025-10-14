@@ -17,11 +17,30 @@ body {
   background-color: #9e4829;
 }
 
+#button-container {
+  margin-top: 3em;
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+#next-button {
+  margin: 2em;
+  padding: 1em 2em 1em 2em;
+  background-color: #a1b69a;
+
+  border-radius: 10px;
+}
+
+#next-button img{
+  width: 3em;
+}
+
 main {
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
 }
 
 .card-area {
@@ -56,7 +75,12 @@ main {
   transform-style: preserve-3d;
 }
 
+
 .flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card:active .flip-card-inner {
   transform: rotateY(180deg);
 }
 
