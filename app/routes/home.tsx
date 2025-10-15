@@ -1,7 +1,7 @@
 import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
 import { Card } from "~/card/card";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -141,12 +141,42 @@ export default function Home() {
     setCurrentCard(random_plant())
   }
 
+  const [flipped, setFlipped] = useState(false)
+
+  useEffect(() => {
+    const handleKeyDown = (event: { key: any; }) => {
+      switch (event.key) {
+        case 'ArrowUp':
+          setFlipped(true);
+          break;
+        case 'ArrowRight':
+          nextAction();
+          break;
+      }
+    };
+    const handleKeyUp = (event: { key: any; }) => {
+      switch (event.key) {
+        case 'ArrowUp':
+          setFlipped(false);
+          break;
+      };
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []); 
+
   const invasive = invasives.includes(currentCard)
 
   return (
   <main>
 
-    <Card card={currentCard} invasive={invasive}/>
+    <Card card={currentCard} invasive={invasive} flipped={flipped}/>
     <div id="button-container">
     <button id="next-button" onClick={nextAction}>
     <img src="/arrow-right-solid-full.svg"/>
