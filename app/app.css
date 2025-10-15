@@ -103,6 +103,12 @@ main {
   transform: rotateY(180deg);
 }
 
+.invasive {
+  border-color: red;
+  border-style: solid;
+  border-width: 6px;
+}
+
 .flip-card img {
   height: auto;
   width: auto;

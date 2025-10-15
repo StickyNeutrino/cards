@@ -93,6 +93,42 @@ const plants = [
 "White Sage",
 ]
 
+const invasives = [
+"Arundo",
+"Castor",
+"Ox Tongue",
+"Crown Daisy",
+"Peruvian Pepper",
+"Tamarisk",
+"Cape Ivy",
+"Thistle",
+"Fennel",
+"Jade",
+"Himalayan Blackberry",
+"Blue Plumbago",
+"Brazilian Pepper",
+"Sweet Pea",
+"Cheeseweed",
+"African Flag",
+"Bridal Creeper",
+"Beggarticks",
+"Poison Hemlock",
+"Purple Fountain Grass",
+"Myoporum",
+"Mexican Fan Palm",
+"Tree Tobacco",
+"Horehound",
+"Mustard",
+"Ice Plant",
+"Canary Island Date Palm",
+"Radish",
+"Stinkwort",
+"Curly Dock",
+"Acacia",
+"Pampas Grass",
+"Umbrella Sedge",
+"Nasturtium",
+]
 export default function Home() {
   const [currentCard, setCurrentCard] = useState("Black Sage")
   
@@ -102,10 +138,12 @@ export default function Home() {
     setCurrentCard(plants[randomIndex])
   }
 
+  const invasive = invasives.includes(currentCard)
+
   return (
   <main>
 
-    <Card card={currentCard}/>
+    <Card card={currentCard} invasive={invasive}/>
     <div id="button-container">
     <button id="next-button" onClick={nextAction}>
     <img src="/arrow-right-solid-full.svg"/>
