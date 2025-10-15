@@ -129,13 +129,16 @@ const invasives = [
 "Umbrella Sedge",
 "Nasturtium",
 ]
+
+function random_plant() {
+  return plants[ Math.floor(Math.random() * plants.length) ]
+}
 export default function Home() {
-  const [currentCard, setCurrentCard] = useState("Black Sage")
+  const [currentCard, setCurrentCard] = useState(random_plant())
   
 
   const nextAction = () => {
-    const randomIndex = Math.floor(Math.random() * plants.length);
-    setCurrentCard(plants[randomIndex])
+    setCurrentCard(random_plant())
   }
 
   const invasive = invasives.includes(currentCard)
