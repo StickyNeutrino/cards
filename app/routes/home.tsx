@@ -133,12 +133,20 @@ const invasives = [
 function random_plant() {
   return plants[ Math.floor(Math.random() * plants.length) ]
 }
-export default function Home() {
-  const [currentCard, setCurrentCard] = useState(random_plant())
-  
 
+const deck = [...new Array(1000)].map(() => random_plant());
+
+export default function Home() {
+  const [cardIndex, setIndex] = useState(0)
+  const currentCard = deck[cardIndex % deck.length]
+  
   const nextAction = () => {
-    setCurrentCard(random_plant())
+    setIndex(cardIndex + 1)
+  }
+
+  const backAction = () => {
+    if (cardIndex == 0) { return }
+    setIndex(cardIndex - 1)
   }
 
   const [flipped, setFlipped] = useState(false)
@@ -151,6 +159,9 @@ export default function Home() {
           break;
         case 'ArrowRight':
           nextAction();
+          break;
+        case 'ArrowLeft':
+          backAction();
           break;
       }
     };
@@ -169,7 +180,7 @@ export default function Home() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []); 
+  }, [cardIndex]); 
 
   const invasive = invasives.includes(currentCard)
 
@@ -178,6 +189,9 @@ export default function Home() {
 
     <Card card={currentCard} invasive={invasive} flipped={flipped}/>
     <div id="button-container">
+    <button id="next-button" onClick={backAction}>
+    <img src="/arrow-left-solid-full.svg"/>
+    </button>
     <button id="next-button" onClick={nextAction}>
     <img src="/arrow-right-solid-full.svg"/>
     </button>
