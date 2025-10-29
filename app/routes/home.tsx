@@ -130,11 +130,26 @@ const invasives = [
 "Nasturtium",
 ]
 
-function random_plant() {
-  return plants[ Math.floor(Math.random() * plants.length) ]
+// https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+function shuffle(array: any[]) {
+  let currentIndex = array.length;
+
+  // While there remain elements to shuffle...
+  while (currentIndex != 0) {
+
+    // Pick a remaining element...
+    let randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]];
+  }
+
+  return array
 }
 
-const deck = [...new Array(1000)].map(() => random_plant());
+const deck = [...new Array(10)].flatMap(() => shuffle([...plants]))
 let max_index = 0;
 
 export default function Home() {
