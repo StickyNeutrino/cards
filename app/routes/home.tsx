@@ -1,7 +1,7 @@
 import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
 import { Card } from "~/card/card";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -190,15 +190,23 @@ export default function Home() {
 
   const invasive = invasives.includes(currentCard)
 
+  const elementRef = useRef(null);
+  const [elementWidth, setElementWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    if (elementRef.current) {
+      setElementWidth(elementRef.current.offsetWidth); // or clientWidth
+    }
+  }, []); // Empty dependency array ensures it runs only once after mount
+
   return (
   <main>
-
-    <Card card={currentCard} invasive={invasive} flipped={flipped}/>
-    <div id="button-container">
-    <button id="next-button" onClick={backAction}>
+    <Card card={currentCard} invasive={invasive} flipped={flipped} widthRef={elementRef}/>
+    <div id="button-container" style={{width:`calc(${elementWidth}px)`}}>
+    <button id="back-button" className="control-button" onClick={backAction}>
     <img src="/arrow-left-solid-full.svg"/>
     </button>
-    <button id="next-button" onClick={nextAction}>
+    <button id="next-button" className="control-button" onClick={nextAction}>
     <img src="/arrow-right-solid-full.svg"/>
     </button>
     </div>
