@@ -135,6 +135,7 @@ function random_plant() {
 }
 
 const deck = [...new Array(1000)].map(() => random_plant());
+let max_index = 0;
 
 export default function Home() {
   const [cardIndex, setIndex] = useState(0)
@@ -147,6 +148,11 @@ export default function Home() {
   const backAction = () => {
     if (cardIndex == 0) { return }
     setIndex(cardIndex - 1)
+  }
+
+  if (cardIndex > max_index) {
+    max_index = cardIndex 
+    umami.track('viewed card');
   }
 
   const [flipped, setFlipped] = useState(false)
