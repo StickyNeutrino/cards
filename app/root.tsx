@@ -50,6 +50,14 @@ export default function App() {
     return trackView();
   },[])
 
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
+    }
+
+    return () => {}
+  },[]);
+
   return <Outlet />;
 }
 
