@@ -9,6 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { useEffect } from "react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -29,7 +30,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script defer src="https://cloud.umami.is/script.js" data-website-id="37372e71-04e7-45d4-9227-634088b621b7"></script>
+        <script defer src="https://cloud.umami.is/script.js" data-website-id="37372e71-04e7-45d4-9227-634088b621b7" data-auto-track="false"></script>
         <Meta />
         <Links />
       </head>
@@ -42,7 +43,60 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0,
+          v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+  });
+}
+
+
 export default function App() {
+  
+  useEffect(() => {
+    let userUuid = localStorage.getItem('uuid');
+
+    if (!userUuid) {
+      userUuid = generateUUID();
+      localStorage.setItem('uuid', userUuid);
+    } 
+
+    umami.identify(userUuid);
+    umami.track();
+
+    let hidden_start: number | null = null;
+
+    const visibiltyListener = () => {
+      if (document.visibilityState === "hidden") {
+
+        hidden_start = Date.now()
+      } else if (document.visibilityState === "visible") {
+
+        if (hidden_start !== null) {
+
+          const hidden_ms = Date.now() - hidden_start
+
+          if ((hidden_ms / (1000 *30)) > 20 ) {
+            // It hase been long enought to count as a new page visit
+            umami.track();
+          }
+
+          hidden_start = null;
+        }
+      }
+
+    }
+
+    document.addEventListener("visibilitychange", visibiltyListener);
+
+
+    return () => {document.removeEventListener("visibilitychange", visibiltyListener)};
+  },[])
+
+
+
   return <Outlet />;
 }
 
