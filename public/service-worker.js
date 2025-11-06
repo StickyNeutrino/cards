@@ -1,7 +1,7 @@
 const CACHE_NAME = 'card-cache';
 
 self.addEventListener('fetch', event => {
-    if (event.request.destination === 'image') {
+    if (event.request.url.endsWith('.png')) {
         event.respondWith(
             caches.match(event.request).then(cachedResponse => {
                 // If image is in cache, return it
