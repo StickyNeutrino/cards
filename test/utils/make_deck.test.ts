@@ -1,16 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { birds, plants } from '../../app/routes/card-lists';
 
-// Mock window.location
-const mockLocation = {
-  search: '',
-};
-
-Object.defineProperty(window, 'location', {
-  value: mockLocation,
-  writable: true,
-});
-
 let deck: string[] = []
 
 const make_deck = () => {
@@ -41,7 +31,11 @@ function shuffle(array: any[]) {
 describe('make_deck', () => {
   beforeEach(() => {
     deck = [];
-    mockLocation.search = '';
+    // Reset location search
+    Object.defineProperty(window, 'location', {
+      value: { search: '' },
+      writable: true,
+    });
   });
 
   it('should create deck with plants when no birds query param', () => {
@@ -51,14 +45,20 @@ describe('make_deck', () => {
   });
 
   it('should create deck with birds when birds query param is present', () => {
-    mockLocation.search = '?birds';
+    Object.defineProperty(window, 'location', {
+      value: { search: '?birds' },
+      writable: true,
+    });
     make_deck();
     expect(deck.length).toBe(birds.length * 10);
     expect(deck.every(card => birds.some(bird => bird.name === card))).toBe(true);
   });
 
   it('should create deck with birds when birds query param has value', () => {
-    mockLocation.search = '?birds=true';
+    Object.defineProperty(window, 'location', {
+      value: { search: '?birds=true' },
+      writable: true,
+    });
     make_deck();
     expect(deck.length).toBe(birds.length * 10);
     expect(deck.every(card => birds.some(bird => bird.name === card))).toBe(true);
@@ -74,12 +74,48 @@ describe('make_deck', () => {
   });
 
   it('should contain all bird names multiple times when birds enabled', () => {
-    mockLocation.search = '?birds';
+    Object.defineProperty(window, 'location', {
+      value: { search: '?birds' },
+      writable: true,
+    });
     make_deck();
     const birdNames = birds.map(b => b.name);
     birdNames.forEach(name => {
       const count = deck.filter(card => card === name).length;
       expect(count).toBe(10);
     });
+  });
+
+  it('should handle different query parameter formats', () => {
+    // Test with different query param formats
+    const testCases = ['?birds', '?birds=', '?birds=true', '?birds=false'];
+
+    testCases.forEach(search => {
+      Object.defineProperty(window, 'location', {
+        value: { search },
+        writable: true,
+      });
+      make_deck();
+      expect(deck.length).toBe(birds.length * 10);
+    });
+  });
+
+  it('should create consistent deck size regardless of card list size', () => {
+    // Test with plants
+    make_deck();
+    const plantDeckSize = deck.length;
+
+    // Test with birds
+    Object.defineProperty(window, 'location', {
+      value: { search: '?birds' },
+      writable: true,
+    });
+    make_deck();
+    const birdDeckSize = deck.length;
+
+    // Both should be 10x the number of cards
+    expect(plantDeckSize).toBe(plants.length * 10);
+    expect(birdDeckSize).toBe(birds.length * 10);
+    expect(plantDeckSize).not.toBe(birdDeckSize); // Different sizes
   });
 });

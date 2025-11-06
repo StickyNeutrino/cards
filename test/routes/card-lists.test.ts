@@ -34,6 +34,11 @@ describe('card-lists', () => {
         expect(bird.back).toBe(`${bird.name} Back.png`);
       });
     });
+
+    it('should have reasonable data size', () => {
+      expect(birds.length).toBeGreaterThan(10); // Should have substantial content
+      expect(birds.length).toBeLessThan(1000); // Should not be unreasonably large
+    });
   });
 
   describe('plants', () => {
@@ -68,6 +73,11 @@ describe('card-lists', () => {
         expect(plant.back).toBe(`${plant.name} Back.png`);
       });
     });
+
+    it('should have reasonable data size', () => {
+      expect(plants.length).toBeGreaterThan(10); // Should have substantial content
+      expect(plants.length).toBeLessThan(1000); // Should not be unreasonably large
+    });
   });
 
   describe('data integrity', () => {
@@ -84,6 +94,53 @@ describe('card-lists', () => {
       allNames.forEach(name => {
         expect(name).toBeTruthy();
         expect(name.trim()).toBe(name);
+      });
+    });
+
+    it('all image paths should be valid strings', () => {
+      const allItems = [...birds, ...plants];
+      allItems.forEach(item => {
+        expect(item.front).toMatch(/\.png$/);
+        expect(item.back).toMatch(/\.png$/);
+        expect(item.front).toContain(item.name);
+        expect(item.back).toContain(item.name);
+      });
+    });
+
+    it('should have consistent data structure', () => {
+      const allItems = [...birds, ...plants];
+      allItems.forEach(item => {
+        expect(Object.keys(item)).toHaveLength(3);
+        expect(item).toHaveProperty('name');
+        expect(item).toHaveProperty('front');
+        expect(item).toHaveProperty('back');
+      });
+    });
+  });
+
+  describe('content validation', () => {
+    it('should contain expected bird species', () => {
+      const birdNames = birds.map(b => b.name);
+      const expectedBirds = ['American Crow', 'House Finch', 'Song Sparrow'];
+      expectedBirds.forEach(expectedBird => {
+        expect(birdNames).toContain(expectedBird);
+      });
+    });
+
+    it('should contain expected plant species', () => {
+      const plantNames = plants.map(p => p.name);
+      const expectedPlants = ['Chamise', 'Coast Live Oak', 'California Sagebrush'];
+      expectedPlants.forEach(expectedPlant => {
+        expect(plantNames).toContain(expectedPlant);
+      });
+    });
+
+    it('should have proper name formatting', () => {
+      const allNames = [...birds, ...plants].map(item => item.name);
+      allNames.forEach(name => {
+        // Names should start with capital letters and not end with spaces
+        expect(name).toMatch(/^[A-Z]/);
+        expect(name).not.toMatch(/\s$/);
       });
     });
   });

@@ -1,10 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Card } from '../../app/card/card';
 
 describe('Card', () => {
+  let mockWidthRef: { current: HTMLElement | null };
+
+  beforeEach(() => {
+    mockWidthRef = { current: null };
+  });
+
   it('renders front and back images', () => {
-    const mockWidthRef = { current: null };
     render(<Card card="Test Card" invasive={false} flipped={false} widthRef={mockWidthRef} />);
 
     const images = screen.getAllByRole('img');
@@ -18,7 +23,6 @@ describe('Card', () => {
   });
 
   it('applies invasive class when invasive is true', () => {
-    const mockWidthRef = { current: null };
     render(<Card card="Test Card" invasive={true} flipped={false} widthRef={mockWidthRef} />);
 
     const images = screen.getAllByRole('img');
@@ -27,7 +31,6 @@ describe('Card', () => {
   });
 
   it('does not apply invasive class when invasive is false', () => {
-    const mockWidthRef = { current: null };
     render(<Card card="Test Card" invasive={false} flipped={false} widthRef={mockWidthRef} />);
 
     const images = screen.getAllByRole('img');
@@ -36,7 +39,6 @@ describe('Card', () => {
   });
 
   it('applies flipped class when flipped is true', () => {
-    const mockWidthRef = { current: null };
     render(<Card card="Test Card" invasive={false} flipped={true} widthRef={mockWidthRef} />);
 
     const flipCardInner = screen.getAllByRole('img')[0].parentElement?.parentElement;
@@ -44,7 +46,6 @@ describe('Card', () => {
   });
 
   it('does not apply flipped class when flipped is false', () => {
-    const mockWidthRef = { current: null };
     render(<Card card="Test Card" invasive={false} flipped={false} widthRef={mockWidthRef} />);
 
     const flipCardInner = screen.getAllByRole('img')[0].parentElement?.parentElement;
@@ -52,11 +53,46 @@ describe('Card', () => {
   });
 
   it('sets ref on card-area div', () => {
-    const mockWidthRef = { current: null };
     render(<Card card="Test Card" invasive={false} flipped={false} widthRef={mockWidthRef} />);
 
     const cardArea = screen.getAllByRole('img')[0].parentElement?.parentElement?.parentElement;
     expect(cardArea).toBeInTheDocument();
     expect(mockWidthRef.current).toBe(cardArea);
+  });
+
+  it('handles special characters in card names', () => {
+    render(<Card card="Card with spaces & symbols" invasive={false} flipped={false} widthRef={mockWidthRef} />);
+
+    const images = screen.getAllByRole('img');
+    expect(images[0]).toHaveAttribute('src', '/cards/Card with spaces & symbols Front.png');
+    expect(images[1]).toHaveAttribute('src', '/cards/Card with spaces & symbols Back.png');
+  });
+
+  it('renders with correct CSS classes', () => {
+    const { container } = render(<Card card="Test Card" invasive={false} flipped={false} widthRef={mockWidthRef} />);
+
+    expect(container.querySelector('.card-area')).toBeInTheDocument();
+    expect(container.querySelector('.flip-card')).toBeInTheDocument();
+    expect(container.querySelector('.flip-card-inner')).toBeInTheDocument();
+    expect(container.querySelector('.flip-card-front')).toBeInTheDocument();
+    expect(container.querySelector('.flip-card-back')).toBeInTheDocument();
+  });
+
+  it('handles empty card name gracefully', () => {
+    render(<Card card="" invasive={false} flipped={false} widthRef={mockWidthRef} />);
+
+    const images = screen.getAllByRole('img');
+    expect(images[0]).toHaveAttribute('src', '/cards/ Front.png');
+    expect(images[1]).toHaveAttribute('src', '/cards/ Back.png');
+  });
+
+  it('maintains ref after re-renders', () => {
+    const { rerender } = render(<Card card="Test Card" invasive={false} flipped={false} widthRef={mockWidthRef} />);
+
+    const initialRef = mockWidthRef.current;
+
+    rerender(<Card card="Test Card" invasive={true} flipped={true} widthRef={mockWidthRef} />);
+
+    expect(mockWidthRef.current).toBe(initialRef);
   });
 });
