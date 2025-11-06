@@ -1,5 +1,4 @@
 import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
 import { Card } from "~/card/card";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { trackCardView } from "~/viewtrack";
@@ -211,10 +210,9 @@ export default function Home() {
 
   useLayoutEffect(() => {
     if (elementRef.current) {
-      setElementWidth(elementRef.current.offsetWidth); // or clientWidth
+      setElementWidth(elementRef.current.offsetWidth);
     }
-  }, []); // Empty dependency array ensures it runs only once after mount
-
+  }, []);
   return (
   <main>
     <Card card={currentCard} invasive={invasive} flipped={flipped} widthRef={elementRef}/>
