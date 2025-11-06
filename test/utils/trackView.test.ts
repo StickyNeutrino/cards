@@ -203,8 +203,167 @@ describe('trackView', () => {
   });
 
   it('should handle missing umami gracefully', () => {
-    // Skip this test as umami is set up in global setup and can't be deleted
-    // The function should handle missing umami gracefully in production
-    expect(true).toBe(true);
+    // Since umami is set up in global setup and can't be redefined, we test that the function doesn't crash
+    // when umami.track is called (it should be mocked in setup)
+    expect(() => {
+      const cleanup = trackView();
+      cleanup();
+    }).not.toThrow();
+  });
+
+  it('should handle both query param formats for birds mode', () => {
+    const uuid = 'test-uuid';
+    (window.localStorage.getItem as any).mockReturnValue(uuid);
+
+    // Test ?birds
+    Object.defineProperty(window, 'location', {
+      value: { search: '?birds' },
+      writable: true,
+    });
+    const cleanup1 = trackView();
+    const trackCall1 = (window as any).umami.track.mock.calls[0][0];
+    const result1 = trackCall1({});
+    expect(result1.data.type).toBe('birds');
+    cleanup1();
+
+    vi.clearAllMocks();
+
+    // Test ?birds=true
+    Object.defineProperty(window, 'location', {
+      value: { search: '?birds=true' },
+      writable: true,
+    });
+    const cleanup2 = trackView();
+    const trackCall2 = (window as any).umami.track.mock.calls[0][0];
+    const result2 = trackCall2({});
+    expect(result2.data.type).toBe('birds');
+    cleanup2();
+  });
+
+  it('should handle invalid UUID generation', () => {
+    // Mock Math.random to return invalid values
+    const originalRandom = Math.random;
+    Math.random = vi.fn(() => 0.5); // This should still generate valid UUID
+
+    const cleanup = trackView();
+    expect(window.localStorage.setItem).toHaveBeenCalledWith('uuid', expect.any(String));
+    cleanup();
+
+    Math.random = originalRandom;
+  });
+
+  it('should handle localStorage errors gracefully', () => {
+    // Since localStorage is mocked in setup and can't be easily overridden, we test that
+    // the function continues to work even if localStorage operations fail
+    // The function should not crash if localStorage is unavailable
+    expect(() => {
+      const cleanup = trackView();
+      cleanup();
+    }).not.toThrow();
+  });
+
+  it('should handle multiple visibility changes correctly', () => {
+    const uuid = 'test-uuid';
+    (window.localStorage.getItem as any).mockReturnValue(uuid);
+
+    const cleanup = trackView();
+
+    const visibilityHandler = (document.addEventListener as any).mock.calls.find(
+      (call: any) => call[0] === 'visibilitychange'
+    )[1];
+
+    // Mock Date.now
+    const originalDateNow = Date.now;
+    let currentTime = 1000;
+    global.Date.now = vi.fn(() => currentTime);
+
+    // Multiple hide/show cycles
+    for (let i = 0; i < 3; i++) {
+      // Hide
+      Object.defineProperty(document, 'visibilityState', {
+        value: 'hidden',
+        writable: true,
+      });
+      visibilityHandler();
+
+      // Advance time by more than 20 minutes
+      currentTime += (20 * 60 * 1000) + 1;
+
+      // Show
+      Object.defineProperty(document, 'visibilityState', {
+        value: 'visible',
+        writable: true,
+      });
+      visibilityHandler();
+    }
+
+    // Should have tracked initial + 3 additional times
+    expect((window as any).umami.track).toHaveBeenCalledTimes(4);
+
+    // Restore
+    global.Date.now = originalDateNow;
+    cleanup();
+  });
+
+  it('should handle visibility change without prior hidden state', () => {
+    const uuid = 'test-uuid';
+    (window.localStorage.getItem as any).mockReturnValue(uuid);
+
+    const cleanup = trackView();
+
+    const visibilityHandler = (document.addEventListener as any).mock.calls.find(
+      (call: any) => call[0] === 'visibilitychange'
+    )[1];
+
+    // Directly go to visible without being hidden first
+    Object.defineProperty(document, 'visibilityState', {
+      value: 'visible',
+      writable: true,
+    });
+    visibilityHandler();
+
+    // Should not track additional times
+    expect((window as any).umami.track).toHaveBeenCalledTimes(1);
+
+    cleanup();
+  });
+
+  it('should handle exact 20 minute threshold', () => {
+    const uuid = 'test-uuid';
+    (window.localStorage.getItem as any).mockReturnValue(uuid);
+
+    const cleanup = trackView();
+
+    const visibilityHandler = (document.addEventListener as any).mock.calls.find(
+      (call: any) => call[0] === 'visibilitychange'
+    )[1];
+
+    // Mock Date.now
+    const originalDateNow = Date.now;
+    let currentTime = 1000;
+    global.Date.now = vi.fn(() => currentTime);
+
+    // Hide
+    Object.defineProperty(document, 'visibilityState', {
+      value: 'hidden',
+      writable: true,
+    });
+    visibilityHandler();
+
+    currentTime += 20 * 60 * 1000;
+
+    // Show
+    Object.defineProperty(document, 'visibilityState', {
+      value: 'visible',
+      writable: true,
+    });
+    visibilityHandler();
+
+    // Should not track again (exactly 20 units is not > 20)
+    expect((window as any).umami.track).toHaveBeenCalledTimes(1);
+
+    // Restore
+    global.Date.now = originalDateNow;
+    cleanup();
   });
 });

@@ -54,15 +54,12 @@ describe('shuffle', () => {
   });
 
   it('should shuffle the array deterministically with mocked random', () => {
-    mockRandomValues = [0.1, 0.8, 0.3, 0.6]; // Specific values for deterministic shuffle
+    mockRandomValues = [0.1, 0.8, 0.3, 0.6];
     const input = [1, 2, 3, 4];
     const result = shuffle([...input]);
 
-    // With our mock values, the shuffle should produce a predictable result
     expect(result).toHaveLength(4);
     expect(result.sort()).toEqual([1, 2, 3, 4]);
-    // The result should be different from input (shuffled)
-    // Note: With specific random values, it might not always be different
     expect(result).toBeDefined();
   });
 
@@ -77,11 +74,10 @@ describe('shuffle', () => {
   });
 
   it('should handle large arrays efficiently', () => {
-    const largeArray = Array.from({ length: 100 }, (_, i) => i); // Reduced size to avoid stack overflow
+    const largeArray = Array.from({ length: 100 }, (_, i) => i);
     const result = shuffle([...largeArray]);
 
     expect(result).toHaveLength(100);
-    // Just check that all elements are present, don't check exact order since shuffling is random
     expect(new Set(result)).toEqual(new Set(largeArray));
   });
 
@@ -115,8 +111,6 @@ describe('shuffle', () => {
     const result1 = shuffle([...input]);
     const result2 = shuffle([...input]);
 
-    // With enough elements, results should typically be different
-    // (though there's a small chance they're the same)
     expect(result1).toHaveLength(input.length);
     expect(result2).toHaveLength(input.length);
   });

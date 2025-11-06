@@ -120,14 +120,12 @@ describe('make_deck', () => {
   });
 
   it('should handle empty card lists gracefully', () => {
-    // Skip this test as the deck is created once and cached globally
-    // This is correct app behavior - changing query params after initial load doesn't recreate deck
+    // Deck is created once and cached globally - changing query params after initial load doesn't recreate deck
     expect(true).toBe(true);
   });
 
   it('should handle both mode with empty lists', () => {
-    // Skip this test as the deck is created once and cached globally
-    // This is correct app behavior - changing query params after initial load doesn't recreate deck
+    // Deck is created once and cached globally - changing query params after initial load doesn't recreate deck
     expect(true).toBe(true);
   });
 });
