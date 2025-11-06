@@ -1,11 +1,11 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
 import { reactRouter } from "@react-router/dev/vite";
+import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [!process.env.VITEST &&  reactRouter(), react(), tsconfigPaths()],
+  plugins: [tailwindcss(), !process.env.VITEST &&  reactRouter(), tsconfigPaths()],
   test: {
     globals: true,
     environment: "jsdom",
