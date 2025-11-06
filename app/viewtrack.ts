@@ -1,8 +1,12 @@
+import { data } from "react-router";
+import { plants } from "./routes/card-lists";
+
 export default function trackView() {
     let userUuid = getOrSetUUID()
+    let birds_enabled = new URLSearchParams(window.location.search).has("birds");
+    const payload =  {type: birds_enabled ? "birds" : "plants"}
 
-    umami.identify(userUuid);
-    umami.track();
+    umami.track(props => ({ ...props, id: userUuid, data:payload }));
 
     let hidden_start: number | null = null;
 
@@ -17,7 +21,7 @@ export default function trackView() {
 
           if ((hidden_ms / (1000 *30)) > 20 ) {
             // It hase been long enought to count as a new page visit
-            umami.track();
+            umami.track(props => ({ ...props, id: userUuid, data:payload }));
           }
 
           hidden_start = null;
@@ -28,6 +32,16 @@ export default function trackView() {
     document.addEventListener("visibilitychange", visibiltyListener);
 
     return () => { document.removeEventListener("visibilitychange", visibiltyListener) };
+}
+
+export function trackCardView() {
+  let userUuid = getOrSetUUID()
+  let birds_enabled = new URLSearchParams(window.location.search).has("birds");
+  const payload =  {type: birds_enabled ? "birds" : "plants"}
+
+
+  umami.track(props => ({...props, id: userUuid , name:"viewed card", data: payload}));
+
 }
 
 function getOrSetUUID() {

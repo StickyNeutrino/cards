@@ -2,6 +2,7 @@ import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
 import { Card } from "~/card/card";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { trackCardView } from "~/viewtrack";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -167,7 +168,7 @@ export default function Home() {
 
   if (cardIndex > max_index) {
     max_index = cardIndex 
-    umami.track('viewed card');
+    trackCardView();
   }
 
   const [flipped, setFlipped] = useState(false)
