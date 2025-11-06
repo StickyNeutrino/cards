@@ -155,6 +155,8 @@ let max_index = 0;
 export default function Home() {
   const [cardIndex, setIndex] = useState(0)
   const currentCard = deck[cardIndex % deck.length]
+  const nextCard = deck[(cardIndex + 1) % deck.length]
+
   
   const nextAction = () => {
     setIndex(cardIndex + 1)
@@ -224,5 +226,7 @@ export default function Home() {
     <img src="/arrow-right-solid-full.svg"/>
     </button>
     </div>
+    <link rel="preload" href={`/cards/${nextCard} Front.png`} as="image" />
+    <link rel="preload" href={`/cards/${nextCard} Back.png`} as="image" />
     </main>)
 }
