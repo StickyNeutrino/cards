@@ -95,4 +95,26 @@ describe('Card', () => {
 
     expect(mockWidthRef.current).toBe(initialRef);
   });
+
+  it('handles undefined widthRef gracefully', () => {
+    expect(() => {
+      render(<Card card="Test Card" invasive={false} flipped={false} widthRef={undefined as any} />);
+    }).not.toThrow();
+  });
+
+  it('handles null widthRef gracefully', () => {
+    expect(() => {
+      render(<Card card="Test Card" invasive={false} flipped={false} widthRef={null as any} />);
+    }).not.toThrow();
+  });
+
+  it('handles missing image files gracefully', () => {
+    // This test ensures the component doesn't crash if images don't exist
+    render(<Card card="Nonexistent Card" invasive={false} flipped={false} widthRef={mockWidthRef} />);
+
+    const images = screen.getAllByRole('img');
+    expect(images).toHaveLength(2);
+    expect(images[0]).toHaveAttribute('src', '/cards/Nonexistent Card Front.png');
+    expect(images[1]).toHaveAttribute('src', '/cards/Nonexistent Card Back.png');
+  });
 });

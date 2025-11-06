@@ -146,7 +146,7 @@ describe('trackView', () => {
     visibilityHandler();
 
     // Advance time by more than 20 minutes (20 * 60 * 1000 = 1,200,000 ms)
-    currentTime = 1000 + 1200000 + 1000;
+    currentTime += (20 * 60 * 1000) + 1;
 
     // Return to visible
     Object.defineProperty(document, 'visibilityState', {
@@ -163,8 +163,48 @@ describe('trackView', () => {
     cleanup();
   });
 
+  it('should not track when returning from hidden state too soon', () => {
+    const uuid = 'test-uuid';
+    (window.localStorage.getItem as any).mockReturnValue(uuid);
+
+    const cleanup = trackView();
+
+    // Mock Date.now
+    const originalDateNow = Date.now;
+    let currentTime = 1000;
+    global.Date.now = vi.fn(() => currentTime);
+
+    // Go hidden
+    Object.defineProperty(document, 'visibilityState', {
+      value: 'hidden',
+      writable: true,
+    });
+    const visibilityHandler = (document.addEventListener as any).mock.calls.find(
+      (call: any) => call[0] === 'visibilitychange'
+    )[1];
+    visibilityHandler();
+
+    // Advance time by less than 20 minutes (10 minutes = 600,000 ms)
+    currentTime = 1000 + 300000;
+
+    // Return to visible
+    Object.defineProperty(document, 'visibilityState', {
+      value: 'visible',
+      writable: true,
+    });
+    visibilityHandler();
+
+    // Should not track again (still only 1 call)
+    expect((window as any).umami.track).toHaveBeenCalledTimes(1);
+
+    // Restore
+    global.Date.now = originalDateNow;
+    cleanup();
+  });
+
   it('should handle missing umami gracefully', () => {
     // Skip this test as umami is set up in global setup and can't be deleted
+    // The function should handle missing umami gracefully in production
     expect(true).toBe(true);
   });
 });

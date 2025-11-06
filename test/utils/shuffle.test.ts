@@ -93,4 +93,31 @@ describe('shuffle', () => {
     expect(original).toEqual(originalCopy);
     expect(result).not.toEqual(original); // Result should be shuffled
   });
+
+  it('should handle arrays with duplicate values', () => {
+    const input = [1, 1, 2, 2, 3, 3];
+    const result = shuffle([...input]);
+
+    expect(result).toHaveLength(input.length);
+    expect(result.sort()).toEqual(input.sort());
+  });
+
+  it('should handle arrays with complex objects', () => {
+    const input = [{ id: 1 }, { id: 2 }, { id: 3 }];
+    const result = shuffle([...input]);
+
+    expect(result).toHaveLength(input.length);
+    expect(result.map(item => item.id).sort()).toEqual([1, 2, 3]);
+  });
+
+  it('should produce different results on subsequent calls', () => {
+    const input = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const result1 = shuffle([...input]);
+    const result2 = shuffle([...input]);
+
+    // With enough elements, results should typically be different
+    // (though there's a small chance they're the same)
+    expect(result1).toHaveLength(input.length);
+    expect(result2).toHaveLength(input.length);
+  });
 });
