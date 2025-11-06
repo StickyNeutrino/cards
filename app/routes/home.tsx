@@ -1,6 +1,7 @@
 import type { Route } from "./+types/home";
 import { Card } from "~/card/card";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { birds, plants } from "./card-lists";
 import { trackCardView } from "~/viewtrack";
 
 export function meta({}: Route.MetaArgs) {
@@ -9,89 +10,6 @@ export function meta({}: Route.MetaArgs) {
     { name: "description", content: "SD Canyonlands Flashcards" },
   ];
 }
-
-const plants = [
-"Sycamore",
-"Blue Plumbago",
-"Cheeseweed",
-"Fennel",
-"Monkeyflower",
-"Horehound",
-"Sweet Pea",
-"Toyon",
-"Mexican Fan Palm",
-"Poison Hemlock",
-"Golden Yarrow",
-"Arundo",
-"Eucalyptus",
-"California Sagebrush",
-"Mustard",
-"Nasturtium",
-"Jade",
-"Tarweed",
-"Gooseberry",
-"Laurel sumac",
-"Thistle",
-"Acacia",
-"Everlasting",
-"Bridal Creeper",
-"Curly Dock",
-"Crown Daisy",
-"Himalayan Blackberry",
-"Yerba Santa",
-"Peruvian Pepper",
-"Nightshade",
-"Pampas Grass",
-"Elderberry",
-"Coyote brush",
-"Ceanothus",
-"Willow",
-"Honeysuckle",
-"California sunflower",
-"Beggarticks",
-"Radish",
-"Brazilian Pepper",
-"Broom baccharis",
-"Deerweed",
-"Bladderpod",
-"Ice Plant",
-"Marsh Elder",
-"Spiny redberry",
-"Lemonadeberry",
-"Mission Manzanita",
-"African Flag",
-"Poison Oak",
-"Scrub Oak",
-"Yerba Mansa",
-"Stinkwort",
-"Mallow",
-"Hollyleaf Cherry",
-"Cottonwood",
-"Lupine",
-"California buckwheat",
-"Narrowleaf Milkweed",
-"Wild Rye",
-"Mugwort",
-"Sagewort",
-"Yucca",
-"Black Sage",
-"Tamarisk",
-"Chamise",
-"Canary Island Date Palm",
-"Cape Ivy",
-"Primrose",
-"California wild rose",
-"Mulefat",
-"Umbrella Sedge",
-"Cholla",
-"Castor",
-"Purple Fountain Grass",
-"San Diego Sunflower",
-"Myoporum",
-"Tree Tobacco",
-"Ox Tongue",
-"White Sage",
-]
 
 const invasives = [
 "Arundo",
@@ -149,7 +67,14 @@ function shuffle(array: any[]) {
   return array
 }
 
-const deck = [...new Array(10)].flatMap(() => shuffle([...plants]))
+let deck: string[] = []
+
+const make_deck = () => {
+  const birds_enabled = new URLSearchParams(window.location.search).has("birds");
+  const cards = (birds_enabled? birds : plants ).map(plant => plant.name)
+  deck = [...new Array(10)].flatMap(() => shuffle([...cards]))
+} 
+
 let max_index = 0;
 
 export default function Home() {
@@ -157,6 +82,8 @@ export default function Home() {
   const currentCard = deck[cardIndex % deck.length]
   const nextCard = deck[(cardIndex + 1) % deck.length]
 
+
+  useEffect(make_deck, []);
   
   const nextAction = () => {
     setIndex(cardIndex + 1)
