@@ -26,7 +26,7 @@ export default function trackView() {
 
           const hidden_ms = Date.now() - hidden_start
 
-          if ((hidden_ms / (1000 *30)) > 20 ) {
+          if ((hidden_ms / (1000 * 60)) > 20 ) {
             // It has been long enough to count as a new page visit
             window.umami.track((props: any) => ({ ...props, id: userUuid, data:payload }));
           }
