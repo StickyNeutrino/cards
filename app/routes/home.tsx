@@ -84,7 +84,7 @@ const make_deck = (mode: 'plants' | 'birds' | 'both') => {
 let max_index = 0;
 
 export default function Home() {
-  const [cardIndex, setIndex] = useState(0)
+  const [cardIndex, setIndex] = useState(0);
   const [mode, setMode] = useState<'plants' | 'birds' | 'both'>(() => {
     if (typeof window !== 'undefined' && window.location) {
       const params = new URLSearchParams(window.location.search);
@@ -94,8 +94,8 @@ export default function Home() {
     }
     return 'plants';
   })
-  const currentCard = deck[cardIndex % deck.length]
-  const nextCard = deck[(cardIndex + 1) % deck.length]
+  const currentCard = deck[cardIndex % deck.length];
+  const nextCard = deck[(cardIndex + 1) % deck.length];
 
   useEffect(() => {
     make_deck(mode); // Initialize deck immediately
@@ -119,20 +119,20 @@ export default function Home() {
   }, [mode]);
   
   const nextAction = () => {
-    setIndex(cardIndex + 1)
-  }
+    setIndex(cardIndex + 1);
+  };
 
   const backAction = () => {
-    if (cardIndex == 0) { return }
-    setIndex(cardIndex - 1)
-  }
+    if (cardIndex === 0) { return; }
+    setIndex(cardIndex - 1);
+  };
 
   if (cardIndex > max_index) {
-    max_index = cardIndex 
+    max_index = cardIndex;
     trackCardView();
   }
 
-  const [flipped, setFlipped] = useState(false)
+  const [flipped, setFlipped] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (event: { key: any; }) => {
@@ -165,7 +165,7 @@ export default function Home() {
     };
   }, [cardIndex]); 
 
-  const invasive = invasives.includes(currentCard)
+  const invasive = invasives.includes(currentCard);
 
   const elementRef = useRef<HTMLDivElement>(null);
   const [elementWidth, setElementWidth] = useState(0);
@@ -191,13 +191,13 @@ export default function Home() {
       </button>
     </div>
     <Card card={currentCard} invasive={invasive} flipped={flipped} widthRef={elementRef}/>
-    <div id="button-container" style={{width:`calc(${elementWidth}px)`}}>
-    <button id="back-button" className="control-button" onClick={backAction}>
-    <img src="/arrow-left-solid-full.svg"/>
-    </button>
-    <button id="next-button" className="control-button" onClick={nextAction}>
-    <img src="/arrow-right-solid-full.svg"/>
-    </button>
+    <div id="button-container" style={{ width: `calc(${elementWidth}px)` }}>
+      <button id="back-button" className="control-button" onClick={backAction}>
+        <img src="/arrow-left-solid-full.svg" alt="Previous card" />
+      </button>
+      <button id="next-button" className="control-button" onClick={nextAction}>
+        <img src="/arrow-right-solid-full.svg" alt="Next card" />
+      </button>
     </div>
     <link rel="preload" href={`/cards/${nextCard} Front.png`} as="image" />
     <link rel="preload" href={`/cards/${nextCard} Back.png`} as="image" />

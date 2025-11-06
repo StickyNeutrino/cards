@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { Card } from '../../app/card/card';
 
 describe('Card', () => {
-  let mockWidthRef: { current: HTMLElement | null };
+  let mockWidthRef: { current: HTMLDivElement | null };
 
   beforeEach(() => {
     mockWidthRef = { current: null };

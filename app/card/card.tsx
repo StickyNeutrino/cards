@@ -1,10 +1,10 @@
 
 interface CardProps {
-    card: string;
-    invasive: Boolean;
-    flipped: Boolean;
-    widthRef: any;
-  }
+  card: string;
+  invasive: boolean;
+  flipped: boolean;
+  widthRef: React.RefObject<HTMLDivElement | null>;
+}
 
 export function Card({card, invasive, flipped, widthRef}:CardProps) {
     return (

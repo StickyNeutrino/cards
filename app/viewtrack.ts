@@ -1,12 +1,19 @@
-import { data } from "react-router";
 import { plants } from "./routes/card-lists";
+
+declare global {
+  interface Window {
+    umami: {
+      track: (event: string | ((props: any) => any)) => void;
+    };
+  }
+}
 
 export default function trackView() {
     let userUuid = getOrSetUUID()
     let birds_enabled = new URLSearchParams(window.location.search).has("birds");
     const payload =  {type: birds_enabled ? "birds" : "plants"}
 
-    umami.track(props => ({ ...props, id: userUuid, data:payload }));
+    window.umami.track((props: any) => ({ ...props, id: userUuid, data:payload }));
 
     let hidden_start: number | null = null;
 
@@ -20,8 +27,8 @@ export default function trackView() {
           const hidden_ms = Date.now() - hidden_start
 
           if ((hidden_ms / (1000 *30)) > 20 ) {
-            // It hase been long enought to count as a new page visit
-            umami.track(props => ({ ...props, id: userUuid, data:payload }));
+            // It has been long enough to count as a new page visit
+            window.umami.track((props: any) => ({ ...props, id: userUuid, data:payload }));
           }
 
           hidden_start = null;
@@ -40,7 +47,7 @@ export function trackCardView() {
   const payload =  {type: birds_enabled ? "birds" : "plants"}
 
 
-  umami.track(props => ({...props, id: userUuid , name:"viewed card", data: payload}));
+  window.umami.track((props: any) => ({...props, id: userUuid , name:"viewed card", data: payload}));
 
 }
 
