@@ -32,9 +32,19 @@ vi.mock('../../app/card/card', () => ({
 // Mock window.location
 const mockLocation = {
   search: '',
+  href: 'http://localhost:3000/',
 };
 Object.defineProperty(window, 'location', {
   value: mockLocation,
+  writable: true,
+});
+
+// Mock window.history
+const mockHistory = {
+  replaceState: vi.fn(),
+};
+Object.defineProperty(window, 'history', {
+  value: mockHistory,
   writable: true,
 });
 
@@ -235,5 +245,52 @@ describe('Home', () => {
       const newCard = screen.getByTestId('card').getAttribute('data-card');
       expect(['Mock Plant 1', 'Mock Plant 2']).toContain(newCard);
     });
+  });
+
+  it('cycles through plants, birds, and both modes with hamburger menu', async () => {
+    render(<RouterProvider router={router} />);
+
+    // Initially shows plants
+    const menuButton = screen.getByText('🌿 Plants');
+    expect(menuButton).toBeInTheDocument();
+
+    // Check that initial cards are plants
+    const initialCard = screen.getByTestId('card');
+    expect(['Mock Plant 1', 'Mock Plant 2']).toContain(initialCard.getAttribute('data-card'));
+
+    // Click to switch to birds
+    fireEvent.click(menuButton);
+
+    await waitFor(() => {
+      const updatedButton = screen.getByText('🐦 Birds');
+      expect(updatedButton).toBeInTheDocument();
+    });
+
+    // Check that cards switched to birds
+    const birdCard = screen.getByTestId('card');
+    expect(['Mock Bird 1', 'Mock Bird 2']).toContain(birdCard.getAttribute('data-card'));
+
+    // Click to switch to both
+    fireEvent.click(menuButton);
+
+    await waitFor(() => {
+      const bothButton = screen.getByText('🌿🐦 Both');
+      expect(bothButton).toBeInTheDocument();
+    });
+
+    // Check that cards include both plants and birds
+    const bothCard = screen.getByTestId('card');
+    expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Bird 1', 'Mock Bird 2']).toContain(bothCard.getAttribute('data-card'));
+
+    // Click to cycle back to plants
+    fireEvent.click(menuButton);
+
+    await waitFor(() => {
+      const plantsButton = screen.getByText('🌿 Plants');
+      expect(plantsButton).toBeInTheDocument();
+    });
+
+    // Check that URL was updated for birds mode
+    expect(mockHistory.replaceState).toHaveBeenCalledWith({}, "", expect.stringContaining("?birds=true"));
   });
 });

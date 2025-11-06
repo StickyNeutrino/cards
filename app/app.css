@@ -56,6 +56,30 @@ main {
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  position: relative;
+}
+
+.hamburger-menu {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+}
+
+.menu-button {
+  background-color: #a1b69a;
+  color: #333;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.menu-button:hover {
+  background-color: #8fa88a;
 }
 
 .card-area {

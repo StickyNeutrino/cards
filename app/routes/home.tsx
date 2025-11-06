@@ -1,6 +1,6 @@
 import type { Route } from "./+types/home";
 import { Card } from "~/card/card";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { birds, plants } from "./card-lists";
 import { trackCardView } from "~/viewtrack";
 
@@ -69,21 +69,54 @@ function shuffle(array: any[]) {
 
 let deck: string[] = []
 
-const make_deck = () => {
-  const birds_enabled = new URLSearchParams(window.location.search).has("birds");
-  const cards = (birds_enabled? birds : plants ).map(plant => plant.name)
-  deck = [...new Array(10)].flatMap(() => shuffle([...cards]))
-} 
+const make_deck = (mode: 'plants' | 'birds' | 'both') => {
+  let cards: string[];
+  if (mode === 'plants') {
+    cards = plants.map(card => card.name);
+  } else if (mode === 'birds') {
+    cards = birds.map(card => card.name);
+  } else { // both
+    cards = [...plants, ...birds].map(card => card.name);
+  }
+  deck = [...new Array(10)].flatMap(() => shuffle([...cards]));
+}
 
 let max_index = 0;
 
 export default function Home() {
   const [cardIndex, setIndex] = useState(0)
+  const [mode, setMode] = useState<'plants' | 'birds' | 'both'>(() => {
+    if (typeof window !== 'undefined' && window.location) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("both")) return 'both';
+      if (params.has("birds")) return 'birds';
+      return 'plants';
+    }
+    return 'plants';
+  })
   const currentCard = deck[cardIndex % deck.length]
   const nextCard = deck[(cardIndex + 1) % deck.length]
 
+  useEffect(() => {
+    make_deck(mode); // Initialize deck immediately
+  }, []);
 
-  useEffect(make_deck, []);
+  const makeDeckCallback = useCallback(() => make_deck(mode), [mode])
+
+  useEffect(makeDeckCallback, [makeDeckCallback]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("plants");
+      url.searchParams.delete("birds");
+      url.searchParams.delete("both");
+      if (mode !== 'plants') {
+        url.searchParams.set(mode, "true");
+      }
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [mode]);
   
   const nextAction = () => {
     setIndex(cardIndex + 1)
@@ -134,7 +167,7 @@ export default function Home() {
 
   const invasive = invasives.includes(currentCard)
 
-  const elementRef = useRef(null);
+  const elementRef = useRef<HTMLDivElement>(null);
   const [elementWidth, setElementWidth] = useState(0);
 
   useLayoutEffect(() => {
@@ -142,8 +175,21 @@ export default function Home() {
       setElementWidth(elementRef.current.offsetWidth);
     }
   }, []);
+
+  const toggleMode = () => {
+    const nextMode = mode === 'plants' ? 'birds' : mode === 'birds' ? 'both' : 'plants';
+    setMode(nextMode);
+    make_deck(nextMode); // Immediately update deck
+    setIndex(0); // Reset to first card when switching
+  };
+
   return (
   <main>
+    <div className="hamburger-menu">
+      <button onClick={toggleMode} className="menu-button">
+        {mode === 'plants' ? "🌿 Plants" : mode === 'birds' ? "🐦 Birds" : "🌿🐦 Both"}
+      </button>
+    </div>
     <Card card={currentCard} invasive={invasive} flipped={flipped} widthRef={elementRef}/>
     <div id="button-container" style={{width:`calc(${elementWidth}px)`}}>
     <button id="back-button" className="control-button" onClick={backAction}>
@@ -155,5 +201,5 @@ export default function Home() {
     </div>
     <link rel="preload" href={`/cards/${nextCard} Front.png`} as="image" />
     <link rel="preload" href={`/cards/${nextCard} Back.png`} as="image" />
-    </main>)
+  </main>)
 }
