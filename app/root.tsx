@@ -41,6 +41,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script defer src="https://cloud.umami.is/script.js" data-website-id="37372e71-04e7-45d4-9227-634088b621b7" data-auto-track="false"></script>
         <Meta />
         <Links />
+        <script> 
+        {`if('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+            .then(registration => {
+              console.log('SW registered from root:', registration);
+            })
+            .catch(error => {
+              console.log('SW registration failed from root:', error);
+            });
+          }`}
+          
+        </script>
       </head>
       <body>
         {children}
@@ -58,21 +70,6 @@ export default function App() {
     return trackView();
   },[])
 
-  useEffect(() => {
-    // Only register service worker in production, and only once
-    if (import.meta.env.PROD && 'serviceWorker' in navigator && !swRegistered.current) {
-      swRegistered.current = true;
-      navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
-        .then(registration => {
-          console.log('SW registered from root:', registration);
-        })
-        .catch(error => {
-          console.log('SW registration failed from root:', error);
-        });
-    }
-
-    return () => {}
-  },[]);
 
   return <Outlet />;
 }
