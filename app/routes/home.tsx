@@ -380,7 +380,7 @@ export default function Home() {
         <img src="/arrow-right-solid-full.svg" alt="Next card" />
       </button>
     </div>
-    <link rel="preload" href={`/cards/${nextCard} Front.png`} as="image" />
-    <link rel="preload" href={`/cards/${nextCard} Back.png`} as="image" />
+    {nextCard && <link rel="preload" href={`/cards/${nextCard} Front.png`} as="image" />}
+    {nextCard && <link rel="preload" href={`/cards/${nextCard} Back.png`} as="image" />}
   </main>)
 }
