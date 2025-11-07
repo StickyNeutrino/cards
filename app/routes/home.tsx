@@ -265,7 +265,7 @@ export default function Home() {
         className="menu-button ml-2"
         title="Settings"
       >
-        ⚙️
+        <img src="/gear-solid-full.svg" style={{height: "1.5em"}}/>
       </button>
     </div>
 
