@@ -369,4 +369,33 @@ describe('Home', () => {
     const plantsButton = screen.getByText('🌿 Plants');
     expect(plantsButton).toBeInTheDocument();
   });
+
+  it('should not load invalid image urls', async () => {
+    vi.resetModules();
+
+    const { default: Home } = await import('../../app/routes/home');
+
+    const router = createMemoryRouter([
+      {
+        path: '/',
+        element: <Home />,
+      },
+    ]);
+
+    render(<RouterProvider router={router} />);
+
+    const preloadLinks = document.querySelectorAll('link[rel="preload"]');
+    preloadLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      expect(href).not.toContain('undefined');
+      expect(href).not.toMatch(/^\/cards\/ Front\.png$/);
+    });
+
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+      const src = img.getAttribute('src');
+      expect(src).not.toContain('undefined');
+      expect(src).not.toMatch(/^\/cards\/ Front\.png$/);
+    });
+  });
 });
