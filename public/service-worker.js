@@ -54,10 +54,6 @@ self.addEventListener('fetch', event => {
         // For all other requests, try cache first, then network
         event.respondWith(
             caches.match(event.request).then(cachedResponse => {
-                if (cachedResponse) {
-                    console.log('Serving from cache:', event.request.url);
-                    return cachedResponse;
-                }
 
                 console.log('Fetching from network:', event.request.url);
                 // Try network, but cache successful responses
