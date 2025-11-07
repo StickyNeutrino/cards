@@ -107,6 +107,7 @@ export default function Home() {
   });
   const [isPreloading, setIsPreloading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
   const [flipSpeed, setFlipSpeed] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('flipSpeed');
@@ -173,6 +174,11 @@ export default function Home() {
         case 'ArrowLeft':
           backAction();
           break;
+        case 'Escape':
+          if (showSettings) {
+            setShowSettings(false);
+          }
+          break;
       }
     };
     const handleKeyUp = (event: { key: any; }) => {
@@ -182,15 +188,25 @@ export default function Home() {
           break;
       };
     }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+        setShowSettings(false);
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
-
+    if (showSettings) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [cardIndex]); 
+  }, [cardIndex, showSettings]);
 
   const invasive = invasives.includes(currentCard);
 
@@ -284,7 +300,7 @@ export default function Home() {
 
     {/* Settings Popup */}
     {showSettings && (
-      <div className="fixed top-20 right-4 z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 min-w-64">
+      <div ref={settingsRef} className="fixed top-20 right-4 z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 min-w-64">
         <h3 className="text-lg font-semibold mb-3 text-gray-800">Settings</h3>
 
         {/* Flip Speed Slider */}
