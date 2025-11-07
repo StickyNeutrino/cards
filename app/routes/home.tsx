@@ -107,6 +107,19 @@ export default function Home() {
   });
   const [isPreloading, setIsPreloading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [flipSpeed, setFlipSpeed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('flipSpeed');
+      return saved ? parseFloat(saved) : 0.8;
+    }
+    return 0.8;
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('flipSpeed', flipSpeed.toString());
+    }
+  }, [flipSpeed]);
 
   const currentCard = deck[cardIndex % deck.length];
   const nextCard = deck[(cardIndex + 1) % deck.length];
@@ -274,6 +287,22 @@ export default function Home() {
       <div className="fixed top-20 right-4 z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 min-w-64">
         <h3 className="text-lg font-semibold mb-3 text-gray-800">Settings</h3>
 
+        {/* Flip Speed Slider */}
+        <div className="space-y-2 mb-4">
+          <label className="block text-sm font-medium text-gray-700">
+            Card Flip Speed: {flipSpeed.toFixed(1)}s
+          </label>
+          <input
+            type="range"
+            min="0.1"
+            max="2.0"
+            step="0.1"
+            value={flipSpeed}
+            onChange={(e) => setFlipSpeed(parseFloat(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+        </div>
+
         {/* Preload Button */}
         <div className="space-y-2">
           <button
@@ -326,7 +355,7 @@ export default function Home() {
       </div>
     )}
 
-    <Card card={currentCard} invasive={invasive} flipped={flipped} widthRef={elementRef}/>
+    <Card card={currentCard} invasive={invasive} flipped={flipped} widthRef={elementRef} flipSpeed={flipSpeed}/>
     <div id="button-container" style={{ width: `calc(${elementWidth}px)` }}>
       <button id="back-button" className="control-button" onClick={backAction}>
         <img src="/arrow-left-solid-full.svg" alt="Previous card" />

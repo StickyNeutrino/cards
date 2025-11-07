@@ -106,12 +106,12 @@ main {
 
   height: 100%;
   width: 100%;
-    
+
   display: flex;
   justify-content: center;
   align-items: center;
 
-  transition: transform 0.8s;
+  transition: transform var(--flip-speed, 0.8s);
   transform-style: preserve-3d;
 }
 
