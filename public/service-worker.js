@@ -25,7 +25,6 @@ self.addEventListener('install', event => {
       return cache.addAll(STATIC_ASSETS);
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('fetch', event => {

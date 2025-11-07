@@ -7,6 +7,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tailwindcss(), !process.env.VITEST && reactRouter(), tsconfigPaths()],
   build: {
+    outDir: './build/client',
     rollupOptions: {
       output: {
         manualChunks: undefined,
