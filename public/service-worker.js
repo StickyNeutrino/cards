@@ -4,16 +4,6 @@ const STATIC_CACHE_NAME = 'static-cache-v2';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/build/client/assets/root-BJ0p9Af6.css',
-  '/build/client/assets/chunk-UIGDSWPH-BjI8LrHh.js',
-  '/build/client/assets/entry.client-D0uJzCY7.js',
-  '/build/client/assets/home-DTzSyyvP.js',
-  '/build/client/assets/manifest-cd7138da.js',
-  '/build/client/assets/root-mp6r8hvW.js',
-  '/app/welcome/logo-dark.svg',
-  '/app/welcome/logo-light.svg',
-  '/arrow-left-solid-full.svg',
-  '/arrow-right-solid-full.svg'
 ];
 
 self.addEventListener('install', event => {

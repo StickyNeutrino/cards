@@ -15,11 +15,11 @@ WORKDIR /app
 RUN npm run build
 
 FROM node:20-alpine
+COPY public /app/public
 COPY ./package.json package-lock.json /app/
 COPY ./update-manifest.js /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/build /app/build
-COPY /public /app/public
 
 WORKDIR /app
 CMD ["npm", "run", "start"]
