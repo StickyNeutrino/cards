@@ -6,6 +6,14 @@ import tsconfigPaths from "vite-tsconfig-paths";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [tailwindcss(), !process.env.VITEST && reactRouter(), tsconfigPaths()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
+  publicDir: 'public',
   test: {
     globals: true,
     environment: "jsdom",
@@ -16,5 +24,10 @@ export default defineConfig({
       },
     },
     include: ["test/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+  },
+  server: {
+    headers: {
+      'Service-Worker-Allowed': '/',
+    },
   },
 } as any);

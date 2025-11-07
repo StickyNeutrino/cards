@@ -9,7 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { useEffect, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import trackView from "./viewtrack";
 import { birds, plants } from "./routes/card-lists";
 
@@ -52,13 +52,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const swRegistered = useRef(false);
+
   useEffect(() => {
     return trackView();
   },[])
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
+    // Only register service worker in production, and only once
+    if (import.meta.env.PROD && 'serviceWorker' in navigator && !swRegistered.current) {
+      swRegistered.current = true;
+      navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+        .then(registration => {
+          console.log('SW registered from root:', registration);
+        })
+        .catch(error => {
+          console.log('SW registration failed from root:', error);
+        });
     }
 
     return () => {}
@@ -95,3 +105,4 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     </main>
   );
 }
+

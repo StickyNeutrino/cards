@@ -1,7 +1,7 @@
 {
   "name": "Canyonlands Flash Cards",
   "short_name": "Flash Cards",
-  "description": "Learn about Canyonlands wildlife with flash cards",
+  "description": "Flash Cards App",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#9e4829",
@@ -12,5 +12,7 @@
       "sizes": "any",
       "type": "image/svg+xml"
     }
-  ]
+  ],
+  "version": "1.0.0",
+  "last_updated": "2025-11-07T03:13:27.141Z"
 }

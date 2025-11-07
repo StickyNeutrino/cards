@@ -215,15 +215,10 @@ export default function Home() {
 
       setPreloadProgress({ current: 0, total: imageUrls.length, isVisible: true });
 
-      // Preload images in batches to avoid overwhelming the network
-      const batchSize = 20;
       let loadedCount = 0;
 
-      for (let i = 0; i < imageUrls.length; i += batchSize) {
-        const batch = imageUrls.slice(i, i + batchSize);
-        await Promise.all(
-          batch.map(url =>
-            new Promise((resolve) => {
+      for (let i = 0; i < imageUrls.length; i += 1) {
+        await new Promise((resolve) => {
               const img = new Image();
               img.onload = () => {
                 loadedCount++;
@@ -235,10 +230,10 @@ export default function Home() {
                 setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
                 resolve(void 0); // Continue even if image fails
               };
-              img.src = url;
-            })
+              img.src = imageUrls[i];
+            }
           )
-        );
+        
       }
 
       console.log('All card images preloaded for offline use');
