@@ -290,11 +290,11 @@ export default function Home() {
         {/* Flip Speed Slider */}
         <div className="space-y-2 mb-4">
           <label className="block text-sm font-medium text-gray-700">
-            Card Flip Speed: {flipSpeed.toFixed(1)}s
+            Card Flip Speed: {flipSpeed === 0 ? 'Instant' : `${flipSpeed.toFixed(1)}s`}
           </label>
           <input
             type="range"
-            min="0.1"
+            min="0"
             max="2.0"
             step="0.1"
             value={flipSpeed}
