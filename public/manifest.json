@@ -1,0 +1,16 @@
+{
+  "name": "Canyonlands Flash Cards",
+  "short_name": "Flash Cards",
+  "description": "Learn about Canyonlands wildlife with flash cards",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#9e4829",
+  "theme_color": "#9e4829",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

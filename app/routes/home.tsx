@@ -94,6 +94,20 @@ export default function Home() {
     }
     return 'plants';
   })
+  const [preloadProgress, setPreloadProgress] = useState<{ current: number; total: number; isVisible: boolean }>({
+    current: 0,
+    total: 0,
+    isVisible: false
+  });
+  const [isPreloaded, setIsPreloaded] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('pwa-cards-preloaded') === 'true';
+    }
+    return false;
+  });
+  const [isPreloading, setIsPreloading] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
   const currentCard = deck[cardIndex % deck.length];
   const nextCard = deck[(cardIndex + 1) % deck.length];
 
@@ -183,13 +197,140 @@ export default function Home() {
     setIndex(0); // Reset to first card when switching
   };
 
+  const handlePreloadCards = () => {
+    if (isPreloaded || isPreloading) return;
+
+    setIsPreloading(true);
+
+    const preloadImages = async () => {
+      const imageUrls: string[] = [];
+
+      // Add all bird and plant card images
+      [...birds, ...plants].forEach(card => {
+        imageUrls.push(`/cards/${card.front}`);
+        imageUrls.push(`/cards/${card.back}`);
+      });
+
+      console.log(`Manually preloading ${imageUrls.length} card images...`);
+
+      setPreloadProgress({ current: 0, total: imageUrls.length, isVisible: true });
+
+      // Preload images in batches to avoid overwhelming the network
+      const batchSize = 20;
+      let loadedCount = 0;
+
+      for (let i = 0; i < imageUrls.length; i += batchSize) {
+        const batch = imageUrls.slice(i, i + batchSize);
+        await Promise.all(
+          batch.map(url =>
+            new Promise((resolve) => {
+              const img = new Image();
+              img.onload = () => {
+                loadedCount++;
+                setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
+                resolve(void 0);
+              };
+              img.onerror = () => {
+                loadedCount++;
+                setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
+                resolve(void 0); // Continue even if image fails
+              };
+              img.src = url;
+            })
+          )
+        );
+      }
+
+      console.log('All card images preloaded for offline use');
+
+      // Mark as preloaded in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pwa-cards-preloaded', 'true');
+      }
+      setIsPreloaded(true);
+      setIsPreloading(false);
+
+      // Hide progress bar after a short delay
+      setTimeout(() => {
+        setPreloadProgress(prev => ({ ...prev, isVisible: false }));
+      }, 2000);
+    };
+
+    preloadImages();
+  };
+
   return (
   <main>
     <div className="hamburger-menu">
       <button onClick={toggleMode} className="menu-button">
         {mode === 'plants' ? "🌿 Plants" : mode === 'birds' ? "🐦 Birds" : "🌿🐦 Both"}
       </button>
+      <button
+        onClick={() => setShowSettings(!showSettings)}
+        className="menu-button ml-2"
+        title="Settings"
+      >
+        ⚙️
+      </button>
     </div>
+
+    {/* Settings Popup */}
+    {showSettings && (
+      <div className="fixed top-20 right-4 z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 min-w-64">
+        <h3 className="text-lg font-semibold mb-3 text-gray-800">Settings</h3>
+
+        {/* Preload Button */}
+        <div className="space-y-2">
+          <button
+            onClick={handlePreloadCards}
+            disabled={isPreloaded || isPreloading}
+            className={`w-full px-4 py-3 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 text-sm font-medium ${
+              isPreloaded
+                ? 'bg-green-100 text-green-800 cursor-not-allowed'
+                : isPreloading
+                ? 'bg-blue-100 text-blue-800 cursor-not-allowed'
+                : 'bg-green-600 hover:bg-green-700 text-white'
+            }`}
+          >
+            <span>{isPreloaded ? '✅' : isPreloading ? '⏳' : '📥'}</span>
+            <span>
+              {isPreloaded
+                ? 'Cards Downloaded'
+                : isPreloading
+                ? 'Downloading...'
+                : 'Download for Offline'}
+            </span>
+          </button>
+
+          {isPreloaded && (
+            <p className="text-xs text-gray-600 text-center">
+              All cards are cached for offline use
+            </p>
+          )}
+        </div>
+      </div>
+    )}
+
+    {/* Progress Bar */}
+    {preloadProgress.isVisible && (
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2 border border-gray-200">
+        <div className="flex items-center space-x-3">
+          <div className="text-sm text-gray-600 font-medium">
+            {isPreloading ? 'Downloading cards for offline use...' : 'Preloading cards for offline use...'}
+          </div>
+          <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-green-500 transition-all duration-300 ease-out"
+              style={{ width: `${(preloadProgress.current / preloadProgress.total) * 100}%` }}
+            />
+          </div>
+          <div className="text-xs text-gray-500">
+            {preloadProgress.current}/{preloadProgress.total}
+          </div>
+        </div>
+      </div>
+    )}
+
     <Card card={currentCard} invasive={invasive} flipped={flipped} widthRef={elementRef}/>
     <div id="button-container" style={{ width: `calc(${elementWidth}px)` }}>
       <button id="back-button" className="control-button" onClick={backAction}>

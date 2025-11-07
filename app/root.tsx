@@ -9,8 +9,9 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import trackView from "./viewtrack";
+import { birds, plants } from "./routes/card-lists";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -23,6 +24,8 @@ export const links: Route.LinksFunction = () => [
     rel: "stylesheet",
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
+  { rel: "manifest", href: "/manifest.json" },
+  { rel: "icon", href: "/icon.svg" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -31,6 +34,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#9e4829" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Flash Cards" />
         <script defer src="https://cloud.umami.is/script.js" data-website-id="37372e71-04e7-45d4-9227-634088b621b7" data-auto-track="false"></script>
         <Meta />
         <Links />
@@ -45,7 +52,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  
   useEffect(() => {
     return trackView();
   },[])
