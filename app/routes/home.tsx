@@ -67,8 +67,6 @@ function shuffle(array: any[]) {
   return array
 }
 
-let deck: string[] = []
-
 const make_deck = (mode: 'plants' | 'birds' | 'both') => {
   let cards: string[];
   if (mode === 'plants') {
@@ -78,7 +76,7 @@ const make_deck = (mode: 'plants' | 'birds' | 'both') => {
   } else { // both
     cards = [...plants, ...birds].map(card => card.name);
   }
-  deck = [...new Array(10)].flatMap(() => shuffle([...cards]));
+  return [...new Array(10)].flatMap(() => shuffle([...cards]));
 }
 
 let max_index = 0;
@@ -94,6 +92,7 @@ export default function Home() {
     }
     return 'plants';
   })
+  const [deck, setDeck] = useState(make_deck(mode))
   const [preloadProgress, setPreloadProgress] = useState<{ current: number; total: number; isVisible: boolean }>({
     current: 0,
     total: 0,
@@ -125,11 +124,7 @@ export default function Home() {
   const currentCard = deck[cardIndex % deck.length];
   const nextCard = deck[(cardIndex + 1) % deck.length];
 
-  useEffect(() => {
-    make_deck(mode); // Initialize deck immediately
-  }, []);
-
-  const makeDeckCallback = useCallback(() => make_deck(mode), [mode])
+  const makeDeckCallback = useCallback(() => setDeck(make_deck(mode)), [mode])
 
   useEffect(makeDeckCallback, [makeDeckCallback]);
 
