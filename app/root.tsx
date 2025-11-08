@@ -11,7 +11,6 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import React, { useEffect, useRef } from "react";
 import trackView from "./viewtrack";
-import { birds, plants } from "./routes/card-lists";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -43,13 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
         <script> 
         {`if('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
-            .then(registration => {
-              console.log('SW registered from root:', registration);
-            })
-            .catch(error => {
-              console.log('SW registration failed from root:', error);
-            });
+            navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
           }`}
           
         </script>
