@@ -4,6 +4,17 @@ const STATIC_CACHE_NAME = 'static-cache-v2';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
+  '/build/client/assets/root-ClIsp6LX.css',
+  '/build/client/assets/chunk-UIGDSWPH-BjI8LrHh.js',
+  '/build/client/assets/entry.client-D0uJzCY7.js',
+  '/build/client/assets/home-BJshev90.js',
+  '/build/client/assets/manifest-fc15868d.js',
+  '/build/client/assets/root-DhkemyWV.js',
+  '/build/client/assets/viewtrack-MCT4rmZj.js',
+  '/app/welcome/logo-dark.svg',
+  '/app/welcome/logo-light.svg',
+  '/arrow-left-solid-full.svg',
+  '/arrow-right-solid-full.svg'
 ];
 
 self.addEventListener('install', event => {
@@ -15,6 +26,7 @@ self.addEventListener('install', event => {
       return cache.addAll(STATIC_ASSETS);
     })
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('fetch', event => {
