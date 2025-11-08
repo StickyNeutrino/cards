@@ -80,12 +80,10 @@ self.addEventListener('activate', event => {
                         // Only delete caches that are clearly old versions (different version numbers)
                         if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE_NAME &&
                             cacheName.startsWith('card-cache-v') && cacheName !== 'card-cache-v2') {
-                            console.log('Service Worker deleting old card cache:', cacheName);
                             return caches.delete(cacheName);
                         }
                         if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE_NAME &&
                             cacheName.startsWith('static-cache-v') && cacheName !== 'static-cache-v2') {
-                            console.log('Service Worker deleting old static cache:', cacheName);
                             return caches.delete(cacheName);
                         }
                     })
@@ -95,5 +93,4 @@ self.addEventListener('activate', event => {
             clients.claim()
         ])
     );
-    console.log('Service Worker activated and controlling clients.');
 });

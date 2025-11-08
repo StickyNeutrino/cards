@@ -57,12 +57,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const swRegistered = useRef(false);
-
   useEffect(() => {
     return trackView();
   },[])
-
 
   return <Outlet />;
 }
