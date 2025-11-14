@@ -9,7 +9,7 @@ declare global {
 }
 
 function possible_offline_track(arg: string | ((props: any) => any)) {
-  if (navigator.onLine) {
+  if (navigator.onLine && window.umami) {
     window.umami.track(arg)
   }
 }
