@@ -111,8 +111,11 @@ main {
   justify-content: center;
   align-items: center;
 
-  transition: transform var(--flip-speed, 0.8s);
   transform-style: preserve-3d;
+}
+
+.flip-card-inner-animated {
+  transition: transform var(--flip-speed, 0.8s);
 }
 
 
