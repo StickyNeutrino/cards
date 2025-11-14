@@ -11,6 +11,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import React, { useEffect, useRef } from "react";
 import trackView from "./viewtrack";
+import { setupGlobalErrorHandlers, reportError } from "./utils/errorReporting";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -61,6 +62,10 @@ export default function App() {
     return trackView();
   },[])
 
+  useEffect(() => {
+    return setupGlobalErrorHandlers();
+  }, []);
+
   return <Outlet />;
 }
 
@@ -79,6 +84,20 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     details = error.message;
     stack = error.stack;
   }
+
+  React.useEffect(() => {
+    if (error) {
+      const errorReport = {
+        message: details,
+        stack: stack || (error instanceof Error ? error.stack : undefined),
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+        type: 'react' as const,
+      };
+      reportError(errorReport);
+    }
+  }, [error, details, stack]);
 
   return (
     <main className="pt-16 p-4 container mx-auto">

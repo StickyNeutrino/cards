@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cards-error-receiver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cards-error-receiver
+  template:
+    metadata:
+      labels:
+        app: cards-error-receiver
+    spec:
+      containers:
+      - name: error-receiver
+        image: oci.smeago.com:5000/cards-error-receiver:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: PORT
+          value: "3000"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
