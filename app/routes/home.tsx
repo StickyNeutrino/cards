@@ -46,6 +46,7 @@ const invasives = [
 "Pampas Grass",
 "Umbrella Sedge",
 "Nasturtium",
+"Eucalyptus"
 ]
 
 // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
@@ -122,6 +123,7 @@ export default function Home() {
   }, [flipSpeed]);
 
   const currentCard = deck[cardIndex % deck.length];
+  const [activeCard, setActiveCard] = useState(currentCard)
   const nextCard = deck[(cardIndex + 1) % deck.length];
 
   const makeDeckCallback = useCallback(() => setDeck(make_deck(mode)), [mode])
@@ -143,6 +145,10 @@ export default function Home() {
   
   const nextAction = () => {
     setIndex(cardIndex + 1);
+
+    setTimeout(() => {
+      setActiveCard(currentCard)
+    }, 400);
   };
 
   const backAction = () => {
@@ -203,7 +209,7 @@ export default function Home() {
     };
   }, [cardIndex, showSettings]);
 
-  const invasive = invasives.includes(currentCard);
+  const invasive = invasives.includes(activeCard);
 
   const elementRef = useRef<HTMLDivElement>(null);
   const [elementWidth, setElementWidth] = useState(0);
@@ -366,7 +372,7 @@ export default function Home() {
       </div>
     )}
 
-    <Card card={currentCard} invasive={invasive} flipped={flipped} widthRef={elementRef} flipSpeed={flipSpeed}/>
+    <Card card={activeCard} invasive={invasive} flipped={flipped} widthRef={elementRef} flipSpeed={flipSpeed}/>
     <div id="button-container" style={{ width: `calc(${elementWidth}px)` }}>
       <button id="back-button" className="control-button" onClick={backAction}>
         <img src="/arrow-left-solid-full.svg" alt="Previous card" />
