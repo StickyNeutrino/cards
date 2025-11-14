@@ -1,5 +1,3 @@
-import { plants } from "./routes/card-lists";
-
 declare global {
   interface Window {
     umami: {

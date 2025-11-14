@@ -9,7 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import trackView from "./viewtrack";
 import { setupGlobalErrorHandlers, reportError } from "./utils/errorReporting";
 
