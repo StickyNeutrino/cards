@@ -41,7 +41,7 @@ self.addEventListener('fetch', event => {
                 });
             })
         );
-    } else {
+    } else if (event.request.method !== "POST") {
         // For all other requests, try cache first, then network
         event.respondWith(
             caches.match(event.request).then(cachedResponse => {
