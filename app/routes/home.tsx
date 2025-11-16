@@ -64,7 +64,7 @@ export default function Home() {
   const [activeCard, setActiveCard] = useState(currentCard)
   const nextCard = deck[(cardIndex + 1) % deck.length];
 
-  const makeDeckCallback = useCallback(() => setDeck(make_deck(mode, plants, birds)), [mode])
+  const makeDeckCallback = useCallback(() => {setDeck(make_deck(mode, plants, birds)); max_index = 0}, [mode])
 
   useEffect(makeDeckCallback, [makeDeckCallback]);
 
