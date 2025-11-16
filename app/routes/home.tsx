@@ -1,7 +1,7 @@
 import type { Route } from "./+types/home";
 import { Card } from "~/card/card";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { birds, plants } from "./card-lists";
+import { birds, invasives, plants } from "./card-lists";
 import { trackCardView } from "~/viewtrack";
 
 export function meta({}: Route.MetaArgs) {
@@ -10,44 +10,6 @@ export function meta({}: Route.MetaArgs) {
     { name: "description", content: "SD Canyonlands Flashcards" },
   ];
 }
-
-const invasives = [
-"Arundo",
-"Castor",
-"Ox Tongue",
-"Crown Daisy",
-"Peruvian Pepper",
-"Tamarisk",
-"Cape Ivy",
-"Thistle",
-"Fennel",
-"Jade",
-"Himalayan Blackberry",
-"Blue Plumbago",
-"Brazilian Pepper",
-"Sweet Pea",
-"Cheeseweed",
-"African Flag",
-"Bridal Creeper",
-"Beggarticks",
-"Poison Hemlock",
-"Purple Fountain Grass",
-"Myoporum",
-"Mexican Fan Palm",
-"Tree Tobacco",
-"Horehound",
-"Mustard",
-"Ice Plant",
-"Canary Island Date Palm",
-"Radish",
-"Stinkwort",
-"Curly Dock",
-"Acacia",
-"Pampas Grass",
-"Umbrella Sedge",
-"Nasturtium",
-"Eucalyptus"
-]
 
 // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
 function shuffle(array: any[]) {

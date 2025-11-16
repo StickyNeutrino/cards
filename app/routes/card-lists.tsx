@@ -648,3 +648,42 @@ export const plants = [
         "back": "White Sage Back.png"
     }
 ]
+
+
+export const invasives = [
+"Arundo",
+"Castor",
+"Ox Tongue",
+"Crown Daisy",
+"Peruvian Pepper",
+"Tamarisk",
+"Cape Ivy",
+"Thistle",
+"Fennel",
+"Jade",
+"Himalayan Blackberry",
+"Blue Plumbago",
+"Brazilian Pepper",
+"Sweet Pea",
+"Cheeseweed",
+"African Flag",
+"Bridal Creeper",
+"Beggarticks",
+"Poison Hemlock",
+"Purple Fountain Grass",
+"Myoporum",
+"Mexican Fan Palm",
+"Tree Tobacco",
+"Horehound",
+"Mustard",
+"Ice Plant",
+"Canary Island Date Palm",
+"Radish",
+"Stinkwort",
+"Curly Dock",
+"Acacia",
+"Pampas Grass",
+"Umbrella Sedge",
+"Nasturtium",
+"Eucalyptus"
+]
