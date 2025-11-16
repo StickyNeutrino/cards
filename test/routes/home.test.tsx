@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import Home from '../../app/routes/home';
+import { invasives } from '~/routes/card-lists';
 
 // Mock the card lists
 vi.mock('../../app/routes/card-lists', () => ({
@@ -13,6 +14,7 @@ vi.mock('../../app/routes/card-lists', () => ({
     { name: 'Mock Plant 1', front: 'Mock Plant 1 Front.png', back: 'Mock Plant 1 Back.png' },
     { name: 'Mock Plant 2', front: 'Mock Plant 2 Front.png', back: 'Mock Plant 2 Back.png' },
   ],
+  invasives: []
 }));
 
 // Mock viewtrack
