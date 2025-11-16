@@ -83,13 +83,21 @@ export default function Home() {
   }, [mode]);
   
   const nextAction = () => {
-    setFlipped(false);
-    setIndex(prev => prev + 1);
+    if (flipped) {
+      setFlipped(false);
+      setTimeout(() => setIndex(prev => prev + 1), flipSpeed * 1000/2);
+    } else {
+      setIndex(prev => prev + 1);
+    }
   };
 
   const backAction = () => {
-    setFlipped(false);
-    setIndex(prev => prev - 1)
+    if (flipped) {
+      setFlipped(false);
+      setTimeout(() => setIndex(prev => prev - 1), flipSpeed * 1000 /2);
+    } else {
+      setIndex(prev => prev - 1);
+    }
   };
 
   if (cardIndex > max_index) {
