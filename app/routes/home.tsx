@@ -3,6 +3,10 @@ import { Card } from "~/card/card";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { birds, invasives, plants } from "./card-lists";
 import { trackCardView } from "~/viewtrack";
+import { make_deck } from "~/utils/deckUtils";
+import { Settings } from "~/components/Settings";
+import { PreloadProgress } from "~/components/PreloadProgress";
+import { HamburgerMenu } from "~/components/HamburgerMenu";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -11,36 +15,6 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-// https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
-function shuffle(array: any[]) {
-  let currentIndex = array.length;
-
-  // While there remain elements to shuffle...
-  while (currentIndex != 0) {
-
-    // Pick a remaining element...
-    let randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-
-    // And swap it with the current element.
-    [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex], array[currentIndex]];
-  }
-
-  return array
-}
-
-const make_deck = (mode: 'plants' | 'birds' | 'both') => {
-  let cards: string[];
-  if (mode === 'plants') {
-    cards = plants.map(card => card.name);
-  } else if (mode === 'birds') {
-    cards = birds.map(card => card.name);
-  } else { // both
-    cards = [...plants, ...birds].map(card => card.name);
-  }
-  return [...new Array(10)].flatMap(() => shuffle([...cards]));
-}
 
 let max_index = 0;
 
@@ -55,7 +29,7 @@ export default function Home() {
     }
     return 'plants';
   })
-  const [deck, setDeck] = useState(make_deck(mode))
+  const [deck, setDeck] = useState(make_deck(mode, plants, birds))
   const [preloadProgress, setPreloadProgress] = useState<{ current: number; total: number; isVisible: boolean }>({
     current: 0,
     total: 0,
@@ -70,6 +44,8 @@ export default function Home() {
   const [isPreloading, setIsPreloading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
+  const hamburgerRef = useRef<HTMLDivElement>(null);
+
   const [flipSpeed, setFlipSpeed] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('flipSpeed');
@@ -88,7 +64,7 @@ export default function Home() {
   const [activeCard, setActiveCard] = useState(currentCard)
   const nextCard = deck[(cardIndex + 1) % deck.length];
 
-  const makeDeckCallback = useCallback(() => setDeck(make_deck(mode)), [mode])
+  const makeDeckCallback = useCallback(() => setDeck(make_deck(mode, plants, birds)), [mode])
 
   useEffect(makeDeckCallback, [makeDeckCallback]);
 
@@ -159,7 +135,9 @@ export default function Home() {
     }
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+      if (hamburgerRef.current && settingsRef.current
+      && !hamburgerRef.current.contains(event.target as Node)
+      && !settingsRef.current.contains(event.target as Node)) {
         setShowSettings(false);
       }
     };
@@ -253,91 +231,24 @@ export default function Home() {
 
   return (
   <main onClick={() => setFlipped(false)}>
-    <div className="hamburger-menu">
-      <button onClick={toggleMode} className="menu-button">
-        {mode === 'plants' ? "🌿 Plants" : mode === 'birds' ? "🐦 Birds" : "🌿🐦 Both"}
-      </button>
-      <button
-        onClick={() => setShowSettings(!showSettings)}
-        className="menu-button ml-2"
-        title="Settings"
-      >
-        <img src="/gear-solid-full.svg" style={{height: "1.5em"}}/>
-      </button>
-    </div>
+    <HamburgerMenu ref={hamburgerRef} mode={mode} toggleMode={toggleMode} showSettings={showSettings} setShowSettings={setShowSettings} />
 
-    {/* Settings Popup */}
-    {showSettings && (
-      <div ref={settingsRef} className="fixed top-20 right-4 z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 min-w-64">
-        <h3 className="text-lg font-semibold mb-3 text-gray-800">Settings</h3>
+    <Settings
+      ref={settingsRef}
+      showSettings={showSettings}
+      flipSpeed={flipSpeed}
+      setFlipSpeed={setFlipSpeed}
+      isPreloaded={isPreloaded}
+      isPreloading={isPreloading}
+      handlePreloadCards={handlePreloadCards}
+    />
 
-        {/* Flip Speed Slider */}
-        <div className="space-y-2 mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Card Flip Speed: {flipSpeed === 0 ? 'Instant' : `${flipSpeed.toFixed(1)}s`}
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="2.0"
-            step="0.1"
-            value={flipSpeed}
-            onChange={(e) => setFlipSpeed(parseFloat(e.target.value))}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-          />
-        </div>
-
-        {/* Preload Button */}
-        <div className="space-y-2">
-          <button
-            onClick={handlePreloadCards}
-            disabled={isPreloaded || isPreloading}
-            className={`w-full px-4 py-3 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 text-sm font-medium ${
-              isPreloaded
-                ? 'bg-green-100 text-green-800 cursor-not-allowed'
-                : isPreloading
-                ? 'bg-blue-100 text-blue-800 cursor-not-allowed'
-                : 'bg-green-600 hover:bg-green-700 text-white'
-            }`}
-          >
-            <span>{isPreloaded ? '✅' : isPreloading ? '⏳' : '📥'}</span>
-            <span>
-              {isPreloaded
-                ? 'Cards Downloaded'
-                : isPreloading
-                ? 'Downloading...'
-                : 'Download for Offline'}
-            </span>
-          </button>
-
-          {isPreloaded && (
-            <p className="text-xs text-gray-600 text-center">
-              All cards are cached for offline use
-            </p>
-          )}
-        </div>
-      </div>
-    )}
-
-    {/* Progress Bar */}
-    {preloadProgress.isVisible && (
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2 border border-gray-200" >
-        <div className="flex items-center space-x-3">
-          <div className="text-sm text-gray-600 font-medium">
-            {isPreloading ? 'Downloading cards for offline use...' : 'Preloading cards for offline use...'}
-          </div>
-          <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-green-500 transition-all duration-300 ease-out"
-              style={{ width: `${(preloadProgress.current / preloadProgress.total) * 100}%` }}
-            />
-          </div>
-          <div className="text-xs text-gray-500">
-            {preloadProgress.current}/{preloadProgress.total}
-          </div>
-        </div>
-      </div>
-    )}
+    <PreloadProgress
+      current={preloadProgress.current}
+      total={preloadProgress.total}
+      isVisible={preloadProgress.isVisible}
+      isPreloading={isPreloading}
+    />
 
     <Card card={activeCard} invasive={invasive} flipped={flipped} widthRef={elementRef} flipSpeed={flipSpeed} onClick={toggleFlipped}/>
     <div id="button-container" style={{ width: `calc(${elementWidth}px)` }}>

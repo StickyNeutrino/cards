@@ -127,6 +127,7 @@ describe('Home', () => {
       plants: [
         { name: 'Arundo', front: 'Arundo Front.png', back: 'Arundo Back.png' },
       ],
+      invasives: ['Arundo']
     }));
 
     render(<RouterProvider router={invasiveRouter} />);
