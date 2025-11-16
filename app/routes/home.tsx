@@ -92,6 +92,10 @@ export default function Home() {
 
   useEffect(makeDeckCallback, [makeDeckCallback]);
 
+  const updateActieCardCallback = useCallback(() => setActiveCard(deck[cardIndex % deck.length]), [deck, cardIndex])
+
+  useEffect(updateActieCardCallback, [updateActieCardCallback]);
+
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location) {
       const url = new URL(window.location.href);
@@ -187,7 +191,6 @@ export default function Home() {
   const toggleMode = () => {
     const nextMode = mode === 'plants' ? 'birds' : mode === 'birds' ? 'both' : 'plants';
     setMode(nextMode);
-    make_deck(nextMode); // Immediately update deck
     setIndex(0); // Reset to first card when switching
   };
 
