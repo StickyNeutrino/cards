@@ -250,7 +250,7 @@ export default function Home() {
 
   return (
   <main onClick={() => setFlipped(false)}>
-    <div className="hamburger-menu" onClick={(e) => e.stopPropagation()}>
+    <div className="hamburger-menu">
       <button onClick={toggleMode} className="menu-button">
         {mode === 'plants' ? "🌿 Plants" : mode === 'birds' ? "🐦 Birds" : "🌿🐦 Both"}
       </button>
@@ -265,7 +265,7 @@ export default function Home() {
 
     {/* Settings Popup */}
     {showSettings && (
-      <div ref={settingsRef} className="fixed top-20 right-4 z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 min-w-64" onClick={(e) => e.stopPropagation()}>
+      <div ref={settingsRef} className="fixed top-20 right-4 z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 min-w-64">
         <h3 className="text-lg font-semibold mb-3 text-gray-800">Settings</h3>
 
         {/* Flip Speed Slider */}
@@ -318,7 +318,7 @@ export default function Home() {
 
     {/* Progress Bar */}
     {preloadProgress.isVisible && (
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2 border border-gray-200" onClick={(e) => e.stopPropagation()}>
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2 border border-gray-200" >
         <div className="flex items-center space-x-3">
           <div className="text-sm text-gray-600 font-medium">
             {isPreloading ? 'Downloading cards for offline use...' : 'Preloading cards for offline use...'}
@@ -337,7 +337,7 @@ export default function Home() {
     )}
 
     <Card card={activeCard} invasive={invasive} flipped={flipped} widthRef={elementRef} flipSpeed={flipSpeed} onClick={toggleFlipped}/>
-    <div id="button-container" style={{ width: `calc(${elementWidth}px)` }} onClick={(e) => e.stopPropagation()}>
+    <div id="button-container" style={{ width: `calc(${elementWidth}px)` }}>
       <button id="back-button" className="control-button" onClick={backAction}>
         <img src="/arrow-left-solid-full.svg" alt="Previous card" />
       </button>
