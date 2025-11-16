@@ -231,7 +231,7 @@ export default function Home() {
   };
 
   return (
-  <main onClick={() => setFlipped(false)}>
+  <main onClick={() => {setFlipped(false); setShowSettings(false)}}>
     <HamburgerMenu ref={hamburgerRef} mode={mode} toggleMode={toggleMode} showSettings={showSettings} setShowSettings={setShowSettings} />
 
     <Settings

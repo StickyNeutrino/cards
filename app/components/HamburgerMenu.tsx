@@ -15,6 +15,7 @@ export const HamburgerMenu = forwardRef<HTMLDivElement, HamburgerMenuProps>(({ m
       </button>
       <button
         onClick={(e) => {
+          e.stopPropagation()
           setShowSettings(!showSettings);
         }}
         className="menu-button ml-2"
