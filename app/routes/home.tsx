@@ -61,16 +61,11 @@ export default function Home() {
   }, [flipSpeed]);
 
   const currentCard = deck[cardIndex % deck.length];
-  const [activeCard, setActiveCard] = useState(currentCard)
   const nextCard = deck[(cardIndex + 1) % deck.length];
 
   const makeDeckCallback = useCallback(() => {setDeck(make_deck(mode, plants, birds)); max_index = 0}, [mode])
 
   useEffect(makeDeckCallback, [makeDeckCallback]);
-
-  const updateActieCardCallback = useCallback(() => setActiveCard(deck[cardIndex % deck.length]), [deck, cardIndex])
-
-  useEffect(updateActieCardCallback, [updateActieCardCallback]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location) {
@@ -86,16 +81,22 @@ export default function Home() {
   }, [mode]);
   
   const nextAction = () => {
-    setIndex(cardIndex + 1);
-
-    setTimeout(() => {
-      setActiveCard(currentCard)
-    }, 400);
+    if (flipped) {
+      setFlipped(false);
+      setTimeout(() => setIndex(prev => prev + 1), flipSpeed * 1000/2);
+    } else {
+      setIndex(prev => prev + 1);
+    }
   };
 
   const backAction = () => {
     if (cardIndex === 0) { return; }
-    setIndex(cardIndex - 1);
+    if (flipped) {
+      setFlipped(false);
+      setTimeout(() => setIndex(prev => prev - 1), flipSpeed * 1000 /2);
+    } else {
+      setIndex(prev => prev - 1);
+    }
   };
 
   if (cardIndex > max_index) {
@@ -155,7 +156,7 @@ export default function Home() {
     };
   }, [cardIndex, showSettings]);
 
-  const invasive = invasives.includes(activeCard);
+  const invasive = invasives.includes(currentCard);
 
   const elementRef = useRef<HTMLDivElement>(null);
   const [elementWidth, setElementWidth] = useState(0);
@@ -250,7 +251,7 @@ export default function Home() {
       isPreloading={isPreloading}
     />
 
-    <Card card={activeCard} invasive={invasive} flipped={flipped} widthRef={elementRef} flipSpeed={flipSpeed} onClick={toggleFlipped}/>
+    <Card card={currentCard} invasive={invasive} flipped={flipped} widthRef={elementRef} flipSpeed={flipSpeed} onClick={toggleFlipped}/>
     <div id="button-container" style={{ width: `calc(${elementWidth}px)` }}>
       <button id="back-button" className="control-button" onClick={backAction}>
         <img src="/arrow-left-solid-full.svg" alt="Previous card" />
