@@ -173,6 +173,16 @@ export default function Home() {
     setIndex(0); // Reset to first card when switching
   };
 
+  const changeModeClicked = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    toggleMode()
+  }
+
+  const settingsButtonClicked = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowSettings(!showSettings)
+  }
+
   const handlePreloadCards = () => {
     if (isPreloaded || isPreloading) return;
 
@@ -232,7 +242,7 @@ export default function Home() {
 
   return (
   <main onClick={() => {setFlipped(false); setShowSettings(false)}}>
-    <HamburgerMenu ref={hamburgerRef} mode={mode} toggleMode={toggleMode} showSettings={showSettings} setShowSettings={setShowSettings} />
+    <HamburgerMenu ref={hamburgerRef} mode={mode} changeModeClicked={changeModeClicked} settingsClicked={settingsButtonClicked} />
 
     <Settings
       ref={settingsRef}

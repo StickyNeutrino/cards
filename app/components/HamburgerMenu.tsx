@@ -2,22 +2,18 @@ import { forwardRef } from "react";
 
 interface HamburgerMenuProps {
   mode: 'plants' | 'birds' | 'both';
-  toggleMode: () => void;
-  showSettings: boolean;
-  setShowSettings: (show: boolean) => void;
+  changeModeClicked: React.MouseEventHandler<HTMLButtonElement>;
+  settingsClicked: React.MouseEventHandler<HTMLButtonElement>;
 }
 
-export const HamburgerMenu = forwardRef<HTMLDivElement, HamburgerMenuProps>(({ mode, toggleMode, showSettings, setShowSettings }, ref) => {
+export const HamburgerMenu = forwardRef<HTMLDivElement, HamburgerMenuProps>(({ mode, changeModeClicked, settingsClicked }, ref) => {
   return (
     <div className="hamburger-menu">
-      <button onClick={(e) => { e.stopPropagation(); toggleMode(); }} className="menu-button">
+      <button onClick={changeModeClicked} className="menu-button">
         {mode === 'plants' ? "🌿 Plants" : mode === 'birds' ? "🐦 Birds" : "🌿🐦 Both"}
       </button>
       <button
-        onClick={(e) => {
-          e.stopPropagation()
-          setShowSettings(!showSettings);
-        }}
+        onClick={settingsClicked}
         className="menu-button ml-2"
         title="Settings"
       >
