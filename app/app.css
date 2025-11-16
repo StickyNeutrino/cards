@@ -123,10 +123,6 @@ main {
   transform: rotateY(180deg);
 }
 
-.flip-card:active .flip-card-inner {
-  transform: rotateY(180deg);
-}
-
 .flipped .flip-card-inner {
   transform: rotateY(180deg);
 }
