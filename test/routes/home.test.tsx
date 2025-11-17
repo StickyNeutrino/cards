@@ -111,16 +111,9 @@ describe('Home', () => {
     expect(document.querySelector('html')).toBeInTheDocument();
   });
 
-  it('should handle invasive species detection', () => {
-    // Create a new router with invasive plant
-    const invasiveRouter = createMemoryRouter([
-      {
-        path: '/',
-        element: <Home />,
-      },
-    ]);
+  it('should handle invasive species detection', async () => {
+    vi.resetModules();
 
-    // Mock the card lists to include an invasive species
     vi.doMock('../../app/routes/card-lists', () => ({
       birds: [
         { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.png', back: 'Mock Bird 1 Back.png' },
@@ -131,13 +124,22 @@ describe('Home', () => {
       invasives: ['Arundo']
     }));
 
+    const { default: Home } = await import('../../app/routes/home');
+
+    const invasiveRouter = createMemoryRouter([
+      {
+        path: '/',
+        element: <Home />,
+      },
+    ]);
+
     render(<RouterProvider router={invasiveRouter} />);
 
     const card = screen.getByTestId('card');
     // Arundo is in the invasives list, so it should be marked as invasive
     expect(card.getAttribute('data-card')).toBe('Arundo')
     expect(card).toHaveAttribute('data-invasive', 'true');
-    
+
   });
 
   it('should handle non-invasive species', () => {
