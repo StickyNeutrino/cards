@@ -135,9 +135,9 @@ describe('Home', () => {
 
     const card = screen.getByTestId('card');
     // Arundo is in the invasives list, so it should be marked as invasive
-    if (card.getAttribute('data-card') === 'Arundo') {
-      expect(card).toHaveAttribute('data-invasive', 'true');
-    }
+    expect(card.getAttribute('data-card')).toBe('Arundo')
+    expect(card).toHaveAttribute('data-invasive', 'true');
+    
   });
 
   it('should handle non-invasive species', () => {
