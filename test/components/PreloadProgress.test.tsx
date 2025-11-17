@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { PreloadProgress } from '../../app/components/PreloadProgress';
+import fc from 'fast-check';
 
 describe('PreloadProgress', () => {
   it('does not render when isVisible is false', () => {
@@ -83,5 +84,15 @@ describe('PreloadProgress', () => {
   it('validates prop types implicitly through TypeScript', () => {
     // This test ensures the component accepts the expected prop types
     expect(() => render(<PreloadProgress current={1} total={2} isVisible={true} isPreloading={false} />)).not.toThrow();
+  });
+
+  it('progress bar width matches progress value', () => {
+    fc.assert(
+      fc.property(fc.float({ min: 0, max: 1 }), (progress) => {
+        const { container } = render(<PreloadProgress current={progress * 100} total={100} isVisible={true} isPreloading={true} />);
+        const progressBar = container.querySelector('.bg-green-500');
+        expect(progressBar).toHaveStyle({ width: `${progress * 100}%` });
+      })
+    );
   });
 });

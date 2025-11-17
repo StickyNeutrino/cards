@@ -1,71 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as fc from 'fast-check';
+import { make_deck } from '../../app/utils/deckUtils';
 import { birds, plants } from '../../app/routes/card-lists';
 
-let deck: string[] = []
-
-const make_deck = () => {
-  const birds_enabled = new URLSearchParams(window.location.search).has("birds");
-  const cards = (birds_enabled? birds : plants ).map(plant => plant.name)
-  deck = [...new Array(10)].flatMap(() => shuffle([...cards]))
-}
-
-// https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
-function shuffle(array: any[]) {
-  let currentIndex = array.length;
-
-  // While there remain elements to shuffle...
-  while (currentIndex != 0) {
-
-    // Pick a remaining element...
-    let randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-
-    // And swap it with the current element.
-    [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex], array[currentIndex]];
-  }
-
-  return array
-}
-
 describe('make_deck', () => {
-  beforeEach(() => {
-    deck = [];
-    // Reset location search
-    Object.defineProperty(window, 'location', {
-      value: { search: '' },
-      writable: true,
-    });
-  });
-
-  it('should create deck with plants when no birds query param', () => {
-    make_deck();
+  it('should create deck with plants', () => {
+    const deck = make_deck('plants', plants, birds);
     expect(deck.length).toBe(plants.length * 10);
     expect(deck.every(card => plants.some(plant => plant.name === card))).toBe(true);
   });
 
-  it('should create deck with birds when birds query param is present', () => {
-    Object.defineProperty(window, 'location', {
-      value: { search: '?birds' },
-      writable: true,
-    });
-    make_deck();
+  it('should create deck with birds', () => {
+    const deck = make_deck('birds', plants, birds);
     expect(deck.length).toBe(birds.length * 10);
     expect(deck.every(card => birds.some(bird => bird.name === card))).toBe(true);
   });
 
-  it('should create deck with birds when birds query param has value', () => {
-    Object.defineProperty(window, 'location', {
-      value: { search: '?birds=true' },
-      writable: true,
-    });
-    make_deck();
-    expect(deck.length).toBe(birds.length * 10);
-    expect(deck.every(card => birds.some(bird => bird.name === card))).toBe(true);
+  it('should create deck with both plants and birds', () => {
+    const deck = make_deck('both', plants, birds);
+    expect(deck.length).toBe((plants.length + birds.length) * 10);
+    const allCards = [...plants, ...birds].map(card => card.name);
+    expect(deck.every(card => allCards.includes(card))).toBe(true);
   });
 
-  it('should contain all plant names multiple times', () => {
-    make_deck();
+  it('should contain all plant names exactly 10 times', () => {
+    const deck = make_deck('plants', plants, birds);
     const plantNames = plants.map(p => p.name);
     plantNames.forEach(name => {
       const count = deck.filter(card => card === name).length;
@@ -73,12 +32,8 @@ describe('make_deck', () => {
     });
   });
 
-  it('should contain all bird names multiple times when birds enabled', () => {
-    Object.defineProperty(window, 'location', {
-      value: { search: '?birds' },
-      writable: true,
-    });
-    make_deck();
+  it('should contain all bird names exactly 10 times', () => {
+    const deck = make_deck('birds', plants, birds);
     const birdNames = birds.map(b => b.name);
     birdNames.forEach(name => {
       const count = deck.filter(card => card === name).length;
@@ -86,46 +41,120 @@ describe('make_deck', () => {
     });
   });
 
-  it('should handle different query parameter formats', () => {
-    // Test with different query param formats
-    const testCases = ['?birds', '?birds=', '?birds=true', '?birds=false'];
-
-    testCases.forEach(search => {
-      Object.defineProperty(window, 'location', {
-        value: { search },
-        writable: true,
-      });
-      make_deck();
-      expect(deck.length).toBe(birds.length * 10);
+  it('should contain all names exactly 10 times in both mode', () => {
+    const deck = make_deck('both', plants, birds);
+    const allNames = [...plants, ...birds].map(card => card.name);
+    allNames.forEach(name => {
+      const count = deck.filter(card => card === name).length;
+      expect(count).toBe(10);
     });
   });
 
-  it('should create consistent deck size regardless of card list size', () => {
-    // Test with plants
-    make_deck();
-    const plantDeckSize = deck.length;
+  it('should handle empty plants array', () => {
+    const deck = make_deck('plants', [], birds);
+    expect(deck.length).toBe(0);
+  });
 
-    // Test with birds
-    Object.defineProperty(window, 'location', {
-      value: { search: '?birds' },
-      writable: true,
+  it('should handle empty birds array', () => {
+    const deck = make_deck('birds', plants, []);
+    expect(deck.length).toBe(0);
+  });
+
+  it('should handle empty both arrays', () => {
+    const deck = make_deck('both', [], []);
+    expect(deck.length).toBe(0);
+  });
+
+  describe('property-based tests', () => {
+    it('deck length is 10 times the input array length for plants', () => {
+      fc.assert(fc.property(fc.array(fc.record({ name: fc.string() })), plantArr => {
+        const deck = make_deck('plants', plantArr, []);
+        return deck.length === 10 * plantArr.length;
+      }));
     });
-    make_deck();
-    const birdDeckSize = deck.length;
 
-    // Both should be 10x the number of cards
-    expect(plantDeckSize).toBe(plants.length * 10);
-    expect(birdDeckSize).toBe(birds.length * 10);
-    expect(plantDeckSize).not.toBe(birdDeckSize); // Different sizes
-  });
+    it('each plant name appears exactly 10 times its count in input', () => {
+      fc.assert(fc.property(fc.array(fc.record({ name: fc.string() })), plantArr => {
+        const deck = make_deck('plants', plantArr, []);
+        const freq = new Map<string, number>();
+        for (const val of deck) {
+          freq.set(val, (freq.get(val) || 0) + 1);
+        }
+        const nameCounts = new Map<string, number>();
+        for (const p of plantArr) {
+          nameCounts.set(p.name, (nameCounts.get(p.name) || 0) + 1);
+        }
+        return Array.from(nameCounts.entries()).every(([name, count]) => (freq.get(name) || 0) === 10 * count);
+      }));
+    });
 
-  it('should handle empty card lists gracefully', () => {
-    // Deck is created once and cached globally - changing query params after initial load doesn't recreate deck
-    expect(true).toBe(true);
-  });
+    it('the deck only contains plant names', () => {
+      fc.assert(fc.property(fc.array(fc.record({ name: fc.string() })), plantArr => {
+        const deck = make_deck('plants', plantArr, []);
+        const plantNames = new Set(plantArr.map(p => p.name));
+        return deck.every(card => plantNames.has(card));
+      }));
+    });
 
-  it('should handle both mode with empty lists', () => {
-    // Deck is created once and cached globally - changing query params after initial load doesn't recreate deck
-    expect(true).toBe(true);
+    it('deck length is 10 times the input array length for birds', () => {
+      fc.assert(fc.property(fc.array(fc.record({ name: fc.string() })), birdArr => {
+        const deck = make_deck('birds', [], birdArr);
+        return deck.length === 10 * birdArr.length;
+      }));
+    });
+
+    it('each bird name appears exactly 10 times its count in input', () => {
+      fc.assert(fc.property(fc.array(fc.record({ name: fc.string() })), birdArr => {
+        const deck = make_deck('birds', [], birdArr);
+        const freq = new Map<string, number>();
+        for (const val of deck) {
+          freq.set(val, (freq.get(val) || 0) + 1);
+        }
+        const nameCounts = new Map<string, number>();
+        for (const b of birdArr) {
+          nameCounts.set(b.name, (nameCounts.get(b.name) || 0) + 1);
+        }
+        return Array.from(nameCounts.entries()).every(([name, count]) => (freq.get(name) || 0) === 10 * count);
+      }));
+    });
+
+    it('the deck only contains bird names', () => {
+      fc.assert(fc.property(fc.array(fc.record({ name: fc.string() })), birdArr => {
+        const deck = make_deck('birds', [], birdArr);
+        const birdNames = new Set(birdArr.map(b => b.name));
+        return deck.every(card => birdNames.has(card));
+      }));
+    });
+
+    it('deck length is 10 times the combined array length for both', () => {
+      fc.assert(fc.property(fc.array(fc.record({ name: fc.string() })), fc.array(fc.record({ name: fc.string() })), (plantArr, birdArr) => {
+        const deck = make_deck('both', plantArr, birdArr);
+        return deck.length === 10 * (plantArr.length + birdArr.length);
+      }));
+    });
+
+    it('each name appears exactly 10 times its count in input in both mode', () => {
+      fc.assert(fc.property(fc.array(fc.record({ name: fc.string() })), fc.array(fc.record({ name: fc.string() })), (plantArr, birdArr) => {
+        const deck = make_deck('both', plantArr, birdArr);
+        const freq = new Map<string, number>();
+        for (const val of deck) {
+          freq.set(val, (freq.get(val) || 0) + 1);
+        }
+        const allCards = [...plantArr, ...birdArr];
+        const nameCounts = new Map<string, number>();
+        for (const c of allCards) {
+          nameCounts.set(c.name, (nameCounts.get(c.name) || 0) + 1);
+        }
+        return Array.from(nameCounts.entries()).every(([name, count]) => (freq.get(name) || 0) === 10 * count);
+      }));
+    });
+
+    it('the deck only contains names from both arrays', () => {
+      fc.assert(fc.property(fc.array(fc.record({ name: fc.string() })), fc.array(fc.record({ name: fc.string() })), (plantArr, birdArr) => {
+        const deck = make_deck('both', plantArr, birdArr);
+        const allNames = new Set([...plantArr, ...birdArr].map(c => c.name));
+        return deck.every(card => allNames.has(card));
+      }));
+    });
   });
 });
