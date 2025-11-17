@@ -1,6 +1,7 @@
 import type { Route } from "./+types/home";
 import { Card } from "~/card/card";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { birds, invasives, plants } from "./card-lists";
 import { trackCardView } from "~/viewtrack";
 import { make_deck } from "~/utils/deckUtils";
@@ -81,22 +82,16 @@ export default function Home() {
   }, [mode]);
   
   const nextAction = () => {
-    if (flipped) {
-      setFlipped(false);
-      setTimeout(() => setIndex(prev => prev + 1), flipSpeed * 1000/2);
-    } else {
-      setIndex(prev => prev + 1);
-    }
+    console.log('nextAction called, cardIndex:', cardIndex);
+    flushSync(() => setFlipped(false));
+    flushSync(() => setIndex(prev => prev + 1));
   };
 
   const backAction = () => {
     if (cardIndex === 0) { return; }
-    if (flipped) {
-      setFlipped(false);
-      setTimeout(() => setIndex(prev => prev - 1), flipSpeed * 1000 /2);
-    } else {
-      setIndex(prev => prev - 1);
-    }
+    console.log('backAction called, cardIndex:', cardIndex);
+    flushSync(() => setFlipped(false));
+    flushSync(() => setIndex(prev => prev - 1));
   };
 
   if (cardIndex > max_index) {
@@ -106,21 +101,37 @@ export default function Home() {
 
   const [flipped, setFlipped] = useState(false);
 
-  const toggleFlipped = () => setFlipped(!flipped);
+  const toggleFlipped = () => {
+    console.log('toggleFlipped called, flipped:', flipped);
+    flushSync(() => setFlipped(!flipped));
+  };
 
   useEffect(() => {
-    const handleKeyDown = (event: { key: any; }) => {
+    const handleKeyDown = (event: { key: any; preventDefault: () => void; }) => {
+      console.log('handleKeyDown', event.key);
       switch (event.key) {
         case 'ArrowUp':
-          setFlipped(true);
+          event.preventDefault();
+          console.log('ArrowUp: setting flipped to true');
+          flushSync(() => setFlipped(true));
+          break;
+        case ' ':
+          event.preventDefault();
+          console.log('Space: toggling flipped');
+          flushSync(() => setFlipped(prev => !prev));
           break;
         case 'ArrowRight':
+          event.preventDefault();
+          console.log('ArrowRight: calling nextAction');
           nextAction();
           break;
         case 'ArrowLeft':
+          event.preventDefault();
+          console.log('ArrowLeft: calling backAction');
           backAction();
           break;
         case 'Escape':
+          event.preventDefault();
           if (showSettings) {
             setShowSettings(false);
           }
@@ -154,7 +165,7 @@ export default function Home() {
       window.removeEventListener('keyup', handleKeyUp);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [cardIndex, showSettings]);
+  }, []);
 
   const invasive = invasives.includes(currentCard);
 
@@ -188,56 +199,54 @@ export default function Home() {
 
     setIsPreloading(true);
 
-    const preloadImages = async () => {
-      const imageUrls: string[] = [];
+    const imageUrls: string[] = [];
 
-      // Add all bird and plant card images
-      [...birds, ...plants].forEach(card => {
-        imageUrls.push(`/cards/${card.front}`);
-        imageUrls.push(`/cards/${card.back}`);
-      });
+    // Add all bird and plant card images
+    [...birds, ...plants].forEach(card => {
+      imageUrls.push(`/cards/${card.front}`);
+      imageUrls.push(`/cards/${card.back}`);
+    });
 
-      console.log(`Manually preloading ${imageUrls.length} card images...`);
+    console.log(`Manually preloading ${imageUrls.length} card images...`);
 
-      setPreloadProgress({ current: 0, total: imageUrls.length, isVisible: true });
+    setPreloadProgress({ current: 0, total: imageUrls.length, isVisible: true });
 
-      let loadedCount = 0;
+    let loadedCount = 0;
 
-      for (let i = 0; i < imageUrls.length; i += 1) {
-        await new Promise((resolve) => {
-              const img = new Image();
-              img.onload = () => {
-                loadedCount++;
-                setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
-                resolve(void 0);
-              };
-              img.onerror = () => {
-                loadedCount++;
-                setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
-                resolve(void 0); // Continue even if image fails
-              };
-              img.src = imageUrls[i];
-            }
-          )
-        
-      }
-
-      console.log('All card images preloaded for offline use');
-
-      // Mark as preloaded in localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('pwa-cards-preloaded', 'true');
-      }
-      setIsPreloaded(true);
-      setIsPreloading(false);
-
-      // Hide progress bar after a short delay
-      setTimeout(() => {
-        setPreloadProgress(prev => ({ ...prev, isVisible: false }));
-      }, 2000);
-    };
-
-    preloadImages().catch(() => {});
+    for (let i = 0; i < imageUrls.length; i++) {
+      const img = new Image();
+      img.onload = () => {
+        loadedCount++;
+        setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
+        if (loadedCount === imageUrls.length) {
+          console.log('All card images preloaded for offline use');
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('pwa-cards-preloaded', 'true');
+          }
+          setIsPreloaded(true);
+          setIsPreloading(false);
+          setTimeout(() => {
+            setPreloadProgress(prev => ({ ...prev, isVisible: false }));
+          }, 2000);
+        }
+      };
+      img.onerror = () => {
+        loadedCount++;
+        setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
+        if (loadedCount === imageUrls.length) {
+          console.log('All card images preloaded for offline use');
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('pwa-cards-preloaded', 'true');
+          }
+          setIsPreloaded(true);
+          setIsPreloading(false);
+          setTimeout(() => {
+            setPreloadProgress(prev => ({ ...prev, isVisible: false }));
+          }, 2000);
+        }
+      };
+      img.src = imageUrls[i];
+    }
   };
 
   return (

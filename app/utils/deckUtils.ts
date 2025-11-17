@@ -26,5 +26,5 @@ export const make_deck = (mode: 'plants' | 'birds' | 'both', plants: any[], bird
   } else { // both
     cards = [...plants, ...birds].map(card => card.name);
   }
-  return [...new Array(10)].flatMap(() => shuffle([...cards]));
+  return [...new Array(10)].flatMap(() => [...cards]);
 }

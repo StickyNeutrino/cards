@@ -134,5 +134,13 @@ describe('shuffle', () => {
         return true; // Placeholder, as the above tests cover it
       }));
     });
+
+    it('should preserve array length', () => {
+      fc.assert(fc.property(fc.array(fc.anything()), arr => {
+        const shuffled = shuffle([...arr]);
+        return shuffled.length === arr.length;
+      }));
+    });
+
   });
 });

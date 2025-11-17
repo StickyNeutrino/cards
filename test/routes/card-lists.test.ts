@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { birds, plants } from '../../app/routes/card-lists';
+import * as fc from 'fast-check';
+import { birds, plants, invasives } from '../../app/routes/card-lists';
 
 describe('card-lists', () => {
   describe('birds', () => {
@@ -82,6 +83,41 @@ describe('card-lists', () => {
         expect(name).toMatch(/^[A-Z]/);
         expect(name).not.toMatch(/\s$/);
       });
+    });
+  });
+
+  describe('property-based tests', () => {
+    it('should have no duplicate names across all cards', () => {
+      fc.assert(fc.property(fc.constant(null), () => {
+        const allCards = [...birds, ...plants];
+        const names = allCards.map(card => card.name);
+        const uniqueNames = new Set(names);
+        return uniqueNames.size === names.length;
+      }));
+    });
+
+    it('should have all cards with required fields', () => {
+      fc.assert(fc.property(fc.constant(null), () => {
+        const allCards = [...birds, ...plants];
+        return allCards.every(card =>
+          card.hasOwnProperty('name') &&
+          card.hasOwnProperty('front') &&
+          card.hasOwnProperty('back') &&
+          typeof card.name === 'string' &&
+          typeof card.front === 'string' &&
+          typeof card.back === 'string' &&
+          card.name.length > 0 &&
+          card.front.length > 0 &&
+          card.back.length > 0
+        );
+      }));
+    });
+
+    it('should have invasive list containing valid names from plants or birds', () => {
+      fc.assert(fc.property(fc.constant(null), () => {
+        const allCardNames = new Set([...birds, ...plants].map(card => card.name));
+        return invasives.every(invasive => allCardNames.has(invasive));
+      }));
     });
   });
 });

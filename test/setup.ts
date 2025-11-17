@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import fc from 'fast-check';
 import { vi } from 'vitest';
 
 // Mock window.location
@@ -64,6 +65,17 @@ Object.defineProperty(document, 'removeEventListener', {
   value: vi.fn(),
   writable: true,
 });
+
+// Mock Image constructor for preloading tests
+global.Image = class MockImage {
+  static instances: any[] = [];
+  onload: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  src = '';
+  constructor() {
+    MockImage.instances.push(this);
+  }
+} as any;
 
 // Prevent vitest from reporting unhandled rejections from mocks
 window.addEventListener('unhandledrejection', (event) => {

@@ -3,8 +3,6 @@ const app = express();
 
 const cors = require('cors');
 
-const PORT = process.env.PORT || 3000;
-
 app.use(express.json());
 
 app.use(cors());
@@ -18,6 +16,11 @@ app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-app.listen(PORT, () => {
-  console.log(`Error receiver server listening on port ${PORT}`);
-});
+module.exports = app;
+
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Error receiver server listening on port ${PORT}`);
+  });
+}
