@@ -237,7 +237,7 @@ export default function Home() {
       }, 2000);
     };
 
-    preloadImages();
+    preloadImages().catch(() => {});
   };
 
   return (

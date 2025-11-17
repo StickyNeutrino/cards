@@ -8,7 +8,7 @@ interface HamburgerMenuProps {
 
 export const HamburgerMenu = forwardRef<HTMLDivElement, HamburgerMenuProps>(({ mode, changeModeClicked, settingsClicked }, ref) => {
   return (
-    <div className="hamburger-menu">
+    <div className="hamburger-menu" ref={ref}>
       <button onClick={changeModeClicked} className="menu-button">
         {mode === 'plants' ? "🌿 Plants" : mode === 'birds' ? "🐦 Birds" : "🌿🐦 Both"}
       </button>
@@ -22,3 +22,5 @@ export const HamburgerMenu = forwardRef<HTMLDivElement, HamburgerMenuProps>(({ m
     </div>
   );
 })
+
+HamburgerMenu.displayName = 'HamburgerMenu';

@@ -17,7 +17,7 @@ export function PreloadProgress({ current, total, isVisible, isPreloading }: Pre
         <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
             className="h-full bg-green-500 transition-all duration-300 ease-out"
-            style={{ width: `${(current / total) * 100}%` }}
+            style={{ width: `${total === 0 ? 0 : (current / total) * 100}%` }}
           />
         </div>
         <div className="text-xs text-gray-500">

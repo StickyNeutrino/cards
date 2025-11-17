@@ -38,6 +38,7 @@ export function setupGlobalErrorHandlers(): () => void {
   };
 
   const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+    event.preventDefault();
     const errorReport: ErrorReport = {
       message: event.reason?.message || String(event.reason),
       stack: event.reason?.stack,
