@@ -82,14 +82,12 @@ export default function Home() {
   }, [mode]);
   
   const nextAction = () => {
-    console.log('nextAction called, cardIndex:', cardIndex);
     flushSync(() => setFlipped(false));
     flushSync(() => setIndex(prev => prev + 1));
   };
 
   const backAction = () => {
     if (cardIndex === 0) { return; }
-    console.log('backAction called, cardIndex:', cardIndex);
     flushSync(() => setFlipped(false));
     flushSync(() => setIndex(prev => prev - 1));
   };
@@ -102,32 +100,26 @@ export default function Home() {
   const [flipped, setFlipped] = useState(false);
 
   const toggleFlipped = () => {
-    console.log('toggleFlipped called, flipped:', flipped);
     flushSync(() => setFlipped(!flipped));
   };
 
   useEffect(() => {
     const handleKeyDown = (event: { key: any; preventDefault: () => void; }) => {
-      console.log('handleKeyDown', event.key);
       switch (event.key) {
         case 'ArrowUp':
           event.preventDefault();
-          console.log('ArrowUp: setting flipped to true');
           flushSync(() => setFlipped(true));
           break;
         case ' ':
           event.preventDefault();
-          console.log('Space: toggling flipped');
           flushSync(() => setFlipped(prev => !prev));
           break;
         case 'ArrowRight':
           event.preventDefault();
-          console.log('ArrowRight: calling nextAction');
           nextAction();
           break;
         case 'ArrowLeft':
           event.preventDefault();
-          console.log('ArrowLeft: calling backAction');
           backAction();
           break;
         case 'Escape':
@@ -207,7 +199,6 @@ export default function Home() {
       imageUrls.push(`/cards/${card.back}`);
     });
 
-    console.log(`Manually preloading ${imageUrls.length} card images...`);
 
     setPreloadProgress({ current: 0, total: imageUrls.length, isVisible: true });
 
@@ -219,7 +210,6 @@ export default function Home() {
         loadedCount++;
         setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
         if (loadedCount === imageUrls.length) {
-          console.log('All card images preloaded for offline use');
           if (typeof window !== 'undefined') {
             localStorage.setItem('pwa-cards-preloaded', 'true');
           }
@@ -234,7 +224,6 @@ export default function Home() {
         loadedCount++;
         setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
         if (loadedCount === imageUrls.length) {
-          console.log('All card images preloaded for offline use');
           if (typeof window !== 'undefined') {
             localStorage.setItem('pwa-cards-preloaded', 'true');
           }
