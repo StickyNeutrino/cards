@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import Home from '../../app/routes/home';
 import { invasives } from '~/routes/card-lists';
+import { trackCardView } from '../../app/viewtrack';
 
 // Mock the card lists
 vi.mock('../../app/routes/card-lists', () => ({
@@ -400,5 +401,26 @@ describe('Home', () => {
       expect(src).not.toContain('undefined');
       expect(src).not.toMatch(/^\/cards\/ Front\.png$/);
     });
+  });
+
+  it('should track card views when switching decks', () => {
+    render(<RouterProvider router={router} />);
+
+    // Advance to card index 1 (should call trackCardView once)
+    fireEvent.click(screen.getByTestId('card').nextElementSibling?.querySelector('#next-button') as HTMLElement);
+    expect(trackCardView).toHaveBeenCalledTimes(1);
+
+    // Advance to card index 2 (should call trackCardView again)
+    fireEvent.click(screen.getByTestId('card').nextElementSibling?.querySelector('#next-button') as HTMLElement);
+    expect(trackCardView).toHaveBeenCalledTimes(2);
+
+    // Switch to birds mode (resets to index 0)
+    const menuButton = screen.getByText('🌿 Plants');
+    fireEvent.click(menuButton); // Switches to birds
+
+    // Advance in birds mode - should call trackCardView for new max indices
+    fireEvent.click(screen.getByTestId('card').nextElementSibling?.querySelector('#next-button') as HTMLElement);
+    // If bug exists, this might not call trackCardView because max_index is still 2
+    expect(trackCardView).toHaveBeenCalledTimes(3); // This should pass if fixed, fail if bug present
   });
 });
