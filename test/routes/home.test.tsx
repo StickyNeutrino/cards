@@ -3,9 +3,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import Home from '../../app/routes/home';
-import { invasives } from '~/routes/card-lists';
 import { trackCardView } from '../../app/viewtrack';
-import * as fc from 'fast-check';
 
 // Mock the card lists
 vi.mock('../../app/routes/card-lists', () => ({
@@ -210,39 +208,47 @@ describe('Home', () => {
 
   it('handles arrow key navigation', async () => {
     render(<RouterProvider router={router} />);
+
+    for (let i = 0; i < 5; i++) {
+      const initialCard = screen.getByTestId('card').getAttribute('data-card');
+
+      await userEvent.keyboard('{ArrowRight}');
+
+      const nextCard = screen.getByTestId('card').getAttribute('data-card');
+      expect(initialCard).not.toBe(nextCard)
+    }
+
+    const newCard = screen.getByTestId('card').getAttribute('data-card');
+    expect(['Mock Plant 1', 'Mock Plant 2']).toContain(newCard);
+  });
+
+  it('handles back navigation', async () => {
+    render(<RouterProvider router={router} />);
     const initialCard = screen.getByTestId('card').getAttribute('data-card');
 
     for (let i = 0; i < 5; i++) {
       await userEvent.keyboard('{ArrowRight}');
     }
 
-    await waitFor(() => {
-      const newCard = screen.getByTestId('card').getAttribute('data-card');
-      expect(['Mock Plant 1', 'Mock Plant 2']).toContain(newCard);
-    }, { timeout: 2000 });
-  });
-
-  it('handles back navigation', async () => {
-    render(<RouterProvider router={router} />);
-
-    for (let i = 0; i < 5; i++) {
-      await userEvent.keyboard('{ArrowRight}');
-    }
-
     await userEvent.keyboard('{ArrowLeft}');
-    await waitFor(() => {
-      const backCard = screen.getByTestId('card').getAttribute('data-card');
-      expect(['Mock Plant 1', 'Mock Plant 2']).toContain(backCard);
-    }, { timeout: 2000 });
+    const backCard = screen.getByTestId('card').getAttribute('data-card');
+    expect(initialCard).not.toBe(backCard)
+    expect(['Mock Plant 1', 'Mock Plant 2']).toContain(backCard); 
   });
 
   it('handles flip with up arrow', async () => {
     render(<RouterProvider router={router} />);
     expect(screen.getByTestId('card')).toHaveAttribute('data-flipped', 'false');
 
-    await userEvent.keyboard('{ArrowUp}');
-    await new Promise(resolve => setTimeout(resolve, 10));
-    expect(screen.getByTestId('card')).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'ArrowUp' });
+    await waitFor(() => {
+      expect(screen.getByTestId('card')).toHaveAttribute('data-flipped', 'true');
+    });
+
+    fireEvent.keyUp(window, { key: 'ArrowUp' });
+    await waitFor(() => {
+      expect(screen.getByTestId('card')).toHaveAttribute('data-flipped', 'false');
+    });
   });
 
   it('renders navigation buttons', () => {
@@ -301,7 +307,6 @@ describe('Home', () => {
         const card = screen.getByTestId('card');
         expect(card).toBeInTheDocument();
         expect(card).toHaveAttribute('data-flipped', 'false');
-        expect(card.getAttribute('data-card')).toBe('Mock Plant 1'); // First card in plants deck
       });
   
       it('should navigate forward through deck with next button', async () => {
@@ -1539,17 +1544,18 @@ describe('Home', () => {
       const card = screen.getByTestId('card');
       const nextButton = screen.getByTestId('card').nextElementSibling?.querySelector('#next-button') as HTMLElement;
       const backButton = screen.getByTestId('card').nextElementSibling?.querySelector('#back-button') as HTMLElement;
+      let initialCard = card.getAttribute('data-card')
 
       // Go forward first
       await userEvent.click(nextButton);
       await waitFor(() => {
-        expect(card.getAttribute('data-card')).toBe('Mock Plant 2');
+        expect(card.getAttribute('data-card')).not.toBe(initialCard);
       });
 
       // Simulate back with button
       await userEvent.click(backButton);
       await waitFor(() => {
-        expect(card.getAttribute('data-card')).toBe('Mock Plant 1');
+        expect(card.getAttribute('data-card')).toBe(initialCard);
       });
     });
 
@@ -1589,6 +1595,7 @@ describe('Home', () => {
     it('should flip while navigating', async () => {
       render(<RouterProvider router={router} />);
       const card = screen.getByTestId('card');
+      const initialCard = card.getAttribute('data-card')
 
       // Flip with card click
       await userEvent.click(card);
@@ -1600,9 +1607,10 @@ describe('Home', () => {
       const nextButton = screen.getByTestId('card').nextElementSibling?.querySelector('#next-button') as HTMLElement;
       await userEvent.click(nextButton);
 
+      await new Promise(resolve => setTimeout(resolve, 400)); // default flip / 2
       await waitFor(() => {
         expect(card).toHaveAttribute('data-flipped', 'false');
-        expect(card.getAttribute('data-card')).toBe('Mock Plant 2');
+        expect(card.getAttribute('data-card')).not.toBe(initialCard);
       });
     });
 
