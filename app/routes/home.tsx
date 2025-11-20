@@ -2,7 +2,7 @@ import type { Route } from "./+types/home";
 import { Card } from "~/card/card";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { birds, invasives, plants } from "./card-lists";
+import { birds, plants } from "./card-lists";
 import { trackCardView } from "~/viewtrack";
 import { make_deck } from "~/utils/deckUtils";
 import { Settings } from "~/components/Settings";
@@ -159,8 +159,6 @@ export default function Home() {
     };
   }, []);
 
-  const invasive = invasives.includes(currentCard);
-
   const elementRef = useRef<HTMLDivElement>(null);
   const [elementWidth, setElementWidth] = useState(0);
 
@@ -259,7 +257,7 @@ export default function Home() {
       isPreloading={isPreloading}
     />
 
-    <Card card={currentCard} invasive={invasive} flipped={flipped} widthRef={elementRef} flipSpeed={flipSpeed} onClick={toggleFlipped}/>
+    <Card card={currentCard} flipped={flipped} widthRef={elementRef} flipSpeed={flipSpeed} onClick={toggleFlipped}/>
     <div id="button-container" style={{ width: `calc(${elementWidth}px)` }}>
       <button id="back-button" className="control-button" onClick={backAction}>
         <img src="/arrow-left-solid-full.svg" alt="Previous card" />

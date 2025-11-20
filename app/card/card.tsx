@@ -1,14 +1,16 @@
+import { invasives } from "~/routes/card-lists";
 
 interface CardProps {
   card: string;
-  invasive: boolean;
   flipped: boolean;
   widthRef: React.RefObject<HTMLDivElement | null>;
   flipSpeed: number;
   onClick?: () => void;
 }
 
-export function Card({card, invasive, flipped, widthRef, flipSpeed, onClick}:CardProps) {
+export function Card({card, flipped, widthRef, flipSpeed, onClick}:CardProps) {
+    const invasive = invasives.includes(card);
+    
     const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation();
         onClick?.();
