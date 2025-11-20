@@ -80,9 +80,18 @@ describe('Home', () => {
   });
 
   it('displays bird cards when birds query param is present', () => {
-    // Note: Deck is created once and cached globally, so query params after initial load don't change deck
-    // This test verifies the initial behavior is correct
-    expect(true).toBe(true);
+    mockLocation.search = '?birds=true';
+    router = createMemoryRouter([
+      {
+        path: '/',
+        element: <Home />,
+      },
+    ]);
+
+    render(<RouterProvider router={router} />);
+
+    const card = screen.getByTestId('card');
+    expect(['Mock Bird 1', 'Mock Bird 2']).toContain(card.getAttribute('data-card'));
   });
 
   it('should handle service worker registration', () => {
