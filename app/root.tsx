@@ -28,6 +28,14 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/icon.svg" },
 ];
 
+export function HydrateFallback() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <p>Loading flashcards...</p>
+    </div>
+  );
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
