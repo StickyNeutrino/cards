@@ -125,16 +125,6 @@ describe('shuffle', () => {
       }));
     });
 
-    it('should be a valid permutation', () => {
-      fc.assert(fc.property(fc.array(fc.anything()), arr => {
-        const shuffled = shuffle([...arr]);
-        // Since it's a shuffle, and we checked length and elements, it's a permutation
-        // But to verify, we can check it's not necessarily the original order, but since random, assume it's fine
-        // For completeness, check that the multiset is the same, which we did above
-        return true; // Placeholder, as the above tests cover it
-      }));
-    });
-
     it('should preserve array length', () => {
       fc.assert(fc.property(fc.array(fc.anything()), arr => {
         const shuffled = shuffle([...arr]);

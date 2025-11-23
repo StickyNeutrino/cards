@@ -86,12 +86,6 @@ describe('Home', () => {
 
   it('displays bird cards when birds query param is present', () => {
     mockLocation.search = '?birds=true';
-    router = createMemoryRouter([
-      {
-        path: '/',
-        element: <Home />,
-      },
-    ]);
 
     render(<RouterProvider router={router} />);
 
@@ -476,7 +470,6 @@ describe('Home', () => {
             render(<RouterProvider router={router} />);
       
             const menuButton = screen.getByText('🐦 Birds');
-            const card = screen.getByTestId('card');
       
             // Switch to both
             await userEvent.click(menuButton);
@@ -500,7 +493,6 @@ describe('Home', () => {
             render(<RouterProvider router={router} />);
       
             const menuButton = screen.getByText('🌿🐦 Both');
-            const card = screen.getByTestId('card');
       
             // Switch to plants
             await userEvent.click(menuButton);
