@@ -49,12 +49,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script defer src="https://cloud.umami.is/script.js" data-website-id="37372e71-04e7-45d4-9227-634088b621b7" data-auto-track="false"></script>
         <Meta />
         <Links />
-        <script>
-        {`if('serviceWorker' in navigator && !import.meta.env.VITEST) {
-            navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
-          }`}
-
-        </script>
       </head>
       <body>
         {children}
@@ -74,6 +68,12 @@ export default function App() {
     return setupGlobalErrorHandlers();
   }, []);
 
+  useEffect(() => {
+    if('serviceWorker' in navigator && !import.meta.env.VITEST) {
+      navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+    }
+  }, []);
+  
   return <Outlet />;
 }
 

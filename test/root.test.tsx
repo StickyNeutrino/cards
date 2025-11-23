@@ -88,14 +88,6 @@ describe('Layout', () => {
     expect(script).toHaveAttribute('data-auto-track', 'false');
   });
 
-  it('renders service worker script', () => {
-    render(<Layout><div>Test content</div></Layout>);
-
-    const script = Array.from(document.querySelectorAll('script')).find(s => s.textContent && s.textContent.includes('serviceWorker'));
-    expect(script).toBeInTheDocument();
-    expect(script?.textContent).toContain('serviceWorker.register');
-  });
-
   it('renders body with children and React Router components', () => {
     render(<Layout><div>Test content</div></Layout>);
 
