@@ -4,6 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import Home from '../../app/routes/home';
 import { trackCardView } from '../../app/viewtrack';
+const mockPlantNames = ['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5'];
+const mockBirdNames = ['Mock Bird 1', 'Mock Bird 2', 'Mock Bird 3', 'Mock Bird 4', 'Mock Bird 5'];
+const mockAllNames = [...mockPlantNames, ...mockBirdNames];
+
 
 // Mock the card lists
 vi.mock('../../app/routes/card-lists', () => ({
@@ -81,7 +85,7 @@ describe('Home', () => {
     render(<RouterProvider router={router} />);
 
     const card = screen.getByTestId('card');
-    expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(card.getAttribute('data-card'));
+    expect(mockPlantNames).toContain(card.getAttribute('data-card'));
   });
 
   it('displays bird cards when birds query param is present', () => {
@@ -90,7 +94,7 @@ describe('Home', () => {
     render(<RouterProvider router={router} />);
 
     const card = screen.getByTestId('card');
-    expect(['Mock Bird 1', 'Mock Bird 2', 'Mock Bird 3', 'Mock Bird 4', 'Mock Bird 5']).toContain(card.getAttribute('data-card'));
+    expect(mockBirdNames).toContain(card.getAttribute('data-card'));
   });
 
   it('should handle service worker registration', () => {
@@ -214,11 +218,11 @@ describe('Home', () => {
       await userEvent.keyboard('{ArrowRight}');
 
       const nextCard = screen.getByTestId('card').getAttribute('data-card');
-      expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(nextCard);
+      expect(mockPlantNames).toContain(nextCard);
     }
 
     const newCard = screen.getByTestId('card').getAttribute('data-card');
-    expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(newCard);
+    expect(mockPlantNames).toContain(newCard);
   });
 
   it('handles back navigation', async () => {
@@ -230,7 +234,7 @@ describe('Home', () => {
 
     await userEvent.keyboard('{ArrowLeft}');
     const backCard = screen.getByTestId('card').getAttribute('data-card');
-    expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(backCard);
+    expect(mockPlantNames).toContain(backCard);
   });
 
   it('handles flip with up arrow', async () => {
@@ -270,13 +274,13 @@ describe('Home', () => {
 
     await waitFor(() => {
       const newCard = screen.getByTestId('card').getAttribute('data-card');
-      expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(newCard);
+      expect(mockPlantNames).toContain(newCard);
     });
 
     await userEvent.click(backButton);
     await waitFor(() => {
       const backCard = screen.getByTestId('card').getAttribute('data-card');
-      expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(backCard);
+      expect(mockPlantNames).toContain(backCard);
     });
   
     describe('Card Viewing User Flow Integration Tests', () => {
@@ -320,7 +324,7 @@ describe('Home', () => {
         await waitFor(() => {
           const newCard = screen.getByTestId('card').getAttribute('data-card');
           expect(newCard).not.toBe(initialCard);
-          expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(newCard);
+          expect(mockPlantNames).toContain(newCard);
         });
       });
   
@@ -450,7 +454,7 @@ describe('Home', () => {
             await waitFor(() => {
               expect(screen.getByText('🐦 Birds')).toBeInTheDocument();
               const newCard = screen.getByTestId('card').getAttribute('data-card');
-              expect(['Mock Bird 1', 'Mock Bird 2', 'Mock Bird 3', 'Mock Bird 4', 'Mock Bird 5']).toContain(newCard);
+              expect(mockBirdNames).toContain(newCard);
               expect(newCard).not.toBe(initialCard); // Deck regenerated
             });
       
@@ -477,7 +481,7 @@ describe('Home', () => {
             await waitFor(() => {
               expect(screen.getByText('🌿🐦 Both')).toBeInTheDocument();
               const newCard = screen.getByTestId('card').getAttribute('data-card');
-              expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5', 'Mock Bird 1', 'Mock Bird 2', 'Mock Bird 3', 'Mock Bird 4', 'Mock Bird 5']).toContain(newCard);
+              expect(mockAllNames).toContain(newCard);
             });
           });
       
@@ -500,7 +504,7 @@ describe('Home', () => {
             await waitFor(() => {
               expect(screen.getByText('🌿 Plants')).toBeInTheDocument();
               const newCard = screen.getByTestId('card').getAttribute('data-card');
-              expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(newCard);
+              expect(mockPlantNames).toContain(newCard);
             });
           });
       
@@ -595,20 +599,20 @@ describe('Home', () => {
             let card = screen.getByTestId('card');
       
             // Plants mode
-            expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(card.getAttribute('data-card'));
+            expect(mockPlantNames).toContain(card.getAttribute('data-card'));
       
             // Switch to birds
             await userEvent.click(menuButton);
             await waitFor(() => {
               card = screen.getByTestId('card');
-              expect(['Mock Bird 1', 'Mock Bird 2', 'Mock Bird 3', 'Mock Bird 4', 'Mock Bird 5']).toContain(card.getAttribute('data-card'));
+              expect(mockBirdNames).toContain(card.getAttribute('data-card'));
             });
       
             // Switch to both
             await userEvent.click(menuButton);
             await waitFor(() => {
               card = screen.getByTestId('card');
-              expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5', 'Mock Bird 1', 'Mock Bird 2', 'Mock Bird 3', 'Mock Bird 4', 'Mock Bird 5']).toContain(card.getAttribute('data-card'));
+              expect(mockAllNames).toContain(card.getAttribute('data-card'));
             });
           });
       
@@ -677,7 +681,7 @@ describe('Home', () => {
 
         await waitFor(() => {
           const card = screen.getByTestId('card').getAttribute('data-card');
-          expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(card);
+          expect(mockPlantNames).toContain(card);
         });
       });
   
@@ -975,7 +979,7 @@ describe('Home', () => {
 
         // Initial state
         expect(card).toHaveAttribute('data-flipped', 'false');
-        expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(card.getAttribute('data-card'));
+        expect(mockPlantNames).toContain(card.getAttribute('data-card'));
 
         // Flip and navigate forward
         await userEvent.click(card);
@@ -984,7 +988,7 @@ describe('Home', () => {
         const initialCard = card.getAttribute('data-card');
         await userEvent.click(nextButton);
         await waitFor(() => {
-          expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(card.getAttribute('data-card'));
+          expect(mockPlantNames).toContain(card.getAttribute('data-card'));
           expect(card).toHaveAttribute('data-flipped', 'false');
         });
 
@@ -1009,7 +1013,7 @@ describe('Home', () => {
 
         await waitFor(() => {
           const finalCard = screen.getByTestId('card').getAttribute('data-card');
-          expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(finalCard);
+          expect(mockPlantNames).toContain(finalCard);
           expect(screen.getByTestId('card')).toHaveAttribute('data-flipped', 'false');
         });
       });
@@ -1043,20 +1047,20 @@ describe('Home', () => {
 
     const menuButton = screen.getByText('🌿 Plants');
     expect(menuButton).toBeInTheDocument();
-    expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(screen.getByTestId('card').getAttribute('data-card'));
+    expect(mockPlantNames).toContain(screen.getByTestId('card').getAttribute('data-card'));
 
     await userEvent.click(menuButton);
     await waitFor(() => {
       expect(screen.getByText('🐦 Birds')).toBeInTheDocument();
     });
-    expect(['Mock Bird 1', 'Mock Bird 2', 'Mock Bird 3', 'Mock Bird 4', 'Mock Bird 5']).toContain(screen.getByTestId('card').getAttribute('data-card'));
+    expect(mockBirdNames).toContain(screen.getByTestId('card').getAttribute('data-card'));
     expect(mockHistory.replaceState).toHaveBeenCalledWith({}, "", expect.stringContaining("?birds=true"));
 
     await userEvent.click(menuButton);
     await waitFor(() => {
       expect(screen.getByText('🌿🐦 Both')).toBeInTheDocument();
     });
-    expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5', 'Mock Bird 1', 'Mock Bird 2', 'Mock Bird 3', 'Mock Bird 4', 'Mock Bird 5']).toContain(screen.getByTestId('card').getAttribute('data-card'));
+    expect(mockAllNames).toContain(screen.getByTestId('card').getAttribute('data-card'));
     expect(mockHistory.replaceState).toHaveBeenCalledWith({}, "", expect.stringContaining("?both=true"));
 
     await userEvent.click(menuButton);
@@ -1323,7 +1327,7 @@ describe('Home', () => {
       // Should unflipped and navigate immediately
       await waitFor(() => {
         expect(card).toHaveAttribute('data-flipped', 'false');
-        expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(card.getAttribute('data-card'));
+        expect(mockPlantNames).toContain(card.getAttribute('data-card'));
         expect(card.getAttribute('data-card')).not.toBe(initialCard);
       });
     });
@@ -1553,7 +1557,7 @@ describe('Home', () => {
 
       await waitFor(() => {
         const buttonCard = card.getAttribute('data-card');
-        expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(buttonCard);
+        expect(mockPlantNames).toContain(buttonCard);
       });
     });
 
@@ -1567,13 +1571,13 @@ describe('Home', () => {
       // Go forward first
       await userEvent.click(nextButton);
       await waitFor(() => {
-        expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(card.getAttribute('data-card'));
+        expect(mockPlantNames).toContain(card.getAttribute('data-card'));
       });
 
       // Simulate back with button
       await userEvent.click(backButton);
       await waitFor(() => {
-        expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(card.getAttribute('data-card'));
+        expect(mockPlantNames).toContain(card.getAttribute('data-card'));
       });
     });
 
@@ -1606,7 +1610,7 @@ describe('Home', () => {
       }
 
       await waitFor(() => {
-        expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(card.getAttribute('data-card'));
+        expect(mockPlantNames).toContain(card.getAttribute('data-card'));
       });
     });
 
@@ -1628,7 +1632,7 @@ describe('Home', () => {
       await new Promise(resolve => setTimeout(resolve, 400)); // default flip / 2
       await waitFor(() => {
         expect(card).toHaveAttribute('data-flipped', 'false');
-        expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(card.getAttribute('data-card'));
+        expect(mockPlantNames).toContain(card.getAttribute('data-card'));
       });
     });
 
@@ -1662,7 +1666,7 @@ describe('Home', () => {
       }
 
       await waitFor(() => {
-        expect(['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5']).toContain(card.getAttribute('data-card'));
+        expect(mockPlantNames).toContain(card.getAttribute('data-card'));
       });
     });
 
