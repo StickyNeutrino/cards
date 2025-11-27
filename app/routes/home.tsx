@@ -1,7 +1,6 @@
 import type { Route } from "./+types/home";
 import { Card } from "~/card/card";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 import { birds, plants } from "./card-lists";
 import { trackCardView } from "~/viewtrack";
 import { make_deck } from "~/utils/deckUtils";
@@ -82,14 +81,14 @@ export default function Home() {
   }, [mode]);
   
   const nextAction = () => {
-    flushSync(() => setFlipped(false));
-    flushSync(() => setIndex(prev => prev + 1));
+    setFlipped(false);
+    setIndex(prev => prev + 1);
   };
 
   const backAction = () => {
     if (cardIndex === 0) { return; }
-    flushSync(() => setFlipped(false));
-    flushSync(() => setIndex(prev => prev - 1));
+    setFlipped(false);
+    setIndex(prev => prev - 1)
   };
 
   if (cardIndex > max_index) {
@@ -100,7 +99,7 @@ export default function Home() {
   const [flipped, setFlipped] = useState(false);
 
   const toggleFlipped = () => {
-    flushSync(() => setFlipped(!flipped));
+    setFlipped(!flipped)
   };
 
   useEffect(() => {
@@ -108,11 +107,11 @@ export default function Home() {
       switch (event.key) {
         case 'ArrowUp':
           event.preventDefault();
-          flushSync(() => setFlipped(true));
+          setFlipped(true)
           break;
         case ' ':
           event.preventDefault();
-          flushSync(() => setFlipped(prev => !prev));
+          setFlipped(prev => !prev)
           break;
         case 'ArrowRight':
           event.preventDefault();
