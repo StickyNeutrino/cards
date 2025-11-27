@@ -106,23 +106,18 @@ export default function Home() {
     const handleKeyDown = (event: { key: any; preventDefault: () => void; }) => {
       switch (event.key) {
         case 'ArrowUp':
-          event.preventDefault();
           setFlipped(true)
           break;
         case ' ':
-          event.preventDefault();
           setFlipped(prev => !prev)
           break;
         case 'ArrowRight':
-          event.preventDefault();
           nextAction();
           break;
         case 'ArrowLeft':
-          event.preventDefault();
           backAction();
           break;
         case 'Escape':
-          event.preventDefault();
           if (showSettings) {
             setShowSettings(false);
           }
