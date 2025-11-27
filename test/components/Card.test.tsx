@@ -88,4 +88,10 @@ describe('Card', () => {
     expect(images[0]).toHaveAttribute('src', '/cards/Nonexistent Card Front.png');
     expect(images[1]).toHaveAttribute('src', '/cards/Nonexistent Card Back.png');
   });
+
+  it('does not apply flip-card-inner-animated class when flipSpeed is 0', () => {
+    const { container } = render(<Card card="Test Card" flipped={false} widthRef={mockWidthRef} flipSpeed={0} />);
+    const flipCardInner = container.querySelector('.flip-card-inner');
+    expect(flipCardInner).not.toHaveClass('flip-card-inner-animated');
+  });
 });
