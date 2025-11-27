@@ -117,11 +117,6 @@ export default function Home() {
         case 'ArrowLeft':
           backAction();
           break;
-        case 'Escape':
-          if (showSettings) {
-            setShowSettings(false);
-          }
-          break;
       }
     };
     const handleKeyUp = (event: { key: any; }) => {
