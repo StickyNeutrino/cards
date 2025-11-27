@@ -20,6 +20,8 @@ let max_index = 0;
 
 export default function Home() {
   const [cardIndex, setIndex] = useState(0);
+  if (cardIndex < 0) { setIndex(0) }
+
   const [mode, setMode] = useState<'plants' | 'birds' | 'both'>(() => {
     if (typeof window !== 'undefined' && window.location) {
       const params = new URLSearchParams(window.location.search);
@@ -86,7 +88,6 @@ export default function Home() {
   };
 
   const backAction = () => {
-    if (cardIndex === 0) { return; }
     setFlipped(false);
     setIndex(prev => prev - 1)
   };
@@ -146,7 +147,7 @@ export default function Home() {
       window.removeEventListener('keyup', handleKeyUp);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [cardIndex]);
+  }, []);
 
   const elementRef = useRef<HTMLDivElement>(null);
   const [elementWidth, setElementWidth] = useState(0);
