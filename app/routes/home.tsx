@@ -147,7 +147,7 @@ export default function Home() {
       window.removeEventListener('keyup', handleKeyUp);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [showSettings]);
 
   const elementRef = useRef<HTMLDivElement>(null);
   const [elementWidth, setElementWidth] = useState(0);
