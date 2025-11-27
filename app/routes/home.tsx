@@ -254,7 +254,6 @@ export default function Home() {
       current={preloadProgress.current}
       total={preloadProgress.total}
       isVisible={preloadProgress.isVisible}
-      isPreloading={isPreloading}
     />
 
     <Card card={currentCard} flipped={flipped} widthRef={elementRef} flipSpeed={flipSpeed} onClick={toggleFlipped}/>
