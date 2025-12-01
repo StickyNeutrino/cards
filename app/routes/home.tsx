@@ -39,7 +39,8 @@ export default function Home() {
   });
   const [isPreloaded, setIsPreloaded] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('pwa-cards-preloaded') === 'true';
+        return localStorage.getItem('pwa-cards-preloaded') === 'true' 
+            && localStorage.getItem('pwa-cards-version') === '3';
     }
     return false;
   });
@@ -208,6 +209,7 @@ export default function Home() {
         if (loadedCount === imageUrls.length) {
           if (typeof window !== 'undefined') {
             localStorage.setItem('pwa-cards-preloaded', 'true');
+            localStorage.setItem('pwa-cards-version', '3');
           }
           setIsPreloaded(true);
           setIsPreloading(false);
@@ -222,6 +224,7 @@ export default function Home() {
         if (loadedCount === imageUrls.length) {
           if (typeof window !== 'undefined') {
             localStorage.setItem('pwa-cards-preloaded', 'true');
+            localStorage.setItem('pwa-cards-version', '3');
           }
           setIsPreloaded(true);
           setIsPreloading(false);

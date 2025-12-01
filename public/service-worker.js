@@ -1,4 +1,6 @@
-const CACHE_NAME = 'card-cache-v2';
+const CACHE_NAME = 'card-cache-v3';
+const OLD_CACHE_NAME = 'card-cache-v2';
+
 const STATIC_CACHE_NAME = 'static-cache-v2';
 
 const STATIC_ASSETS = [
@@ -24,7 +26,7 @@ self.addEventListener('fetch', event => {
     // Handle PNG images (existing logic)
     if (event.request.url.endsWith('.png')) {
         event.respondWith(
-            caches.match(event.request).then(cachedResponse => {
+            caches.open(CACHE_NAME).match(event.request).then(cachedResponse => {
                 // If image is in cache, return it
                 if (cachedResponse) {
                     console.log('Serving PNG from cache:', event.request.url);
@@ -34,6 +36,17 @@ self.addEventListener('fetch', event => {
                 // Otherwise, fetch from network and add to cache
                 console.log('Fetching PNG from network:', event.request.url);
                 return fetch(event.request).then(networkResponse => {
+                    if (!networkResponse.ok) {
+                        caches.open(OLD_CACHE_NAME).match(event.request).then(cachedResponse => {
+                            if (cachedResponse) {
+                                console.log('Serving PNG from old cache:', event.request.url);
+                                return cachedResponse;
+                            } else {
+                                return networkResponse;
+                            }
+                        });
+                    }
+
                     return caches.open(CACHE_NAME).then(cache => {
                         cache.put(event.request, networkResponse.clone()); // Store a clone
                         return networkResponse;
