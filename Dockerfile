@@ -15,7 +15,9 @@ WORKDIR /app
 RUN npm run build
 
 FROM node:20-alpine
+COPY public/cards /app/build/client/cards
 COPY public /app/build/client
+
 COPY ./package.json package-lock.json /app/
 COPY ./update-manifest.js /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
