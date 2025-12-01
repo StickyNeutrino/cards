@@ -25,35 +25,49 @@ self.addEventListener('fetch', event => {
 
     // Handle PNG images (existing logic)
     if (event.request.url.endsWith('.png')) {
-        event.respondWith(
-            caches.open(CACHE_NAME).match(event.request).then(cachedResponse => {
-                // If image is in cache, return it
-                if (cachedResponse) {
-                    console.log('Serving PNG from cache:', event.request.url);
-                    return cachedResponse;
+        event.respondWith((async () => {
+            const cache = await caches.open(CACHE_NAME)
+            let response = await cache.match(event.request)
+            
+            // If image is in cache, return it
+            if (response) {
+                console.log('Serving PNG from cache:', event.request.url);
+                return response;
+            }
+
+            // Otherwise, fetch from network and add to cache
+            console.log('Fetching PNG from network:', event.request.url);
+
+            let network_response;
+            try {
+                network_response = await fetch(event.request);
+            } catch (error) {
+                console.log('Network failed, checking cache again:', event.request.url);
+                // Network failed, try cache again (might have been added by another request)
+                const old_cache = await caches.open(OLD_CACHE_NAME)
+                response = old_cache.match(event.request)
+                if (response) {
+                    console.log('Serving PNG from old cache:', event.request.url);
+                    return response;
+                } else {
+                    return error;
+                }          
+            }
+
+            if (!network_response.ok) {
+                const old_cache = await caches.open(OLD_CACHE_NAME)
+                response = old_cache.match(event.request)
+                if (response) {
+                    console.log('Serving PNG from old cache:', event.request.url);
+                    return response;
+                } else {
+                    return networkResponse;
                 }
-
-                // Otherwise, fetch from network and add to cache
-                console.log('Fetching PNG from network:', event.request.url);
-                return fetch(event.request).then(networkResponse => {
-                    if (!networkResponse.ok) {
-                        caches.open(OLD_CACHE_NAME).match(event.request).then(cachedResponse => {
-                            if (cachedResponse) {
-                                console.log('Serving PNG from old cache:', event.request.url);
-                                return cachedResponse;
-                            } else {
-                                return networkResponse;
-                            }
-                        });
-                    }
-
-                    return caches.open(CACHE_NAME).then(cache => {
-                        cache.put(event.request, networkResponse.clone()); // Store a clone
-                        return networkResponse;
-                    });
-                });
-            })
-        );
+            } else {
+                cache.put(event.request, network_response.clone()); // Store a clone
+                return network_response;
+            }
+        })());
     } else if (event.request.method !== "POST") {
         // For all other requests, try cache first, then network
         event.respondWith(
