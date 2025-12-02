@@ -155,4 +155,37 @@ test.describe('Card Lists Page E2E Tests', () => {
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL('http://localhost:5173/?card=American%20Robin');
   });
+
+  test('Select bird card and switch to plants mode', async ({ page }) => {
+    // Navigate to card-lists
+    await page.goto('/card-lists');
+
+    // Select first card (Acorn Woodpecker - a bird)
+    const firstCardItem = page.locator('[data-testid="card-item"]').first();
+    const cardName = await firstCardItem.getAttribute('data-card-name');
+
+    await page.waitForLoadState('networkidle');
+    await page.evaluate(() => {
+      const el = document.querySelector('[data-testid="card-item"]') as HTMLElement;
+      if (el) {
+        el.scrollIntoView({ behavior: 'instant', block: 'center' });
+        el.click();
+      }
+    });
+
+    // Should navigate back to home with selected card
+    await expect(page).toHaveURL('http://localhost:5173/?card=Acorn%20Woodpecker');
+    const currentCard = page.locator('[data-testid="card"]');
+    await expect(currentCard).toHaveAttribute('data-card', cardName as string);
+
+    // Click the mode button in hamburger menu to toggle mode
+    const modeButton = page.locator('.hamburger-menu button').first();
+    await modeButton.click(); // birds -> both
+
+    // Click again to switch to plants
+    await modeButton.click(); // both -> plants
+
+    // Assert mode has changed to plants
+    await expect(modeButton).toHaveText('🌿 Plants');
+  });
 });

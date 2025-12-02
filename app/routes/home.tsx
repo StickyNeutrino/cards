@@ -232,8 +232,14 @@ export default function Home() {
   }, []);
 
   const toggleMode = () => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('card');
+      window.history.replaceState({}, "", url.toString());
+    }
     const nextMode = mode === 'plants' ? 'birds' : mode === 'birds' ? 'both' : 'plants';
     setMode(nextMode);
+    setSelectedCard(null);
     setIndex(0); // Reset to first card when switching
   };
 

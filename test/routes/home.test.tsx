@@ -645,25 +645,50 @@ describe('Home', () => {
       
           it('should handle switching modes while card is flipped mid-deck', async () => {
             render(<RouterProvider router={router} />);
-      
+
             const card = screen.getByTestId('card');
             const nextButton = screen.getByTestId('card').nextElementSibling?.querySelector('#next-button') as HTMLElement;
             const menuButton = screen.getByText('🌿 Plants');
-      
+
             // Advance and flip
             await userEvent.click(nextButton);
             await userEvent.click(card);
             await waitFor(() => {
               expect(card).toHaveAttribute('data-flipped', 'true');
             });
-      
+
             // Switch mode
             await userEvent.click(menuButton);
-      
+
             await waitFor(() => {
               expect(card).toHaveAttribute('data-flipped', 'false'); // Reset
               expect(screen.getByText('🐦 Birds')).toBeInTheDocument();
             });
+          });
+
+          it('should clear selectedCard when toggling mode via hamburger menu', async () => {
+            mockLocation.search = '?card=Mock Plant 1';
+            render(<RouterProvider router={router} />);
+
+            const card = screen.getByTestId('card');
+            const menuButton = screen.getByText('🌿 Plants');
+
+            // Verify initial card is selected
+            await waitFor(() => {
+              expect(card.getAttribute('data-card')).toBe('Mock Plant 1');
+            });
+
+            // Toggle mode
+            await userEvent.click(menuButton);
+
+            // Verify mode switched and selectedCard cleared (card resets to first in new mode)
+            await waitFor(() => {
+              expect(screen.getByText('🐦 Birds')).toBeInTheDocument();
+              expect(card.getAttribute('data-card')).toBe('Mock Bird 1');
+            });
+
+            // Assert selectedCard is null by checking URL has no card param
+            expect(mockHistory.replaceState).toHaveBeenCalledWith({}, "", expect.not.stringContaining('card='));
           });
         });
       
