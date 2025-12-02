@@ -1,12 +1,12 @@
 import { forwardRef } from "react";
 
 interface SettingsProps {
-  showSettings: boolean;
-  flipSpeed: number;
-  setFlipSpeed: (speed: number) => void;
-  isPreloaded: boolean;
-  isPreloading: boolean;
-  handlePreloadCards: () => void;
+   showSettings: boolean;
+   flipSpeed: string;
+   setFlipSpeed: (speed: string) => void;
+   isPreloaded: boolean;
+   isPreloading: boolean;
+   handlePreloadCards: () => void;
 }
 
 export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
@@ -26,7 +26,7 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
       {/* Flip Speed Slider */}
       <div className="space-y-2 mb-4" onClick={(e) => e.stopPropagation()}>
         <label className="block text-sm font-medium text-gray-700">
-          Card Flip Speed: {flipSpeed === 0 ? 'Instant' : `${flipSpeed.toFixed(1)}s`}
+          Card Flip Speed: {parseFloat(flipSpeed) === 0 ? 'Instant' : `${parseFloat(flipSpeed).toFixed(1)}s`}
         </label>
         <input
           type="range"
@@ -34,7 +34,7 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
           max="2.0"
           step="0.1"
           value={flipSpeed}
-          onChange={(e) => setFlipSpeed(parseFloat(e.target.value))}
+          onInput={(e) => setFlipSpeed(parseFloat(e.target.value).toFixed(1))}
           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
         />
       </div>

@@ -1212,7 +1212,9 @@ describe('Home', () => {
       expect(slider).toHaveValue('0.8');
 
       // Change slider value
-      fireEvent.change(slider, { target: { value: '1.5' } });
+      act(() => {
+        fireEvent.input(slider, { target: { value: '1.5' } });
+      });
 
       // UI should update
       expect(screen.getByText('Card Flip Speed: 1.5s')).toBeInTheDocument();
@@ -1298,7 +1300,9 @@ describe('Home', () => {
       const slider = screen.getByRole('slider');
 
       // Change flip speed
-      fireEvent.change(slider, { target: { value: '0.5' } });
+      act(() => {
+        fireEvent.input(slider, { target: { value: '0.5' } });
+      });
 
       // Verify both changes
       expect(screen.getByText('Card Flip Speed: 0.5s')).toBeInTheDocument();

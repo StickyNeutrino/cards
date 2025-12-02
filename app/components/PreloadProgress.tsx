@@ -8,7 +8,7 @@ export function PreloadProgress({ current, total, isVisible }: PreloadProgressPr
   if (!isVisible) return null;
 
   return (
-    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2 border border-gray-200" >
+    <div data-testid="preload-progress" className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2 border border-gray-200" >
       <div className="flex items-center space-x-3">
         <div className="text-sm text-gray-600 font-medium">
           {'Downloading cards...'}

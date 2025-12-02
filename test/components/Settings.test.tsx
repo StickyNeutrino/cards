@@ -40,9 +40,9 @@ describe('Settings', () => {
     render(<Settings {...defaultProps} setFlipSpeed={setFlipSpeed} />);
 
     const slider = screen.getByRole('slider');
-    fireEvent.change(slider, { target: { value: '1.5' } });
+    fireEvent.input(slider, { target: { value: '1.5' } });
 
-    expect(setFlipSpeed).toHaveBeenCalledWith(1.5);
+    expect(setFlipSpeed).toHaveBeenCalledWith('1.5');
   });
 
   it('renders preload button with correct states', () => {

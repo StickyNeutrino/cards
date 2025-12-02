@@ -23,11 +23,13 @@ export default function Home() {
   if (cardIndex < 0) { setIndex(0) }
 
   const [mode, setMode] = useState<'plants' | 'birds' | 'both'>(() => {
-    if (typeof window !== 'undefined' && window.location) {
+    if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.has("both")) return 'both';
       if (params.has("birds")) return 'birds';
-      return 'plants';
+      const saved = localStorage.getItem('mode');
+      if (saved === 'plants' || saved === 'birds' || saved === 'both') return saved;
+      return 'plants'; // Changed default to 'plants'
     }
     return 'plants';
   })
@@ -39,8 +41,7 @@ export default function Home() {
   });
   const [isPreloaded, setIsPreloaded] = useState(() => {
     if (typeof window !== 'undefined') {
-        return localStorage.getItem('pwa-cards-preloaded') === 'true' 
-            && localStorage.getItem('pwa-cards-version') === '3';
+        return localStorage.getItem('pwa-cards-preloaded') === 'true';
     }
     return false;
   });
@@ -49,19 +50,38 @@ export default function Home() {
   const settingsRef = useRef<HTMLDivElement>(null);
   const hamburgerRef = useRef<HTMLDivElement>(null);
 
-  const [flipSpeed, setFlipSpeed] = useState(() => {
+  const [selectedCard, setSelectedCard] = useState<string | null>(() => {
+    if (typeof window !== 'undefined' && window.location) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('card');
+    }
+    return null;
+  });
+
+  const [flipSpeed, setFlipSpeed] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('flipSpeed');
-      return saved ? parseFloat(saved) : 0.8;
+      if (saved !== null) {
+        const num = parseFloat(saved);
+        if (!isNaN(num) && num >= 0 && num <= 2.0) {
+          return saved;
+        }
+      }
     }
-    return 0.8;
+    return '0.8';
   });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('flipSpeed', flipSpeed.toString());
+      localStorage.setItem('flipSpeed', flipSpeed);
     }
   }, [flipSpeed]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('mode', mode);
+    }
+  }, [mode]);
 
   const currentCard = deck[cardIndex % deck.length];
   const nextCard = deck[(cardIndex + 1) % deck.length];
@@ -71,7 +91,46 @@ export default function Home() {
   useEffect(makeDeckCallback, [makeDeckCallback]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location) {
+    if (selectedCard) {
+      const index = deck.findIndex(card => card === selectedCard);
+      if (index !== -1) {
+        setIndex(index);
+      } else {
+        // Card not found in current deck, check if it's in birds or plants
+        const isBird = birds.some(bird => bird.name === selectedCard);
+        const isPlant = plants.some(plant => plant.name === selectedCard);
+        if (isBird && mode !== 'birds' && mode !== 'both') {
+          setMode('birds');
+        } else if (isPlant && mode !== 'plants' && mode !== 'both') {
+          setMode('plants');
+        } else if (mode === 'plants' && isBird) {
+          setMode('both');
+        } else if (mode === 'birds' && isPlant) {
+          setMode('both');
+        }
+      }
+    }
+  }, [selectedCard, deck]);
+  useEffect(() => {
+    if (!selectedCard && deck.length > 0) {
+      setSelectedCard(deck[0].name);
+    }
+  }, [deck, selectedCard]);
+
+  // Separate effect to handle URL cleanup after mode change
+  useEffect(() => {
+    if (selectedCard && deck.length > 0) {
+      const index = deck.findIndex(card => card.name === selectedCard);
+      if (index !== -1) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('card');
+        window.history.replaceState({}, "", url.toString());
+      }
+    }
+  }, [selectedCard, deck]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location && window.history && window.history.replaceState) {
       const url = new URL(window.location.href);
       url.searchParams.delete("plants");
       url.searchParams.delete("birds");
@@ -86,7 +145,7 @@ export default function Home() {
   const nextAction = () => {
     if (flipped) {
       setFlipped(false);
-      setTimeout(() => setIndex(prev => prev + 1), flipSpeed * 1000/2);
+      setTimeout(() => setIndex(prev => prev + 1), parseFloat(flipSpeed) * 1000/2);
     } else {
       setIndex(prev => prev + 1);
     }
@@ -95,7 +154,7 @@ export default function Home() {
   const backAction = () => {
     if (flipped) {
       setFlipped(false);
-      setTimeout(() => setIndex(prev => prev - 1), flipSpeed * 1000 /2);
+      setTimeout(() => setIndex(prev => prev - 1), parseFloat(flipSpeed) * 1000 /2);
     } else {
       setIndex(prev => prev - 1);
     }
@@ -126,6 +185,9 @@ export default function Home() {
           break;
         case 'ArrowLeft':
           backAction();
+          break;
+        case 'Escape':
+          setShowSettings(false);
           break;
       }
     };
@@ -187,6 +249,9 @@ export default function Home() {
     if (isPreloaded || isPreloading) return;
 
     setIsPreloading(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pwa-cards-preloaded', 'true');
+    }
 
     const imageUrls: string[] = [];
 
@@ -197,9 +262,9 @@ export default function Home() {
     });
 
 
-    setPreloadProgress({ current: 0, total: imageUrls.length, isVisible: true });
-
     let loadedCount = 0;
+
+    setPreloadProgress({ current: 0, total: imageUrls.length, isVisible: true });
 
     for (let i = 0; i < imageUrls.length; i++) {
       const img = new Image();
@@ -239,6 +304,7 @@ export default function Home() {
 
   return (
   <main onClick={() => {setFlipped(false); setShowSettings(false)}}>
+    <a href="/card-lists" style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 1000 }}>Card Lists</a>
     <HamburgerMenu ref={hamburgerRef} mode={mode} changeModeClicked={changeModeClicked} settingsClicked={settingsButtonClicked} />
 
     <Settings
@@ -257,7 +323,7 @@ export default function Home() {
       isVisible={preloadProgress.isVisible}
     />
 
-    <Card card={currentCard} flipped={flipped} widthRef={elementRef} flipSpeed={flipSpeed} onClick={toggleFlipped}/>
+    <Card card={currentCard} flipped={flipped} widthRef={elementRef} flipSpeed={parseFloat(flipSpeed)} onClick={toggleFlipped}/>
     <div id="button-container" style={{ width: `calc(${elementWidth}px)` }}>
       <button id="back-button" className="control-button" onClick={backAction}>
         <img src="/arrow-left-solid-full.svg" alt="Previous card" />

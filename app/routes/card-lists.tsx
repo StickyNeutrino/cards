@@ -1,3 +1,13 @@
+import type { Route } from "./+types/card-lists";
+import { useState, useMemo, useEffect, useRef } from "react";
+
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "Card Lists - Flash Cards" },
+    { name: "description", content: "Browse all available flash cards" },
+  ];
+}
+
 export const birds = [
     {
         "name": "Acorn Woodpecker",
@@ -817,3 +827,84 @@ export const invasives = [
 "Nasturtium",
 "Eucalyptus"
 ]
+
+export default function CardLists() {
+  const [filter, setFilter] = useState<'plants' | 'birds' | 'both'>('both');
+  const [search, setSearch] = useState('');
+  const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const allCards = useMemo(() => {
+    const cards = [];
+    if (filter === 'birds' || filter === 'both') {
+      cards.push(...birds);
+    }
+    if (filter === 'plants' || filter === 'both') {
+      cards.push(...plants);
+    }
+    return cards.filter(card => card.name.toLowerCase().includes(search.toLowerCase()));
+  }, [filter, search]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      const cardElements = cardRefs.current.filter(el => el !== null);
+      const currentIndex = cardElements.indexOf(activeElement as HTMLButtonElement);
+
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          if (currentIndex >= 0 && currentIndex < cardElements.length - 1) {
+            cardElements[currentIndex + 1]?.focus();
+          }
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          if (currentIndex > 0) {
+            cardElements[currentIndex - 1]?.focus();
+          }
+          break;
+        case 'Enter':
+          event.preventDefault();
+          if (currentIndex >= 0 && currentIndex < allCards.length) {
+            window.location.href = `/?card=${encodeURIComponent(allCards[currentIndex].name)}`;
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [allCards]);
+
+
+  return (
+    <main>
+      <h1>Card Lists</h1>
+      <div>
+        <button onClick={() => setFilter('plants')}>Plants</button>
+        <button onClick={() => setFilter('birds')}>Birds</button>
+        <button onClick={() => setFilter('both')}>Both</button>
+      </div>
+      <input
+        type="search"
+        placeholder="Search cards..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      <div data-testid="card-list">
+        {allCards.map((card, index) => (
+          <button
+            key={index}
+            ref={(el) => { cardRefs.current[index] = el; }}
+            data-testid="card-item"
+            data-card-name={card.name}
+            onClick={() => window.location.href = `/?card=${encodeURIComponent(card.name)}`}
+            style={{ cursor: 'pointer', padding: '10px', border: '1px solid #ccc', margin: '5px', background: 'none', textAlign: 'left' }}
+          >
+            {card.name}
+          </button>
+        ))}
+      </div>
+    </main>
+  );
+}

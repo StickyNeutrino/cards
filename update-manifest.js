@@ -73,8 +73,6 @@ function updateServiceWorker(buildDir, swPath) {
       '/manifest.json',
       ...cssFiles.map(file => `/build/client/assets/${file}`),
       ...jsFiles.map(file => `/build/client/assets/${file}`),
-      '/app/welcome/logo-dark.svg',
-      '/app/welcome/logo-light.svg',
       '/arrow-left-solid-full.svg',
       '/arrow-right-solid-full.svg'
     ];

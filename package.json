@@ -23,6 +23,7 @@
     "serve": "^14.2.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@react-router/dev": "^7.9.4",
     "@tailwindcss/vite": "^4.1.13",
     "@testing-library/jest-dom": "^6.9.1",
