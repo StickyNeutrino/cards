@@ -878,30 +878,35 @@ export default function CardLists() {
 
 
   return (
-    <main>
-      <h1>Card Lists</h1>
-      <div>
-        <button onClick={() => setFilter('plants')}>Plants</button>
-        <button onClick={() => setFilter('birds')}>Birds</button>
-        <button onClick={() => setFilter('both')}>Both</button>
+    <main className="card-list-main">
+      <div className="controls-container">
+        <button type="button" className={filter === 'plants' ? 'menu-button active' : 'menu-button'} onClick={() => setFilter('plants')}>Plants</button>
+        <button type="button" className={filter === 'birds' ? 'menu-button active' : 'menu-button'} onClick={() => setFilter('birds')}>Birds</button>
+        <button type="button" className={filter === 'both' ? 'menu-button active' : 'menu-button'} onClick={() => setFilter('both')}>Both</button>
+        <input
+          type="search"
+          className="search-input"
+          placeholder="Search cards..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
-      <input
-        type="search"
-        placeholder="Search cards..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-      <div data-testid="card-list">
+      <div className="card-list-container" data-testid="card-list">
         {allCards.map((card, index) => (
           <button
             key={index}
             ref={(el) => { cardRefs.current[index] = el; }}
+            className="card-list-item"
             data-testid="card-item"
             data-card-name={card.name}
             onClick={() => window.location.href = `/?card=${encodeURIComponent(card.name)}`}
-            style={{ cursor: 'pointer', padding: '10px', border: '1px solid #ccc', margin: '5px', background: 'none', textAlign: 'left' }}
           >
-            {card.name}
+            <img
+              src={`/cards/${card.front}`}
+              alt={`${card.name} front`}
+              className="card-thumbnail"
+            />
+            <span className="card-name">{card.name}</span>
           </button>
         ))}
       </div>

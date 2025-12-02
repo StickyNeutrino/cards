@@ -1,6 +1,7 @@
 import type { Route } from "./+types/home";
 import { Card } from "~/card/card";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 import { birds, plants } from "./card-lists";
 import { trackCardView } from "~/viewtrack";
 import { make_deck } from "~/utils/deckUtils";
@@ -19,6 +20,7 @@ export function meta({}: Route.MetaArgs) {
 let max_index = 0;
 
 export default function Home() {
+  const navigate = useNavigate();
   const [cardIndex, setIndex] = useState(0);
   if (cardIndex < 0) { setIndex(0) }
 
@@ -245,6 +247,11 @@ export default function Home() {
     setShowSettings(!showSettings)
   }
 
+  const cardListsButtonClicked = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigate('/card-lists')
+  }
+
   const handlePreloadCards = () => {
     if (isPreloaded || isPreloading) return;
 
@@ -304,8 +311,7 @@ export default function Home() {
 
   return (
   <main onClick={() => {setFlipped(false); setShowSettings(false)}}>
-    <a href="/card-lists" style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 1000 }}>Card Lists</a>
-    <HamburgerMenu ref={hamburgerRef} mode={mode} changeModeClicked={changeModeClicked} settingsClicked={settingsButtonClicked} />
+    <HamburgerMenu ref={hamburgerRef} mode={mode} changeModeClicked={changeModeClicked} settingsClicked={settingsButtonClicked} cardListsClicked={cardListsButtonClicked} />
 
     <Settings
       ref={settingsRef}

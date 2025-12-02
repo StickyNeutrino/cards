@@ -59,6 +59,10 @@ main {
   position: relative;
 }
 
+.card-list-main {
+  align-items: stretch;
+}
+
 .hamburger-menu {
   position: absolute;
   top: 20px;
@@ -81,6 +85,25 @@ main {
 
 .menu-button:hover {
   background-color: #8fa88a;
+}
+
+.menu-button.active {
+  border: 2px solid #a1b69a;
+}
+
+.controls-container {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.search-input {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px;
 }
 
 .card-area {
@@ -157,4 +180,80 @@ main {
   height: auto;
   width: auto;
   object-fit: contain;
+}
+
+/* Card List Styles */
+.card-list-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 240px));
+  gap: 1rem;
+  padding: 0;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin: 0;
+  overflow: auto;
+  justify-content: center;
+}
+
+@media (min-width: 1024px) {
+  .card-list-container {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 240px));
+  }
+}
+
+.filter-button {
+  padding: 0.5rem 1rem;
+  margin: 0.5rem;
+  background-color: #a1b69a;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.filter-button:hover {
+  background-color: #8fa88a;
+}
+
+.card-list-item {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 200px;
+}
+
+.card-list-item:hover {
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.card-list-item:focus {
+  outline: 2px solid #a1b69a;
+  outline-offset: 2px;
+}
+
+.card-thumbnail {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.card-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
 }
