@@ -8,6 +8,7 @@ describe('HamburgerMenu', () => {
     mode: 'plants' as const,
     changeModeClicked: vi.fn(),
     settingsClicked: vi.fn(),
+    cardListsClicked: vi.fn(),
   };
 
   it('renders with plants mode', () => {
@@ -73,11 +74,11 @@ describe('HamburgerMenu', () => {
     expect(settingsButton).toHaveAttribute('title', 'Settings');
   });
 
-  it('renders both buttons', () => {
+  it('renders all buttons', () => {
     render(<HamburgerMenu {...defaultProps} />);
 
     const buttons = screen.getAllByRole('button');
-    expect(buttons).toHaveLength(2);
+    expect(buttons).toHaveLength(3);
   });
 
   it('handles all mode prop values correctly', () => {
