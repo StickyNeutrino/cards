@@ -69,5 +69,6 @@ export default defineConfig({
     port: 5173,
     timeout: 120000,
     reuseExistingServer: !process.env.CI,
+    env: { VITE_DISABLE_UMAMI: 'true' },
   },
 });
