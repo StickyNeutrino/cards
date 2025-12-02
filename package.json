@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "dev": "npm run update-manifest && react-router dev",
+    "dev": "react-router dev",
     "start": "npx serve ./build/client",
     "typecheck": "react-router typegen && tsc",
     "test": "vitest",
