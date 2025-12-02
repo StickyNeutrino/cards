@@ -18,7 +18,7 @@ export const HamburgerMenu = forwardRef<HTMLDivElement, HamburgerMenuProps>(({ m
         className="menu-button ml-2"
         title="Card Lists"
       >
-        📋 Card Lists
+        📋 Card List
       </button>
       <button
         onClick={settingsClicked}
