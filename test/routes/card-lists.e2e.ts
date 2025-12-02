@@ -33,7 +33,7 @@ test.describe('Card Lists Page E2E Tests', () => {
     await page.goto('/');
 
     // Assume there's a link or button to card-lists
-    const cardListsLink = page.locator('a[href="/card-lists"]').or(page.locator('button').filter({ hasText: 'Card Lists' }));
+    const cardListsLink = page.locator('a[href="/card-lists"]').or(page.locator('button').filter({ hasText: 'Card List' }));
     await expect(cardListsLink).toBeVisible();
     await cardListsLink.click();
 
