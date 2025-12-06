@@ -188,4 +188,34 @@ test.describe('Card Lists Page E2E Tests', () => {
     // Assert mode has changed to plants
     await expect(modeButton).toHaveText('🌿 Plants');
   });
+
+  test('Invasive plants have red border styling', async ({ page }) => {
+    await page.goto('/card-lists');
+
+    // Search for a known invasive plant, e.g., "Arundo"
+    const searchInput = page.locator('input[type="search"]');
+    await searchInput.fill('Arundo');
+    await page.waitForTimeout(300);
+
+    // Should show Arundo card
+    const arundoCard = page.locator('[data-testid="card-item"]').filter({ hasText: 'Arundo' });
+    await expect(arundoCard).toBeVisible();
+
+    // Check it has the 'invasive' class
+    await expect(arundoCard).toHaveClass('card-list-item invasive');
+
+    // Check the styling: border should be 6px solid red
+    const border = await arundoCard.evaluate(el => window.getComputedStyle(el).border);
+    expect(border).toContain('6px');
+    expect(border).toContain('solid');
+    expect(border).toContain('rgb(255, 0, 0)'); // red
+
+    // Check border-radius is 10px
+    const borderRadius = await arundoCard.evaluate(el => window.getComputedStyle(el).borderRadius);
+    expect(borderRadius).toBe('10px');
+
+    // Check overflow is hidden
+    const overflow = await arundoCard.evaluate(el => window.getComputedStyle(el).overflow);
+    expect(overflow).toBe('hidden');
+  });
 });

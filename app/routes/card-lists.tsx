@@ -861,7 +861,7 @@ export default function CardLists() {
         {allCards.map((card, index) => (
           <button
             key={index}
-            className="card-list-item"
+            className={`card-list-item ${invasives.includes(card.name) ? 'invasive' : ''}`}
             data-testid="card-item"
             data-card-name={card.name}
             onClick={() => window.location.href = `/?card=${encodeURIComponent(card.name)}`}
