@@ -1,5 +1,5 @@
 import type { Route } from "./+types/card-lists";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -831,7 +831,6 @@ export const invasives = [
 export default function CardLists() {
   const [filter, setFilter] = useState<'plants' | 'birds' | 'both'>('both');
   const [search, setSearch] = useState('');
-  const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const allCards = useMemo(() => {
     const cards = [];
@@ -843,39 +842,6 @@ export default function CardLists() {
     }
     return cards.filter(card => card.name.toLowerCase().includes(search.toLowerCase()));
   }, [filter, search]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const activeElement = document.activeElement;
-      const cardElements = cardRefs.current.filter(el => el !== null);
-      const currentIndex = cardElements.indexOf(activeElement as HTMLButtonElement);
-
-      switch (event.key) {
-        case 'ArrowDown':
-          event.preventDefault();
-          if (currentIndex >= 0 && currentIndex < cardElements.length - 1) {
-            cardElements[currentIndex + 1]?.focus();
-          }
-          break;
-        case 'ArrowUp':
-          event.preventDefault();
-          if (currentIndex > 0) {
-            cardElements[currentIndex - 1]?.focus();
-          }
-          break;
-        case 'Enter':
-          event.preventDefault();
-          if (currentIndex >= 0 && currentIndex < allCards.length) {
-            window.location.href = `/?card=${encodeURIComponent(allCards[currentIndex].name)}`;
-          }
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [allCards]);
-
 
   return (
     <main className="card-list-main">
@@ -895,7 +861,6 @@ export default function CardLists() {
         {allCards.map((card, index) => (
           <button
             key={index}
-            ref={(el) => { cardRefs.current[index] = el; }}
             className="card-list-item"
             data-testid="card-item"
             data-card-name={card.name}
