@@ -232,7 +232,7 @@ main {
 }
 
 .card-list-item.invasive {
-  border: 6px solid red;
+  border: 3px solid red;
   border-radius: 10px;
   overflow: hidden;
 }
@@ -281,4 +281,7 @@ main {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+.card-list-item.invasive .card-name {
+  margin-top: -5px;
 }

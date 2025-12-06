@@ -204,9 +204,9 @@ test.describe('Card Lists Page E2E Tests', () => {
     // Check it has the 'invasive' class
     await expect(arundoCard).toHaveClass('card-list-item invasive');
 
-    // Check the styling: border should be 6px solid red
+    // Check the styling: border should be 2px solid red
     const border = await arundoCard.evaluate(el => window.getComputedStyle(el).border);
-    expect(border).toContain('6px');
+    expect(border).toContain('2px');
     expect(border).toContain('solid');
     expect(border).toContain('rgb(255, 0, 0)'); // red
 
