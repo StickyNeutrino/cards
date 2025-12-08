@@ -70,9 +70,9 @@ export const birds = [
         "back": "Ash-throated Flycatcher Back.png"
     },
     {
-        "name": "Cassin_s Kingbird",
-        "front": "Cassin_s Kingbird Front.png",
-        "back": "Cassin_s Kingbird Back.png"
+        "name": "Cassin's Kingbird",
+        "front": "Cassin's Kingbird Front.png",
+        "back": "Cassin's Kingbird Back.png"
     },
     {
         "name": "Mourning Dove",
@@ -170,9 +170,9 @@ export const birds = [
         "back": "Northern Mockingbird Back.png"
     },
     {
-        "name": "Say_s Phoebe",
-        "front": "Say_s Phoebe Front.png",
-        "back": "Say_s Phoebe Back.png"
+        "name": "Say's Phoebe",
+        "front": "Say's Phoebe Front.png",
+        "back": "Say's Phoebe Back.png"
     },
     {
         "name": "House Sparrow",
@@ -180,9 +180,9 @@ export const birds = [
         "back": "House Sparrow Back.png"
     },
     {
-        "name": "Cooper_s Hawk",
-        "front": "Cooper_s Hawk Front.png",
-        "back": "Cooper_s Hawk Back.png"
+        "name": "Cooper's Hawk",
+        "front": "Cooper's Hawk Front.png",
+        "back": "Cooper's Hawk Back.png"
     },
     {
         "name": "California Towhee",
@@ -200,14 +200,14 @@ export const birds = [
         "back": "California Scrub Jay Back.png"
     },
     {
-        "name": "Nuttall_s Woodpecker",
-        "front": "Nuttall_s Woodpecker Front.png",
-        "back": "Nuttall_s Woodpecker Back.png"
+        "name": "Nuttall's Woodpecker",
+        "front": "Nuttall's Woodpecker Front.png",
+        "back": "Nuttall's Woodpecker Back.png"
     },
     {
-        "name": "Allen_s Hummingbird",
-        "front": "Allen_s Hummingbird Front.png",
-        "back": "Allen_s Hummingbird Back.png"
+        "name": "Allen's Hummingbird",
+        "front": "Allen's Hummingbird Front.png",
+        "back": "Allen's Hummingbird Back.png"
     },
     {
         "name": "Northern Flicker",
@@ -220,9 +220,9 @@ export const birds = [
         "back": "Dark-eyed Junco Back.png"
     },
     {
-        "name": "Bewick_s Wren",
-        "front": "Bewick_s Wren Front.png",
-        "back": "Bewick_s Wren Back.png"
+        "name": "Bewick's Wren",
+        "front": "Bewick's Wren Front.png",
+        "back": "Bewick's Wren Back.png"
     },
     {
         "name": "European Starling",
@@ -235,9 +235,9 @@ export const birds = [
         "back": "Yellow-rumped Warbler Back.png"
     },
     {
-        "name": "Anna_s Hummingbird",
-        "front": "Anna_s Hummingbird Front.png",
-        "back": "Anna_s Hummingbird Back.png"
+        "name": "Anna's Hummingbird",
+        "front": "Anna's Hummingbird Front.png",
+        "back": "Anna's Hummingbird Back.png"
     },
     {
         "name": "Western Flycatcher",
@@ -255,9 +255,9 @@ export const birds = [
         "back": "Common Yellowthroat Back.png"
     },
     {
-        "name": "Wilson_s Warbler",
-        "front": "Wilson_s Warbler Front.png",
-        "back": "Wilson_s Warbler Back.png"
+        "name": "Wilson's Warbler",
+        "front": "Wilson's Warbler Front.png",
+        "back": "Wilson's Warbler Back.png"
     },
     {
         "name": "Red-shouldered Hawk",
@@ -265,14 +265,14 @@ export const birds = [
         "back": "Red-shouldered Hawk Back.png"
     },
     {
-        "name": "Least Bell_s Vireo",
-        "front": "Least Bell_s Vireo Front.png",
-        "back": "Least Bell_s Vireo Back.png"
+        "name": "Least Bell's Vireo",
+        "front": "Least Bell's Vireo Front.png",
+        "back": "Least Bell's Vireo Back.png"
     },
     {
-        "name": "Townsend_s Warbler",
-        "front": "Townsend_s Warbler Front.png",
-        "back": "Townsend_s Warbler Back.png"
+        "name": "Townsend's Warbler",
+        "front": "Townsend's Warbler Front.png",
+        "back": "Townsend's Warbler Back.png"
     },
     {
         "name": "Orange-crowned Warbler",
@@ -295,9 +295,9 @@ export const birds = [
         "back": "Eurasian Collared Dove Back.png"
     },
     {
-        "name": "Light-footed Ridgeway_s Rail",
-        "front": "Light-footed Ridgeway_s Rail Front.png",
-        "back": "Light-footed Ridgeway_s Rail Back.png"
+        "name": "Light-footed Ridgeway's Rail",
+        "front": "Light-footed Ridgeway's Rail Front.png",
+        "back": "Light-footed Ridgeway's Rail Back.png"
     },
     {
         "name": "Cedar Waxwing",
@@ -345,9 +345,9 @@ export const birds = [
         "back": "Oak Titmouse Back.png"
     },
     {
-        "name": "Hutton_s Vireo",
-        "front": "Hutton_s Vireo Front.png",
-        "back": "Hutton_s Vireo Back.png"
+        "name": "Hutton's Vireo",
+        "front": "Hutton's Vireo Front.png",
+        "back": "Hutton's Vireo Back.png"
     },
     {
         "name": "Hooded Oriole",
