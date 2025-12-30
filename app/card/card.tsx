@@ -12,6 +12,7 @@ export function Card({card, flipped, widthRef, flipSpeed, onClick}:CardProps) {
     const invasive = invasives.includes(card);
     
     const handleClick = (e: React.SyntheticEvent) => {
+        e.preventDefault();
         e.stopPropagation();
         onClick?.();
     };
