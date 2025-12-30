@@ -218,4 +218,32 @@ test.describe('Card Lists Page E2E Tests', () => {
     const overflow = await arundoCard.evaluate(el => window.getComputedStyle(el).overflow);
     expect(overflow).toBe('hidden');
   });
+}); 
+
+test.describe('Home Page Offline Tests', () => {
+  test('Offline loading with query parameters', async ({ page }) => {
+    // Clear state
+    await page.context().clearCookies();
+    await page.goto('/');
+    await page.evaluate(() => localStorage.clear());
+
+    // Load the main page with one card query parameter online to cache it
+    await page.goto('/?card=Acorn%20Woodpecker');
+    await page.waitForLoadState('networkidle');
+
+    // Verify the card is loaded
+    const card = page.locator('[data-testid="card"]');
+    await expect(card).toHaveAttribute('data-card', 'Acorn Woodpecker');
+
+    // Simulate going offline
+    await page.context().setOffline(true);
+
+    // Attempt to load the main page with a different card query parameter
+    await page.goto('/?card=American%20Robin');
+    await page.waitForLoadState('domcontentloaded');
+
+    // Verify that the page loads successfully despite being offline
+    await expect(card).toBeVisible();
+    await expect(card).toHaveAttribute('data-card', 'American Robin');
+  });
 });

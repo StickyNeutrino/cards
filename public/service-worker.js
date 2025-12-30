@@ -25,9 +25,11 @@ self.addEventListener('fetch', event => {
 
     // Handle PNG images (existing logic)
     if (event.request.url.endsWith('.png')) {
+        const url = new URL(event.request.url);
+        const normalizedRequest = new Request(url.origin + url.pathname);
         event.respondWith((async () => {
             const cache = await caches.open(CACHE_NAME)
-            let response = await cache.match(event.request)
+            let response = await cache.match(normalizedRequest)
             
             // If image is in cache, return it
             if (response) {
@@ -45,7 +47,7 @@ self.addEventListener('fetch', event => {
                 console.log('Network failed, checking cache again:', event.request.url);
                 // Network failed, try cache again (might have been added by another request)
                 const old_cache = await caches.open(OLD_CACHE_NAME)
-                response = old_cache.match(event.request)
+                response = old_cache.match(normalizedRequest)
                 if (response) {
                     console.log('Serving PNG from old cache:', event.request.url);
                     return response;
@@ -56,40 +58,37 @@ self.addEventListener('fetch', event => {
 
             if (!network_response.ok) {
                 const old_cache = await caches.open(OLD_CACHE_NAME)
-                response = old_cache.match(event.request)
+                response = old_cache.match(normalizedRequest)
                 if (response) {
                     console.log('Serving PNG from old cache:', event.request.url);
                     return response;
                 } else {
-                    return networkResponse;
+                    return network_response;
                 }
             } else {
-                cache.put(event.request, network_response.clone()); // Store a clone
+                cache.put(normalizedRequest, network_response.clone()); // Store a clone
                 return network_response;
             }
         })());
     } else if (event.request.method !== "POST") {
-        // For all other requests, try cache first, then network
+        // For all other requests, network-first strategy
+        const url = new URL(event.request.url);
+        let cacheKey = new Request(url.origin + url.pathname);
         event.respondWith(
-            caches.match(event.request).then(cachedResponse => {
-
-                console.log('Fetching from network:', event.request.url);
-                // Try network, but cache successful responses
-                return fetch(event.request).then(networkResponse => {
-                    // Cache successful responses (status 200)
-                    if (networkResponse.status === 200) {
-                        const responseClone = networkResponse.clone();
-                        caches.open(STATIC_CACHE_NAME).then(cache => {
-                            console.log('Caching response:', event.request.url);
-                            cache.put(event.request, responseClone);
-                        });
-                    }
-                    return networkResponse;
-                }).catch(() => {
-                    console.log('Network failed, checking cache again:', event.request.url);
-                    // Network failed, try cache again (might have been added by another request)
-                    return caches.match(event.request);
-                });
+            fetch(event.request).then(networkResponse => {
+                // Cache successful responses (status 200)
+                if (networkResponse.status === 200) {
+                    const responseClone = networkResponse.clone();
+                    caches.open(STATIC_CACHE_NAME).then(cache => {
+                        console.log('Caching response:', event.request.url);
+                        cache.put(cacheKey, responseClone);
+                    });
+                }
+                return networkResponse;
+            }).catch(() => {
+                console.log('Network failed, checking cache:', event.request.url);
+                // Network failed, try cache
+                return caches.open(STATIC_CACHE_NAME).then(cache => cache.match(cacheKey));
             })
         );
     }
