@@ -13,11 +13,14 @@ function possible_offline_track(arg: string | ((props: any) => any)) {
 }
 
 export default function trackView() {
+  if (localStorage.getItem('analyticsConsent') !== 'true') return;
   let userUuid = getOrSetUUID()
   let birds_enabled = new URLSearchParams(window.location.search).has("birds");
   const payload =  {type: birds_enabled ? "birds" : "plants"}
 
-  possible_offline_track((props: any) => ({ ...props, id: userUuid, data:payload }));
+  if (localStorage.getItem('analyticsConsent') === 'true') {
+    possible_offline_track((props: any) => ({ ...props, id: userUuid, data:payload }));
+  }
 
   let hidden_start: number | null = null;
 
@@ -32,7 +35,9 @@ export default function trackView() {
 
         if ((hidden_ms / (1000 * 60)) > 20 ) {
           // It has been long enough to count as a new page visit
-          possible_offline_track((props: any) => ({ ...props, id: userUuid, data:payload }));
+          if (localStorage.getItem('analyticsConsent') === 'true') {
+            possible_offline_track((props: any) => ({ ...props, id: userUuid, data:payload }));
+          }
         }
 
         hidden_start = null;
@@ -50,7 +55,9 @@ export function trackCardView() {
   let birds_enabled = new URLSearchParams(window.location.search).has("birds");
   const payload =  {type: birds_enabled ? "birds" : "plants"}
 
-  possible_offline_track((props: any) => ({...props, id: userUuid , name:"viewed card", data: payload}));
+  if (localStorage.getItem('analyticsConsent') === 'true') {
+    possible_offline_track((props: any) => ({...props, id: userUuid , name:"viewed card", data: payload}));
+  }
 }
 
 function getOrSetUUID() {

@@ -5,13 +5,15 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "react-router";
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import trackView from "./viewtrack";
 import { setupGlobalErrorHandlers, reportError } from "./utils/errorReporting";
+import ConsentPopup from "./components/ConsentPopup";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -60,6 +62,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const [showConsentPopup, setShowConsentPopup] = useState(false);
+
   useEffect(() => {
     return trackView();
   },[])
@@ -73,8 +77,41 @@ export default function App() {
       navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
     }
   }, []);
-  
-  return <Outlet />;
+
+  useEffect(() => {
+    const analyticsConsent = localStorage.getItem('analyticsConsent');
+    const crashConsent = localStorage.getItem('crashReportingConsent');
+    if (analyticsConsent === null || crashConsent === null) {
+      setShowConsentPopup(true);
+    } else if (analyticsConsent === 'true') {
+      trackView();
+    }
+  }, []);
+
+  const handleAccept = (consent: { analytics: boolean; crash: boolean }) => {
+    localStorage.setItem('analyticsConsent', consent.analytics ? 'true' : 'false');
+    localStorage.setItem('crashReportingConsent', consent.crash ? 'true' : 'false');
+    window.dispatchEvent(new CustomEvent('consentChanged'));
+    setShowConsentPopup(false);
+    if (consent.analytics) {
+      // Unfortunate hack to give localStorage time to update. 
+      setTimeout(trackView, 50)
+    }
+  };
+
+  const handleDecline = () => {
+    localStorage.setItem('analyticsConsent', 'false');
+    localStorage.setItem('crashReportingConsent', 'false');
+    window.dispatchEvent(new CustomEvent('consentChanged'));
+    setShowConsentPopup(false);
+  };
+
+  return (
+    <>
+      {showConsentPopup && <ConsentPopup onAccept={handleAccept} onDecline={handleDecline} />}
+      <Outlet />
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

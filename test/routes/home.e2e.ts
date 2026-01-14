@@ -1,13 +1,23 @@
 import { test, expect } from '@playwright/test';
 
+async function handleConsentPopup(page) {
+  const acceptButton = page.getByRole('button', { name: 'Accept Selected' });
+  if (await acceptButton.isVisible({ timeout: 2000 })) {
+    await acceptButton.click();
+  }
+}
+
 test.describe('Home Page E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Clear localStorage and navigate to home
+    // Clear cookies and navigate to home
     await page.context().clearCookies();
     await page.goto('/');
     await page.evaluate(() => {
-      localStorage.clear();
+      localStorage.setItem('analyticsConsent', 'true');
+      localStorage.setItem('crashReportingConsent', 'true');
     });
+    // Handle consent popup if it appears
+    await handleConsentPopup(page);
   });
 
   test('Page loading and initial state', async ({ page }) => {

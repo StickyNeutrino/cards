@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useState, useEffect } from "react";
 
 interface SettingsProps {
    showSettings: boolean;
@@ -17,6 +17,19 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
   isPreloading,
   handlePreloadCards
 }, ref) => {
+  const [analyticsConsent, setAnalyticsConsent] = useState(localStorage.getItem('analyticsConsent') === 'true');
+  const [crashReportingConsent, setCrashReportingConsent] = useState(localStorage.getItem('crashReportingConsent') === 'true');
+
+  useEffect(() => {
+    const handleConsentChange = () => {
+      setAnalyticsConsent(localStorage.getItem('analyticsConsent') === 'true');
+      setCrashReportingConsent(localStorage.getItem('crashReportingConsent') === 'true');
+    };
+
+    window.addEventListener('consentChanged', handleConsentChange);
+    return () => window.removeEventListener('consentChanged', handleConsentChange);
+  }, []);
+
   if (!showSettings) return null;
 
   return (
@@ -67,6 +80,41 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
             All cards are cached for offline use
           </p>
         )}
+      </div>
+
+      {/* Privacy Preferences */}
+      <div className="space-y-2 mt-4" onClick={(e) => e.stopPropagation()}>
+        <h4 className="text-md font-semibold mb-2 text-gray-800">Privacy Preferences</h4>
+        <div className="flex items-center space-x-2">
+          <input
+            id="analytics-checkbox"
+            type="checkbox"
+            checked={analyticsConsent}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setAnalyticsConsent(checked);
+              localStorage.setItem('analyticsConsent', checked.toString());
+            }}
+          />
+          <label htmlFor="analytics-checkbox" className="text-sm font-medium text-gray-700">
+            Enable Analytics Tracking
+          </label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <input
+            id="crash-checkbox"
+            type="checkbox"
+            checked={crashReportingConsent}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setCrashReportingConsent(checked);
+              localStorage.setItem('crashReportingConsent', checked.toString());
+            }}
+          />
+          <label htmlFor="crash-checkbox" className="text-sm font-medium text-gray-700">
+            Enable Crash Reporting
+          </label>
+        </div>
       </div>
     </div>
   );

@@ -1,13 +1,23 @@
 import { test, expect } from '@playwright/test';
 
+async function handleConsentPopup(page) {
+  const acceptButton = page.getByRole('button', { name: 'Accept Selected' });
+  if (await acceptButton.isVisible({ timeout: 2000 })) {
+    await acceptButton.click();
+  }
+}
+
 test.describe('Card Lists Page E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Clear localStorage and navigate to card-lists
+    // Clear cookies and navigate to card-lists
     await page.context().clearCookies();
     await page.goto('/card-lists');
     await page.evaluate(() => {
-      localStorage.clear();
+      localStorage.setItem('analyticsConsent', 'true');
+      localStorage.setItem('crashReportingConsent', 'true');
     });
+    // Handle consent popup if it appears
+    await handleConsentPopup(page);
   });
 
   test('Page loading and initial state', async ({ page }) => {
@@ -31,6 +41,8 @@ test.describe('Card Lists Page E2E Tests', () => {
   test('Navigation to card-lists from home', async ({ page }) => {
     // First go to home
     await page.goto('/');
+    // Handle consent popup if it appears
+    await handleConsentPopup(page);
 
     // Assume there's a link or button to card-lists
     const cardListsLink = page.locator('a[href="/card-lists"]').or(page.locator('button').filter({ hasText: 'Card List' }));
@@ -159,6 +171,8 @@ test.describe('Card Lists Page E2E Tests', () => {
   test('Select bird card and switch to plants mode', async ({ page }) => {
     // Navigate to card-lists
     await page.goto('/card-lists');
+    // Handle consent popup if it appears
+    await handleConsentPopup(page);
 
     // Select first card (Acorn Woodpecker - a bird)
     const firstCardItem = page.locator('[data-testid="card-item"]').first();
@@ -191,6 +205,8 @@ test.describe('Card Lists Page E2E Tests', () => {
 
   test('Invasive plants have red border styling', async ({ page }) => {
     await page.goto('/card-lists');
+    // Handle consent popup if it appears
+    await handleConsentPopup(page);
 
     // Search for a known invasive plant, e.g., "Arundo"
     const searchInput = page.locator('input[type="search"]');
@@ -225,10 +241,14 @@ test.describe('Home Page Offline Tests', () => {
     // Clear state
     await page.context().clearCookies();
     await page.goto('/');
+    // Handle consent popup if it appears
+    await handleConsentPopup(page);
     await page.evaluate(() => localStorage.clear());
 
     // Load the main page with one card query parameter online to cache it
     await page.goto('/?card=Acorn%20Woodpecker');
+    // Handle consent popup if it appears
+    await handleConsentPopup(page);
     await page.waitForLoadState('networkidle');
 
     // Verify the card is loaded
@@ -240,6 +260,8 @@ test.describe('Home Page Offline Tests', () => {
 
     // Attempt to load the main page with a different card query parameter
     await page.goto('/?card=American%20Robin');
+    // Handle consent popup if it appears
+    await handleConsentPopup(page);
     await page.waitForLoadState('domcontentloaded');
 
     // Verify that the page loads successfully despite being offline

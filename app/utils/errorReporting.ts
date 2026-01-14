@@ -10,6 +10,7 @@ export interface ErrorReport {
 }
 
 export async function reportError(error: ErrorReport): Promise<void> {
+  if (localStorage.getItem('crashReportingConsent') !== 'true') return;
   try {
     await fetch(ERROR_REPORT_URL, {
       method: 'POST',
