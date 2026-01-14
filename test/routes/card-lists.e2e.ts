@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { birds, plants } from '~/routes/card-lists';
 
 async function handleConsentPopup(page) {
   const acceptButton = page.getByRole('button', { name: 'Accept Selected' });
@@ -80,41 +81,28 @@ test.describe('Card Lists Page E2E Tests', () => {
     const birdsFilter = page.locator('button').filter({ hasText: 'Birds' });
     const bothFilter = page.locator('button').filter({ hasText: 'Both' });
 
+    await page.waitForLoadState('networkidle');
+
+
     // Default should show both or plants
     const initialCount = await page.locator('[data-testid="card-item"]').count();
+    expect(initialCount).toBe(plants.length + birds.length);
 
     // Filter to plants
-    if (await plantsFilter.isVisible()) {
-      await plantsFilter.scrollIntoViewIfNeeded();
-      await page.evaluate(() => {
-        const btn = document.querySelector('button') as HTMLButtonElement;
-        if (btn && btn.textContent?.includes('Plants')) btn.click();
-      });
-      const plantsCount = await page.locator('[data-testid="card-item"]').count();
-      expect(plantsCount).toBeGreaterThan(0);
-    }
+    await plantsFilter.click()
+    const plantsCount = await page.locator('[data-testid="card-item"]').count();
+    expect(plantsCount).toBe(plants.length);
 
     // Filter to birds
-    if (await birdsFilter.isVisible()) {
-      await birdsFilter.scrollIntoViewIfNeeded();
-      await page.evaluate(() => {
-        const btn = document.querySelector('button') as HTMLButtonElement;
-        if (btn && btn.textContent?.includes('Birds')) btn.click();
-      });
-      const birdsCount = await page.locator('[data-testid="card-item"]').count();
-      expect(birdsCount).toBeGreaterThan(0);
-    }
+    await birdsFilter.click();
+    const birdsCount = await page.locator('[data-testid="card-item"]').count();
+    expect(birdsCount).toBe(birds.length);
 
     // Filter to both
-    if (await bothFilter.isVisible()) {
-      await bothFilter.scrollIntoViewIfNeeded();
-      await page.evaluate(() => {
-        const btn = document.querySelector('button') as HTMLButtonElement;
-        if (btn && btn.textContent?.includes('Both')) btn.click();
-      });
-      const bothCount = await page.locator('[data-testid="card-item"]').count();
-      expect(bothCount).toBeGreaterThan(0);
-    }
+    await bothFilter.click();
+    const bothCount = await page.locator('[data-testid="card-item"]').count();
+    expect(bothCount).toBe(plants.length + birds.length);
+  
   });
 
   test('Search functionality', async ({ page }) => {
