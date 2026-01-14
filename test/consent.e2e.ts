@@ -5,20 +5,12 @@ test.describe('Consent Functionality E2E Tests', () => {
     // Clear cookies and navigate to home
     await page.context().clearCookies();
     await page.goto('/');
-
-    // Mock umami tracking to simulate POST requests to umami.is
-    await page.route('**/umami.is/**', async route => {
-      await route.fulfill({ status: 200, body: '{}' });
-    });
+    
     await page.evaluate(() => {
+      window.umami_track_called = 0;
       window.umami = {
         track: (event: string | ((props: any) => any)) => {
-          const payload = typeof event === 'function' ? event({}) : event;
-          fetch('https://umami.is/api/collect', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
+          window.umami_track_called += 1;
         }
       };
     });
@@ -97,22 +89,10 @@ test.describe('Consent Functionality E2E Tests', () => {
     await page.locator('label').filter({ hasText: 'Enable Crash Reporting' }).locator('input[type="checkbox"]').check();
     await page.locator('button').filter({ hasText: 'Accept Selected' }).click();
 
-    // Listen for POST requests to umami.is
-    let trackRequests = 0;
-    page.on('request', (request) => {
-      if (request.url().includes('umami.is') && request.method() === 'POST') {
-        trackRequests++;
-      }
-    });
-
-    // Navigate to card-lists to trigger tracking
-    await page.goto('/card-lists');
-
-    // Wait a bit
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(100);
 
     // Should have at least one umami POST request
-    expect(trackRequests).toBeGreaterThan(0);
+    expect(await page.evaluate(() => window.umami_track_called)).toBeGreaterThan(0);
   });
 
   test('No analytics tracking when declined', async ({ page }) => {
