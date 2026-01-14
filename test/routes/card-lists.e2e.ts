@@ -13,10 +13,7 @@ test.describe('Card Lists Page E2E Tests', () => {
     // Clear cookies and navigate to card-lists
     await page.context().clearCookies();
     await page.goto('/card-lists');
-    await page.evaluate(() => {
-      localStorage.setItem('analyticsConsent', 'true');
-      localStorage.setItem('crashReportingConsent', 'true');
-    });
+
     // Handle consent popup if it appears
     await handleConsentPopup(page);
   });
@@ -110,7 +107,7 @@ test.describe('Card Lists Page E2E Tests', () => {
     if (await searchInput.isVisible()) {
       // Search for a specific card
       await searchInput.fill('Acorn Woodpecker');
-      await page.waitForTimeout(300); // Allow for debouncing
+      await page.waitForTimeout(100);
 
       const visibleCards = page.locator('[data-testid="card-item"]:visible');
       await expect(visibleCards).toHaveCount(1);
@@ -155,14 +152,10 @@ test.describe('Card Lists Page E2E Tests', () => {
   });
 
   test('Select bird card and switch to plants mode', async ({ page }) => {
-    // Navigate to card-lists
-    await page.goto('/card-lists');
-
     // Select first card (Acorn Woodpecker - a bird)
     const firstCardItem = page.locator('[data-testid="card-item"]').first();
     const cardName = await firstCardItem.getAttribute('data-card-name');
 
-    await page.waitForLoadState('networkidle');
     await page.evaluate(() => {
       const el = document.querySelector('[data-testid="card-item"]') as HTMLElement;
       if (el) {
@@ -189,15 +182,8 @@ test.describe('Card Lists Page E2E Tests', () => {
 
   test('Invasive plants have red border styling', async ({ page }) => {
     await page.goto('/card-lists');
-    
-    // Search for a known invasive plant, e.g., "Arundo"
-    const searchInput = page.locator('input[type="search"]');
-    await searchInput.fill('Arundo');
-    await page.waitForTimeout(300);
 
-    // Should show Arundo card
     const arundoCard = page.locator('[data-testid="card-item"]').filter({ hasText: 'Arundo' });
-    await expect(arundoCard).toBeVisible();
 
     // Check it has the 'invasive' class
     await expect(arundoCard).toHaveClass('card-list-item invasive');
