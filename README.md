@@ -5,10 +5,10 @@ A Progressive Web App (PWA) for educational flashcards designed to help users id
 ## Key Features
 - **Multiple Modes**: Choose from Plants, Birds, or Both categories.
 - **Card Lists Page**: Browse and filter cards with search functionality.
-- **Adjustable Flip Speed**: Customize flip timing from 0-2 seconds or instant flip.
-- **Progressive Web App**: Installable PWA with offline functionality.
 - **Offline Capability**: Preloads images for offline use with service worker support.
-- **Keyboard Shortcuts**: Use Space to flip cards, arrow keys to navigate, and Escape for settings.
+- **Progressive Web App**: Installable PWA with offline functionality.
+- **Keyboard Shortcuts**: Use Space to flip cards, arrow keys to navigate.
+- **Adjustable Flip Speed**: Customize flip timing from 0-2 seconds or instant flip.
 - **Responsive Design**: Optimized for both mobile and desktop devices.
 
 ## Installation
