@@ -19,7 +19,7 @@ COPY public/cards /app/build/client/cards
 COPY public /app/build/client
 
 COPY ./package.json package-lock.json /app/
-COPY ./update-manifest.js /app/
+COPY ./scripts/update-manifest.js /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/build/client/assets /app/build/client/assets
 COPY --from=build-env /app/build/client/index.html /app/build/client/index.html
