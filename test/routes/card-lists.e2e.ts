@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { birds, plants } from '~/routes/card-lists';
 
-async function handleConsentPopup(page) {
+async function handleConsentPopup(page: Page) {
   const acceptButton = page.getByRole('button', { name: 'Accept Selected' });
   if (await acceptButton.isVisible({ timeout: 2000 })) {
     await acceptButton.click();
@@ -42,8 +42,6 @@ test.describe('Card Lists Page E2E Tests', () => {
   test('Navigation to card-lists from home', async ({ page }) => {
     // First go to home
     await page.goto('/');
-    // Handle consent popup if it appears
-    await handleConsentPopup(page);
 
     // Assume there's a link or button to card-lists
     const cardListsLink = page.locator('a[href="/card-lists"]').or(page.locator('button').filter({ hasText: 'Card List' }));
@@ -159,8 +157,6 @@ test.describe('Card Lists Page E2E Tests', () => {
   test('Select bird card and switch to plants mode', async ({ page }) => {
     // Navigate to card-lists
     await page.goto('/card-lists');
-    // Handle consent popup if it appears
-    await handleConsentPopup(page);
 
     // Select first card (Acorn Woodpecker - a bird)
     const firstCardItem = page.locator('[data-testid="card-item"]').first();
@@ -193,9 +189,7 @@ test.describe('Card Lists Page E2E Tests', () => {
 
   test('Invasive plants have red border styling', async ({ page }) => {
     await page.goto('/card-lists');
-    // Handle consent popup if it appears
-    await handleConsentPopup(page);
-
+    
     // Search for a known invasive plant, e.g., "Arundo"
     const searchInput = page.locator('input[type="search"]');
     await searchInput.fill('Arundo');
