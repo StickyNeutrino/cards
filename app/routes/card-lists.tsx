@@ -110,11 +110,6 @@ export const birds = [
         "back": "House Finch Back.png"
     },
     {
-        "name": "Bird Flashcards",
-        "front": "Bird Flashcards Front.png",
-        "back": "Bird Flashcards Back.png"
-    },
-    {
         "name": "Red-tailed Hawk",
         "front": "Red-tailed Hawk Front.png",
         "back": "Red-tailed Hawk Back.png"
