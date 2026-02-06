@@ -1,4 +1,4 @@
-# Canyonlands Flash Cards
+# San Diego Native Species Flashcards
 
 A Progressive Web App (PWA) for educational flashcards designed to help users identify birds and plants in the San Diego Canyonlands. This app features over 70 bird species and 85 plant species, with special highlighting for invasive plants to promote environmental awareness and conservation efforts.
 
@@ -18,7 +18,7 @@ To get started with the Canyonlands Flash Cards project, follow these steps:
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd canyonlands-flash-cards
+   cd cards
    ```
 
 2. Install dependencies:
@@ -81,12 +81,12 @@ The project includes comprehensive testing setup:
 
 Build the Docker image:
 ```bash
-docker build -t canyonlands-flash-cards .
+docker build -t cards .
 ```
 
 Run the container:
 ```bash
-docker run -p 3000:3000 canyonlands-flash-cards
+docker run -p 3000:3000 cards
 ```
 
 ### Kubernetes
