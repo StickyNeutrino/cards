@@ -17,6 +17,43 @@ describe('errorReporting', () => {
   });
 
   describe('reportError', () => {
+    it('reports by default when consent is unset', async () => {
+      const errorReport: ErrorReport = {
+        message: 'Test error',
+        stack: 'Error stack',
+        url: 'http://example.com',
+        userAgent: 'Test Agent',
+        timestamp: '2023-01-01T00:00:00.000Z',
+        type: 'javascript',
+      };
+
+      await reportError(errorReport);
+
+      expect(mockFetch).toHaveBeenCalledWith('https://errors.cards.unimpossy.com/report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(errorReport),
+      });
+    });
+
+    it('does not report when crash reporting consent is false', async () => {
+      (window.localStorage.getItem as any).mockImplementationOnce(() => 'false');
+
+      const errorReport: ErrorReport = {
+        message: 'Test error',
+        url: 'http://example.com',
+        userAgent: 'Test Agent',
+        timestamp: '2023-01-01T00:00:00.000Z',
+        type: 'javascript',
+      };
+
+      await reportError(errorReport);
+
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
     it('sends POST request to correct URL with error data', async () => {
       const errorReport: ErrorReport = {
         message: 'Test error',

@@ -17,13 +17,13 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
   isPreloading,
   handlePreloadCards
 }, ref) => {
-  const [analyticsConsent, setAnalyticsConsent] = useState(localStorage.getItem('analyticsConsent') === 'true');
-  const [crashReportingConsent, setCrashReportingConsent] = useState(localStorage.getItem('crashReportingConsent') === 'true');
+  const [analyticsConsent, setAnalyticsConsent] = useState(localStorage.getItem('analyticsConsent') !== 'false');
+  const [crashReportingConsent, setCrashReportingConsent] = useState(localStorage.getItem('crashReportingConsent') !== 'false');
 
   useEffect(() => {
     const handleConsentChange = () => {
-      setAnalyticsConsent(localStorage.getItem('analyticsConsent') === 'true');
-      setCrashReportingConsent(localStorage.getItem('crashReportingConsent') === 'true');
+      setAnalyticsConsent(localStorage.getItem('analyticsConsent') !== 'false');
+      setCrashReportingConsent(localStorage.getItem('crashReportingConsent') !== 'false');
     };
 
     window.addEventListener('consentChanged', handleConsentChange);
@@ -115,6 +115,10 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
             Enable Crash Reporting
           </label>
         </div>
+        <p className="text-xs text-gray-500">
+          Analytics and crash reporting are on by default. See our{' '}
+          <a href="/privacy" className="underline">privacy policy</a>.
+        </p>
       </div>
 
       <p className="text-xs text-gray-400 pt-3 text-center" data-testid="build-version">

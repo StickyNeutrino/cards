@@ -7,6 +7,7 @@ test.describe('Card flip on touch devices', () => {
     await page.addInitScript(() => {
       localStorage.setItem('analyticsConsent', 'true');
       localStorage.setItem('crashReportingConsent', 'true');
+      localStorage.setItem('consentNoticeDismissed', 'true');
     });
     await page.goto('/');
   });

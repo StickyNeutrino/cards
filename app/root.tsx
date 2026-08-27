@@ -13,18 +13,15 @@ import "./app.css";
 import React, { useEffect, useState } from "react";
 import trackView from "./viewtrack";
 import { setupGlobalErrorHandlers, reportError } from "./utils/errorReporting";
-import ConsentPopup from "./components/ConsentPopup";
+import ConsentBanner from "./components/ConsentBanner";
 
 export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
+    rel: "preload",
+    href: "/fonts/InterVariable.woff2",
+    as: "font",
+    type: "font/woff2",
     crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
   { rel: "manifest", href: "/manifest.json" },
   { rel: "icon", href: "/icon.svg" },
@@ -62,7 +59,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const [showConsentPopup, setShowConsentPopup] = useState(false);
+  const [showConsentBanner, setShowConsentBanner] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem('analyticsConsent') === null) {
+      localStorage.setItem('analyticsConsent', 'true');
+    }
+    if (localStorage.getItem('crashReportingConsent') === null) {
+      localStorage.setItem('crashReportingConsent', 'true');
+    }
+  }, []);
 
   useEffect(() => {
     return trackView();
@@ -79,36 +85,26 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const analyticsConsent = localStorage.getItem('analyticsConsent');
-    const crashConsent = localStorage.getItem('crashReportingConsent');
-    if (analyticsConsent === null || crashConsent === null) {
-      setShowConsentPopup(true);
-    } else if (analyticsConsent === 'true') {
-      trackView();
+    if (localStorage.getItem('consentNoticeDismissed') !== 'true') {
+      setShowConsentBanner(true);
     }
   }, []);
 
-  const handleAccept = (consent: { analytics: boolean; crash: boolean }) => {
-    localStorage.setItem('analyticsConsent', consent.analytics ? 'true' : 'false');
-    localStorage.setItem('crashReportingConsent', consent.crash ? 'true' : 'false');
-    window.dispatchEvent(new CustomEvent('consentChanged'));
-    setShowConsentPopup(false);
-    if (consent.analytics) {
-      // Unfortunate hack to give localStorage time to update. 
-      setTimeout(trackView, 50)
-    }
+  const dismissConsentBanner = () => {
+    localStorage.setItem('consentNoticeDismissed', 'true');
+    setShowConsentBanner(false);
   };
 
-  const handleDecline = () => {
+  const handleOptOut = () => {
     localStorage.setItem('analyticsConsent', 'false');
     localStorage.setItem('crashReportingConsent', 'false');
     window.dispatchEvent(new CustomEvent('consentChanged'));
-    setShowConsentPopup(false);
+    dismissConsentBanner();
   };
 
   return (
     <>
-      {showConsentPopup && <ConsentPopup onAccept={handleAccept} onDecline={handleDecline} />}
+      {showConsentBanner && <ConsentBanner onDismiss={dismissConsentBanner} onOptOut={handleOptOut} />}
       <Outlet />
     </>
   );

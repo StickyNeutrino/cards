@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 async function handleConsentPopup(page) {
-  const acceptButton = page.getByRole('button', { name: 'Accept Selected' });
-  if (await acceptButton.isVisible({ timeout: 2000 })) {
-    await acceptButton.click();
+  const dismissButton = page.getByTestId('consent-dismiss');
+  const appeared = await dismissButton.waitFor({ state: 'visible', timeout: 3000 }).then(() => true).catch(() => false);
+  if (appeared) {
+    await dismissButton.click();
   }
 }
 
@@ -44,9 +45,10 @@ test.describe('Home Page E2E Tests', () => {
     // Check URL has no query params initially
     expect(page.url()).toBe('http://localhost:5173/');
 
-    // Check preload links exist
-    const preloadLinks = page.locator('link[rel="preload"]');
-    await expect(preloadLinks).toHaveCount(2); // front and back of next card
+    // Check preload links exist: front and back of next card, plus the font
+    const imagePreloadLinks = page.locator('link[rel="preload"][as="image"]');
+    await expect(imagePreloadLinks).toHaveCount(2);
+    await expect(page.locator('link[rel="preload"][as="font"]')).toHaveCount(1);
   });
 
   test('Card navigation with buttons', async ({ page }) => {
@@ -233,7 +235,7 @@ test.describe('Home Page E2E Tests', () => {
     expect(flipSpeed).toBe('1.2');
 
     // Close settings by clicking outside
-    await page.locator('main').click();
+    await page.locator('main').click({ position: { x: 10, y: 10 } });
     await expect(settingsPanel).toBeHidden();
   });
 
@@ -371,7 +373,7 @@ test.describe('Home Page E2E Tests', () => {
     await expect(settingsPanel).toBeVisible(); // Should still be open
 
     // Close by clicking outside
-    await page.locator('main').click();
+    await page.locator('main').click({ position: { x: 10, y: 10 } });
     await expect(settingsPanel).toBeHidden();
   });
 

@@ -12,14 +12,17 @@ function possible_offline_track(arg: string | ((props: any) => any)) {
   }
 }
 
-export default function trackView() {
-  if (localStorage.getItem('analyticsConsent') !== 'true') return;
-  let userUuid = getOrSetUUID()
+function currentDeckPayload() {
   let birds_enabled = new URLSearchParams(window.location.search).has("birds");
-  const payload =  {type: birds_enabled ? "birds" : "plants"}
+  return {type: birds_enabled ? "birds" : "plants"}
+}
 
-  if (localStorage.getItem('analyticsConsent') === 'true') {
-    possible_offline_track((props: any) => ({ ...props, id: userUuid, data:payload }));
+export default function trackView() {
+  if (localStorage.getItem('analyticsConsent') === 'false') return;
+  const payload = currentDeckPayload();
+
+  if (localStorage.getItem('analyticsConsent') !== 'false') {
+    possible_offline_track((props: any) => ({ ...props, data: payload }));
   }
 
   let hidden_start: number | null = null;
@@ -35,8 +38,8 @@ export default function trackView() {
 
         if ((hidden_ms / (1000 * 60)) > 20 ) {
           // It has been long enough to count as a new page visit
-          if (localStorage.getItem('analyticsConsent') === 'true') {
-            possible_offline_track((props: any) => ({ ...props, id: userUuid, data:payload }));
+          if (localStorage.getItem('analyticsConsent') !== 'false') {
+            possible_offline_track((props: any) => ({ ...props, data: payload }));
           }
         }
 
@@ -51,30 +54,8 @@ export default function trackView() {
 }
 
 export function trackCardView() {
-  let userUuid = getOrSetUUID()
-  let birds_enabled = new URLSearchParams(window.location.search).has("birds");
-  const payload =  {type: birds_enabled ? "birds" : "plants"}
+  if (localStorage.getItem('analyticsConsent') === 'false') return;
+  const payload = currentDeckPayload();
 
-  if (localStorage.getItem('analyticsConsent') === 'true') {
-    possible_offline_track((props: any) => ({...props, id: userUuid , name:"viewed card", data: payload}));
-  }
-}
-
-function getOrSetUUID() {
-    let userUuid = localStorage.getItem('uuid');
-
-    if (!userUuid) {
-      userUuid = generateUUID();
-      localStorage.setItem('uuid', userUuid);
-    } 
-
-    return userUuid;
-}
-
-function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      var r = Math.random() * 16 | 0,
-          v = c == 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-  });
+  possible_offline_track((props: any) => ({...props, name:"viewed card", data: payload}));
 }

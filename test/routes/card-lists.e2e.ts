@@ -2,9 +2,10 @@ import { test, expect, type Page } from '@playwright/test';
 import { birds, plants } from '~/routes/card-lists';
 
 async function handleConsentPopup(page: Page) {
-  const acceptButton = page.getByRole('button', { name: 'Accept Selected' });
-  if (await acceptButton.isVisible({ timeout: 2000 })) {
-    await acceptButton.click();
+  const dismissButton = page.getByTestId('consent-dismiss');
+  const appeared = await dismissButton.waitFor({ state: 'visible', timeout: 3000 }).then(() => true).catch(() => false);
+  if (appeared) {
+    await dismissButton.click();
   }
 }
 
