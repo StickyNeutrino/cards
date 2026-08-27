@@ -75,6 +75,11 @@ main {
   position: relative;
 }
 
+.privacy-main {
+  display: block;
+  height: auto;
+}
+
 .card-list-main {
   align-items: stretch;
 }

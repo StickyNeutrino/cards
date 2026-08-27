@@ -13,8 +13,8 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Privacy() {
   return (
-    <main className="min-h-screen flex justify-center px-4 py-10">
-      <div className="w-full max-w-2xl bg-white rounded-lg shadow-xl p-6 sm:p-10 text-gray-800 h-fit">
+    <main className="privacy-main min-h-screen px-4 py-10">
+      <div className="w-full max-w-2xl mx-auto bg-white rounded-lg shadow-xl p-6 sm:p-10 text-gray-800">
         <a href="/" className="text-sm underline text-gray-600 hover:text-black">
           &larr; Back to Flash Cards
         </a>
