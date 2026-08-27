@@ -15,6 +15,7 @@ spec:
       containers:
       - name: cards
         image: oci.smeago.com:5000/test-canyon-cards:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
         resources:
