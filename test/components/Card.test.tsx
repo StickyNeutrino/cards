@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { Card } from '../../app/card/card';
 
 describe('Card', () => {
@@ -93,5 +93,51 @@ describe('Card', () => {
     const { container } = render(<Card card="Test Card" flipped={false} widthRef={mockWidthRef} flipSpeed={0} />);
     const flipCardInner = container.querySelector('.flip-card-inner');
     expect(flipCardInner).not.toHaveClass('flip-card-inner-animated');
+  });
+
+  it('toggles exactly once per tap when touchend is followed by the synthesized click', () => {
+    const onClick = vi.fn();
+    render(<Card card="Test Card" flipped={false} widthRef={mockWidthRef} flipSpeed={0.8} onClick={onClick} />);
+    const card = screen.getByTestId('card');
+
+    fireEvent.touchEnd(card);
+    fireEvent.click(card);
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not toggle from touchend alone', () => {
+    const onClick = vi.fn();
+    render(<Card card="Test Card" flipped={false} widthRef={mockWidthRef} flipSpeed={0.8} onClick={onClick} />);
+
+    fireEvent.touchEnd(screen.getByTestId('card'));
+
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it('toggles once per plain click', () => {
+    const onClick = vi.fn();
+    render(<Card card="Test Card" flipped={false} widthRef={mockWidthRef} flipSpeed={0.8} onClick={onClick} />);
+    const card = screen.getByTestId('card');
+
+    fireEvent.click(card);
+    fireEvent.click(card);
+
+    expect(onClick).toHaveBeenCalledTimes(2);
+  });
+
+  it('stops click propagation so tapping the card does not trigger ancestor handlers', () => {
+    const onClick = vi.fn();
+    const ancestorClick = vi.fn();
+    render(
+      <div onClick={ancestorClick}>
+        <Card card="Test Card" flipped={false} widthRef={mockWidthRef} flipSpeed={0.8} onClick={onClick} />
+      </div>
+    );
+
+    fireEvent.click(screen.getByTestId('card'));
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(ancestorClick).not.toHaveBeenCalled();
   });
 });
