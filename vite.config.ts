@@ -27,6 +27,9 @@ export default defineConfig({
     include: ["test/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
   },
   server: {
+    // Bind to all interfaces so the dev server is reachable through
+    // container port publishing / VS Code port forwarding.
+    host: true,
     headers: {
       'Service-Worker-Allowed': '/',
     },
