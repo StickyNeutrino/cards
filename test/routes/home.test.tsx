@@ -282,8 +282,9 @@ describe('Home', () => {
       const backCard = screen.getByTestId('card').getAttribute('data-card');
       expect(mockPlantNames).toContain(backCard);
     });
-  
-    describe('Card Viewing User Flow Integration Tests', () => {
+  });
+
+  describe('Card Viewing User Flow Integration Tests', () => {
       let router: ReturnType<typeof createMemoryRouter>;
   
       beforeEach(() => {
@@ -314,17 +315,23 @@ describe('Home', () => {
         render(<RouterProvider router={router} />);
 
         const nextButton = screen.getByTestId('card').nextElementSibling?.querySelector('#next-button') as HTMLElement;
+        const backButton = screen.getByTestId('card').nextElementSibling?.querySelector('#back-button') as HTMLElement;
         const card = screen.getByTestId('card');
 
         const initialCard = card.getAttribute('data-card');
 
-        // Click next
-        await userEvent.click(nextButton);
+        // Click next through several cards
+        for (let i = 0; i < 3; i++) {
+          await userEvent.click(nextButton);
+        }
+
+        // Coming back should land on the card we started with
+        for (let i = 0; i < 3; i++) {
+          await userEvent.click(backButton);
+        }
 
         await waitFor(() => {
-          const newCard = screen.getByTestId('card').getAttribute('data-card');
-          expect(newCard).not.toBe(initialCard);
-          expect(mockPlantNames).toContain(newCard);
+          expect(screen.getByTestId('card').getAttribute('data-card')).toBe(initialCard);
         });
       });
   
@@ -340,7 +347,7 @@ describe('Home', () => {
         // Go forward first
         await userEvent.click(nextButton);
         await waitFor(() => {
-          expect(screen.getByTestId('card').getAttribute('data-card')).not.toBe(initialCard);
+          expect(mockPlantNames).toContain(screen.getByTestId('card').getAttribute('data-card'));
         });
 
         // Go back
@@ -374,6 +381,7 @@ describe('Home', () => {
 
         const card = screen.getByTestId('card');
         const nextButton = screen.getByTestId('card').nextElementSibling?.querySelector('#next-button') as HTMLElement;
+        const backButton = screen.getByTestId('card').nextElementSibling?.querySelector('#back-button') as HTMLElement;
 
         // Flip card
         await userEvent.click(card);
@@ -383,13 +391,20 @@ describe('Home', () => {
 
         const initialCard = card.getAttribute('data-card');
 
-        // Click next while flipped
+        // Click next while flipped — unflips, then advances after the flip delay
         await userEvent.click(nextButton);
 
         await waitFor(() => {
-          const newCard = screen.getByTestId('card').getAttribute('data-card');
-          expect(newCard).not.toBe(initialCard);
           expect(screen.getByTestId('card')).toHaveAttribute('data-flipped', 'false'); // Should be unflipped
+        });
+
+        // Let the delayed advance fire, then go back —
+        // should return to the card we started with
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await userEvent.click(backButton);
+
+        await waitFor(() => {
+          expect(screen.getByTestId('card').getAttribute('data-card')).toBe(initialCard);
         });
       });
   
@@ -404,9 +419,6 @@ describe('Home', () => {
 
         // Go forward
         await userEvent.click(nextButton);
-        await waitFor(() => {
-          expect(screen.getByTestId('card').getAttribute('data-card')).not.toBe(initialCard);
-        });
 
         // Flip card
         await userEvent.click(card);
@@ -414,15 +426,16 @@ describe('Home', () => {
           expect(screen.getByTestId('card')).toHaveAttribute('data-flipped', 'true');
         });
 
-        // Click back while flipped
+        // Click back while flipped — unflips, then returns after the flip delay
         await userEvent.click(backButton);
 
         await waitFor(() => {
           expect(screen.getByTestId('card').getAttribute('data-card')).toBe(initialCard);
           expect(screen.getByTestId('card')).toHaveAttribute('data-flipped', 'false'); // Should be unflipped
         });
-      
-        describe('Mode Switching Integration Tests', () => {
+      });
+    
+      describe('Mode Switching Integration Tests', () => {
           let router: ReturnType<typeof createMemoryRouter>;
       
           beforeEach(() => {
@@ -684,29 +697,29 @@ describe('Home', () => {
             // Verify mode switched and selectedCard cleared (card resets to first in new mode)
             await waitFor(() => {
               expect(screen.getByText('🐦 Birds')).toBeInTheDocument();
-              expect(card.getAttribute('data-card')).toBe('Mock Bird 1');
+              // Deck is shuffled, so assert it's a bird card rather than a specific one
+              expect(mockBirdNames).toContain(card.getAttribute('data-card'));
             });
 
             // Assert selectedCard is null by checking URL has no card param
             expect(mockHistory.replaceState).toHaveBeenCalledWith({}, "", expect.not.stringContaining('card='));
           });
         });
-      
-      });
       it('should wrap around to beginning when reaching end of deck', async () => {
         render(<RouterProvider router={router} />);
 
         const nextButton = screen.getByTestId('card').nextElementSibling?.querySelector('#next-button') as HTMLElement;
+        const initialCard = screen.getByTestId('card').getAttribute('data-card');
 
-        // Navigate to end and wrap around
-        for (let i = 0; i < 1000; i++) { // Deck has 2 cards, so 3 clicks should wrap
+        // The deck is 10 shuffled repeats of the 5-plant list (50 cards),
+        // so one full cycle wraps back around to the starting card
+        for (let i = 0; i < 50; i++) {
           await userEvent.click(nextButton);
-          await new Promise(resolve => setTimeout(resolve, 10)); // Small delay for state updates
         }
 
         await waitFor(() => {
           const card = screen.getByTestId('card').getAttribute('data-card');
-          expect(mockPlantNames).toContain(card);
+          expect(card).toBe(initialCard);
         });
       });
   
@@ -723,8 +736,9 @@ describe('Home', () => {
           const cardAfterBack = screen.getByTestId('card').getAttribute('data-card');
           expect(cardAfterBack).toBe(initialCard);
         });
-      
-        describe('Invasive Species Detection User Flow Integration Tests', () => {
+      });
+    
+      describe('Invasive Species Detection User Flow Integration Tests', () => {
           let router: ReturnType<typeof createMemoryRouter>;
       
           beforeEach(() => {
@@ -798,6 +812,9 @@ describe('Home', () => {
             }));
       
             const { default: Home } = await import('../../app/routes/home');
+            // vi.resetModules() re-creates the viewtrack mock, so grab the
+            // instance the freshly imported Home module actually uses
+            const { trackCardView: freshTrackCardView } = await import('../../app/viewtrack');
       
             const invasiveRouter = createMemoryRouter([
               {
@@ -816,7 +833,7 @@ describe('Home', () => {
       
             await waitFor(() => {
               expect(card.getAttribute('data-card')).toBe('Arundo');
-              expect(trackCardView).toHaveBeenCalled();
+              expect(freshTrackCardView).toHaveBeenCalled();
             });
           });
       
@@ -993,8 +1010,6 @@ describe('Home', () => {
             });
           });
         });
-      
-      });
       it('should maintain state consistency during complex navigation', async () => {
         render(<RouterProvider router={router} />);
 
@@ -1017,30 +1032,29 @@ describe('Home', () => {
           expect(card).toHaveAttribute('data-flipped', 'false');
         });
 
-        // Flip and navigate backward
+        // Flip and navigate backward — should return to the card we started with
         await userEvent.click(card);
         await waitFor(() => expect(card).toHaveAttribute('data-flipped', 'true'));
 
-        const currentCard = card.getAttribute('data-card');
         await userEvent.click(backButton);
+        await waitFor(() => expect(card).toHaveAttribute('data-flipped', 'false'));
+
+        // Navigating while flipped schedules a delayed index change
+        // (flipSpeed/2), so let any pending delayed navigation settle
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         await waitFor(() => {
-          expect(card.getAttribute('data-card')).not.toBe(currentCard);
-          expect(card).toHaveAttribute('data-flipped', 'false');
+          expect(card.getAttribute('data-card')).toBe(initialCard);
         });
 
-        // Navigate forward multiple times to test wrapping
+        // Navigate forward a few more times — state should stay consistent
         for (let i = 0; i < 4; i++) {
-          const before = card.getAttribute('data-card');
           await userEvent.click(nextButton);
-          await new Promise(resolve => setTimeout(resolve, 10));
-          expect(card.getAttribute('data-card')).not.toBe(before);
+          await waitFor(() => {
+            expect(mockPlantNames).toContain(card.getAttribute('data-card'));
+            expect(card).toHaveAttribute('data-flipped', 'false');
+          });
         }
-
-        await waitFor(() => {
-          const finalCard = screen.getByTestId('card').getAttribute('data-card');
-          expect(mockPlantNames).toContain(finalCard);
-          expect(screen.getByTestId('card')).toHaveAttribute('data-flipped', 'false');
-        });
       });
   
       it('should handle rapid navigation without crashes', async () => {
@@ -1065,8 +1079,6 @@ describe('Home', () => {
         });
       });
     });
-  
-  });
   it('cycles through plants, birds, and both modes with hamburger menu', async () => {
     render(<RouterProvider router={router} />);
 
@@ -1349,15 +1361,24 @@ describe('Home', () => {
       fireEvent.keyDown(window, { key: 'ArrowUp' });
       await waitFor(() => expect(card).toHaveAttribute('data-flipped', 'true'));
 
-      // Navigate next while flipped - should navigate immediately
+      // Navigate next while flipped - should unflip and navigate after the flip delay
       const nextButton = screen.getByTestId('card').nextElementSibling?.querySelector('#next-button') as HTMLElement;
       await userEvent.click(nextButton);
 
-      // Should unflipped and navigate immediately
+      // Should be unflipped
       await waitFor(() => {
         expect(card).toHaveAttribute('data-flipped', 'false');
         expect(mockPlantNames).toContain(card.getAttribute('data-card'));
-        expect(card.getAttribute('data-card')).not.toBe(initialCard);
+      });
+
+      // Let the delayed advance fire, then go back —
+      // should return to the card we started with
+      await new Promise(resolve => setTimeout(resolve, 600));
+      const backButton = screen.getByTestId('card').nextElementSibling?.querySelector('#back-button') as HTMLElement;
+      await userEvent.click(backButton);
+
+      await waitFor(() => {
+        expect(card.getAttribute('data-card')).toBe(initialCard);
       });
     });
   });
