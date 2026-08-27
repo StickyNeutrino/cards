@@ -240,6 +240,7 @@ export default function Home() {
     const nextMode = mode === 'plants' ? 'birds' : mode === 'birds' ? 'both' : 'plants';
     setMode(nextMode);
     setSelectedCard(null);
+    setFlipped(false); // Show the front of the new deck's first card
     setIndex(0); // Reset to first card when switching
   };
 
