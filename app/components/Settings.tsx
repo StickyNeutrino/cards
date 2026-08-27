@@ -116,6 +116,10 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
           </label>
         </div>
       </div>
+
+      <p className="text-xs text-gray-400 pt-3 text-center" data-testid="build-version">
+        Build: {import.meta.env.VITE_BUILD_SHA || 'dev'}
+      </p>
     </div>
   );
 });

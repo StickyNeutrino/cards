@@ -12,6 +12,8 @@ FROM node:20-alpine AS build-env
 COPY . /app/
 COPY --from=development-dependencies-env /app/node_modules /app/node_modules
 WORKDIR /app
+ARG BUILD_SHA=dev
+ENV VITE_BUILD_SHA=$BUILD_SHA
 RUN npm run build
 
 FROM node:20-alpine
