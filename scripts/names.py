@@ -4,7 +4,7 @@ import os
 import json
 import re
 
-def get_png_cards(directory="."):
+def get_card_images(directory="."):
     """
     Gets a JSON list of all PNG card filenames in a directory,
     renamed to front and back according to naming conventions specified in the script.
@@ -17,14 +17,14 @@ def get_png_cards(directory="."):
     """
 
     card_list = []
-    front_pattern = re.compile(r"(.*) Front\.png")
-    back_pattern = re.compile(r"(.*) Back\.png")
+    front_pattern = re.compile(r"(.*) Front\.jpg")
+    back_pattern = re.compile(r"(.*) Back\.jpg")
 
     #Dictionary to store names with Front already created to avoid name conflicts
     front_card_names = {}
 
     for filename in os.listdir(directory):
-        if filename.endswith(".png"):
+        if filename.endswith(".jpg"):
             front_match = front_pattern.match(filename)
 
             if front_match:
@@ -33,7 +33,7 @@ def get_png_cards(directory="."):
                 card_list.append({"name": card_name, "front": filename, "back": None})
 
     for filename in os.listdir(directory):
-        if filename.endswith(".png"):
+        if filename.endswith(".jpg"):
             back_match = back_pattern.match(filename)
             if back_match:
                 card_name = back_match.group(1)
@@ -63,7 +63,7 @@ def get_png_cards(directory="."):
 
 if __name__ == "__main__":
     #Example usage
-    json_output = get_png_cards()
+    json_output = get_card_images()
     print(json_output)
 
     #Optional: Save to a file

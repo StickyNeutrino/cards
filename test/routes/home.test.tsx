@@ -12,18 +12,18 @@ const mockAllNames = [...mockPlantNames, ...mockBirdNames];
 // Mock the card lists
 vi.mock('../../app/routes/card-lists', () => ({
   birds: [
-    { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.png', back: 'Mock Bird 1 Back.png' },
-    { name: 'Mock Bird 2', front: 'Mock Bird 2 Front.png', back: 'Mock Bird 2 Back.png' },
-    { name: 'Mock Bird 3', front: 'Mock Bird 3 Front.png', back: 'Mock Bird 3 Back.png' },
-    { name: 'Mock Bird 4', front: 'Mock Bird 4 Front.png', back: 'Mock Bird 4 Back.png' },
-    { name: 'Mock Bird 5', front: 'Mock Bird 5 Front.png', back: 'Mock Bird 5 Back.png' },
+    { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg' },
+    { name: 'Mock Bird 2', front: 'Mock Bird 2 Front.jpg', back: 'Mock Bird 2 Back.jpg' },
+    { name: 'Mock Bird 3', front: 'Mock Bird 3 Front.jpg', back: 'Mock Bird 3 Back.jpg' },
+    { name: 'Mock Bird 4', front: 'Mock Bird 4 Front.jpg', back: 'Mock Bird 4 Back.jpg' },
+    { name: 'Mock Bird 5', front: 'Mock Bird 5 Front.jpg', back: 'Mock Bird 5 Back.jpg' },
   ],
   plants: [
-    { name: 'Mock Plant 1', front: 'Mock Plant 1 Front.png', back: 'Mock Plant 1 Back.png' },
-    { name: 'Mock Plant 2', front: 'Mock Plant 2 Front.png', back: 'Mock Plant 2 Back.png' },
-    { name: 'Mock Plant 3', front: 'Mock Plant 3 Front.png', back: 'Mock Plant 3 Back.png' },
-    { name: 'Mock Plant 4', front: 'Mock Plant 4 Front.png', back: 'Mock Plant 4 Back.png' },
-    { name: 'Mock Plant 5', front: 'Mock Plant 5 Front.png', back: 'Mock Plant 5 Back.png' },
+    { name: 'Mock Plant 1', front: 'Mock Plant 1 Front.jpg', back: 'Mock Plant 1 Back.jpg' },
+    { name: 'Mock Plant 2', front: 'Mock Plant 2 Front.jpg', back: 'Mock Plant 2 Back.jpg' },
+    { name: 'Mock Plant 3', front: 'Mock Plant 3 Front.jpg', back: 'Mock Plant 3 Back.jpg' },
+    { name: 'Mock Plant 4', front: 'Mock Plant 4 Front.jpg', back: 'Mock Plant 4 Back.jpg' },
+    { name: 'Mock Plant 5', front: 'Mock Plant 5 Front.jpg', back: 'Mock Plant 5 Back.jpg' },
   ],
   invasives: []
 }));
@@ -112,10 +112,10 @@ describe('Home', () => {
 
     vi.doMock('../../app/routes/card-lists', () => ({
       birds: [
-        { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.png', back: 'Mock Bird 1 Back.png' },
+        { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg' },
       ],
       plants: [
-        { name: 'Arundo', front: 'Arundo Front.png', back: 'Arundo Back.png' },
+        { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
       ],
       invasives: ['Arundo']
     }));
@@ -160,7 +160,7 @@ describe('Home', () => {
     imageLinks.forEach(link => {
       const href = link.getAttribute('href');
       expect(href).toContain('/cards/');
-      expect(href).toMatch(/\.png$/);
+      expect(href).toMatch(/\.jpg$/);
     });
   });
 
@@ -748,11 +748,11 @@ describe('Home', () => {
       
             vi.doMock('../../app/routes/card-lists', () => ({
               birds: [
-                { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.png', back: 'Mock Bird 1 Back.png' },
+                { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg' },
               ],
               plants: [
-                { name: 'Mock Plant 1', front: 'Mock Plant 1 Front.png', back: 'Mock Plant 1 Back.png' },
-                { name: 'Arundo', front: 'Arundo Front.png', back: 'Arundo Back.png' },
+                { name: 'Mock Plant 1', front: 'Mock Plant 1 Front.jpg', back: 'Mock Plant 1 Back.jpg' },
+                { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
               ],
               invasives: ['Arundo']
             }));
@@ -792,7 +792,7 @@ describe('Home', () => {
             vi.doMock('../../app/routes/card-lists', () => ({
               birds: [],
               plants: [
-                { name: 'Arundo', front: 'Arundo Front.png', back: 'Arundo Back.png' },
+                { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
               ],
               invasives: ['Arundo']
             }));
@@ -825,10 +825,10 @@ describe('Home', () => {
       
             vi.doMock('../../app/routes/card-lists', () => ({
               birds: [
-                { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.png', back: 'Mock Bird 1 Back.png' },
+                { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg' },
               ],
               plants: [
-                { name: 'Arundo', front: 'Arundo Front.png', back: 'Arundo Back.png' },
+                { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
               ],
               invasives: ['Arundo']
             }));
@@ -857,10 +857,10 @@ describe('Home', () => {
       
             vi.doMock('../../app/routes/card-lists', () => ({
               birds: [
-                { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.png', back: 'Mock Bird 1 Back.png' },
+                { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg' },
               ],
               plants: [
-                { name: 'Arundo', front: 'Arundo Front.png', back: 'Arundo Back.png' },
+                { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
               ],
               invasives: ['Arundo']
             }));
@@ -901,7 +901,7 @@ describe('Home', () => {
             vi.doMock('../../app/routes/card-lists', () => ({
               birds: [],
               plants: [
-                { name: 'Arundo', front: 'Arundo Front.png', back: 'Arundo Back.png' },
+                { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
               ],
               invasives: ['Arundo']
             }));
@@ -943,10 +943,10 @@ describe('Home', () => {
       
             vi.doMock('../../app/routes/card-lists', () => ({
               birds: [
-                { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.png', back: 'Mock Bird 1 Back.png' },
+                { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg' },
               ],
               plants: [
-                { name: 'Arundo', front: 'Arundo Front.png', back: 'Arundo Back.png' },
+                { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
               ],
               invasives: ['Arundo']
             }));
@@ -1159,14 +1159,14 @@ describe('Home', () => {
     preloadLinks.forEach(link => {
       const href = link.getAttribute('href');
       expect(href).not.toContain('undefined');
-      expect(href).not.toMatch(/^\/cards\/ Front\.png$/);
+      expect(href).not.toMatch(/^\/cards\/ Front\.jpg$/);
     });
 
     const images = document.querySelectorAll('img');
     images.forEach(img => {
       const src = img.getAttribute('src');
       expect(src).not.toContain('undefined');
-      expect(src).not.toMatch(/^\/cards\/ Front\.png$/);
+      expect(src).not.toMatch(/^\/cards\/ Front\.jpg$/);
     });
   });
 
@@ -1395,7 +1395,7 @@ describe('Home', () => {
       // Should have created 20 images (10 birds + 10 plants, front and back)
       expect((global.Image as any).instances.length).toBe(20);
       (global.Image as any).instances.forEach((img: any) => {
-        expect(img.src).toMatch(/^\/cards\/.*\.png$/);
+        expect(img.src).toMatch(/^\/cards\/.*\.jpg$/);
       });
     });
 
@@ -1484,26 +1484,26 @@ describe('Home', () => {
 
       // Check that all expected image URLs are set
       const expectedUrls = [
-        '/cards/Mock Bird 1 Front.png',
-        '/cards/Mock Bird 1 Back.png',
-        '/cards/Mock Bird 2 Front.png',
-        '/cards/Mock Bird 2 Back.png',
-        '/cards/Mock Bird 3 Front.png',
-        '/cards/Mock Bird 3 Back.png',
-        '/cards/Mock Bird 4 Front.png',
-        '/cards/Mock Bird 4 Back.png',
-        '/cards/Mock Bird 5 Front.png',
-        '/cards/Mock Bird 5 Back.png',
-        '/cards/Mock Plant 1 Front.png',
-        '/cards/Mock Plant 1 Back.png',
-        '/cards/Mock Plant 2 Front.png',
-        '/cards/Mock Plant 2 Back.png',
-        '/cards/Mock Plant 3 Front.png',
-        '/cards/Mock Plant 3 Back.png',
-        '/cards/Mock Plant 4 Front.png',
-        '/cards/Mock Plant 4 Back.png',
-        '/cards/Mock Plant 5 Front.png',
-        '/cards/Mock Plant 5 Back.png',
+        '/cards/Mock Bird 1 Front.jpg',
+        '/cards/Mock Bird 1 Back.jpg',
+        '/cards/Mock Bird 2 Front.jpg',
+        '/cards/Mock Bird 2 Back.jpg',
+        '/cards/Mock Bird 3 Front.jpg',
+        '/cards/Mock Bird 3 Back.jpg',
+        '/cards/Mock Bird 4 Front.jpg',
+        '/cards/Mock Bird 4 Back.jpg',
+        '/cards/Mock Bird 5 Front.jpg',
+        '/cards/Mock Bird 5 Back.jpg',
+        '/cards/Mock Plant 1 Front.jpg',
+        '/cards/Mock Plant 1 Back.jpg',
+        '/cards/Mock Plant 2 Front.jpg',
+        '/cards/Mock Plant 2 Back.jpg',
+        '/cards/Mock Plant 3 Front.jpg',
+        '/cards/Mock Plant 3 Back.jpg',
+        '/cards/Mock Plant 4 Front.jpg',
+        '/cards/Mock Plant 4 Back.jpg',
+        '/cards/Mock Plant 5 Front.jpg',
+        '/cards/Mock Plant 5 Back.jpg',
       ];
 
       const actualUrls = (global.Image as any).instances.map((img: any) => img.src);

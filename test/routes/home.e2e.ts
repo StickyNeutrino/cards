@@ -403,7 +403,7 @@ test.describe('Home Page E2E Tests', () => {
   test('Error handling: image load failure', async ({ page }) => {
     // Mock a failed image load by intercepting requests
     await page.route('**/cards/*', async route => {
-      if (route.request().url().includes('Front.png')) {
+      if (route.request().url().includes('Front.jpg')) {
         await route.fulfill({ status: 404 });
       } else {
         await route.continue();

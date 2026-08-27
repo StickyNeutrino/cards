@@ -49,8 +49,8 @@ export function Card({card, flipped, widthRef, flipSpeed, onClick}:CardProps) {
         >
             <div className={`flip-card ${showBack ? "flipped" : "flip-card-enabled"}`} style={{ '--flip-speed': `${flipSpeed}s` } as React.CSSProperties}>
                 <div className={`flip-card-inner ${flipSpeed === 0 ? "" : "flip-card-inner-animated"}`}>
-                    {card && <img className="flip-card-front" src={`/cards/${card} Front.png`}/>}
-                    {card && <img className={`flip-card-back ${invasive ? "invasive" : ""}`} src={`/cards/${card} Back.png`}/>}
+                    {card && <img className="flip-card-front" src={`/cards/${card} Front.jpg`}/>}
+                    {card && <img className={`flip-card-back ${invasive ? "invasive" : ""}`} src={`/cards/${card} Back.jpg`}/>}
                 </div>
             </div>
         </div>

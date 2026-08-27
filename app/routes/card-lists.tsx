@@ -11,776 +11,776 @@ export function meta({}: Route.MetaArgs) {
 export const birds = [
     {
         "name": "Acorn Woodpecker",
-        "front": "Acorn Woodpecker Front.png",
-        "back": "Acorn Woodpecker Back.png"
+        "front": "Acorn Woodpecker Front.jpg",
+        "back": "Acorn Woodpecker Back.jpg"
     },
     {
         "name": "American Robin",
-        "front": "American Robin Front.png",
-        "back": "American Robin Back.png"
+        "front": "American Robin Front.jpg",
+        "back": "American Robin Back.jpg"
     },
     {
         "name": "Northern Rough-winged Swallow",
-        "front": "Northern Rough-winged Swallow Front.png",
-        "back": "Northern Rough-winged Swallow Back.png"
+        "front": "Northern Rough-winged Swallow Front.jpg",
+        "back": "Northern Rough-winged Swallow Back.jpg"
     },
     {
         "name": "American Crow",
-        "front": "American Crow Front.png",
-        "back": "American Crow Back.png"
+        "front": "American Crow Front.jpg",
+        "back": "American Crow Back.jpg"
     },
     {
         "name": "Brown-headed Cowbird",
-        "front": "Brown-headed Cowbird Front.png",
-        "back": "Brown-headed Cowbird Back.png"
+        "front": "Brown-headed Cowbird Front.jpg",
+        "back": "Brown-headed Cowbird Back.jpg"
     },
     {
         "name": "Song Sparrow",
-        "front": "Song Sparrow Front.png",
-        "back": "Song Sparrow Back.png"
+        "front": "Song Sparrow Front.jpg",
+        "back": "Song Sparrow Back.jpg"
     },
     {
         "name": "Blue-gray Gnatcatcher",
-        "front": "Blue-gray Gnatcatcher Front.png",
-        "back": "Blue-gray Gnatcatcher Back.png"
+        "front": "Blue-gray Gnatcatcher Front.jpg",
+        "back": "Blue-gray Gnatcatcher Back.jpg"
     },
     {
         "name": "Wrentit",
-        "front": "Wrentit Front.png",
-        "back": "Wrentit Back.png"
+        "front": "Wrentit Front.jpg",
+        "back": "Wrentit Back.jpg"
     },
     {
         "name": "Rufous Hummingbird",
-        "front": "Rufous Hummingbird Front.png",
-        "back": "Rufous Hummingbird Back.png"
+        "front": "Rufous Hummingbird Front.jpg",
+        "back": "Rufous Hummingbird Back.jpg"
     },
     {
         "name": "Black-headed Grosbeak",
-        "front": "Black-headed Grosbeak Front.png",
-        "back": "Black-headed Grosbeak Back.png"
+        "front": "Black-headed Grosbeak Front.jpg",
+        "back": "Black-headed Grosbeak Back.jpg"
     },
     {
         "name": "Greater Roadrunner",
-        "front": "Greater Roadrunner Front.png",
-        "back": "Greater Roadrunner Back.png"
+        "front": "Greater Roadrunner Front.jpg",
+        "back": "Greater Roadrunner Back.jpg"
     },
     {
         "name": "Ash-throated Flycatcher",
-        "front": "Ash-throated Flycatcher Front.png",
-        "back": "Ash-throated Flycatcher Back.png"
+        "front": "Ash-throated Flycatcher Front.jpg",
+        "back": "Ash-throated Flycatcher Back.jpg"
     },
     {
         "name": "Cassin's Kingbird",
-        "front": "Cassin's Kingbird Front.png",
-        "back": "Cassin's Kingbird Back.png"
+        "front": "Cassin's Kingbird Front.jpg",
+        "back": "Cassin's Kingbird Back.jpg"
     },
     {
         "name": "Mourning Dove",
-        "front": "Mourning Dove Front.png",
-        "back": "Mourning Dove Back.png"
+        "front": "Mourning Dove Front.jpg",
+        "back": "Mourning Dove Back.jpg"
     },
     {
         "name": "Downy Woodpecker",
-        "front": "Downy Woodpecker Front.png",
-        "back": "Downy Woodpecker Back.png"
+        "front": "Downy Woodpecker Front.jpg",
+        "back": "Downy Woodpecker Back.jpg"
     },
     {
         "name": "Cliff Swallow",
-        "front": "Cliff Swallow Front.png",
-        "back": "Cliff Swallow Back.png"
+        "front": "Cliff Swallow Front.jpg",
+        "back": "Cliff Swallow Back.jpg"
     },
     {
         "name": "Ruby-crowned Kinglet",
-        "front": "Ruby-crowned Kinglet Front.png",
-        "back": "Ruby-crowned Kinglet Back.png"
+        "front": "Ruby-crowned Kinglet Front.jpg",
+        "back": "Ruby-crowned Kinglet Back.jpg"
     },
     {
         "name": "Spotted Towhee",
-        "front": "Spotted Towhee Front.png",
-        "back": "Spotted Towhee Back.png"
+        "front": "Spotted Towhee Front.jpg",
+        "back": "Spotted Towhee Back.jpg"
     },
     {
         "name": "Black Phoebe",
-        "front": "Black Phoebe Front.png",
-        "back": "Black Phoebe Back.png"
+        "front": "Black Phoebe Front.jpg",
+        "back": "Black Phoebe Back.jpg"
     },
     {
         "name": "House Finch",
-        "front": "House Finch Front.png",
-        "back": "House Finch Back.png"
+        "front": "House Finch Front.jpg",
+        "back": "House Finch Back.jpg"
     },
     {
         "name": "Red-tailed Hawk",
-        "front": "Red-tailed Hawk Front.png",
-        "back": "Red-tailed Hawk Back.png"
+        "front": "Red-tailed Hawk Front.jpg",
+        "back": "Red-tailed Hawk Back.jpg"
     },
     {
         "name": "Band-tailed Pigeon",
-        "front": "Band-tailed Pigeon Front.png",
-        "back": "Band-tailed Pigeon Back.png"
+        "front": "Band-tailed Pigeon Front.jpg",
+        "back": "Band-tailed Pigeon Back.jpg"
     },
     {
         "name": "Lesser Goldfinch",
-        "front": "Lesser Goldfinch Front.png",
-        "back": "Lesser Goldfinch Back.png"
+        "front": "Lesser Goldfinch Front.jpg",
+        "back": "Lesser Goldfinch Back.jpg"
     },
     {
         "name": "Red-winged Blackbird",
-        "front": "Red-winged Blackbird Front.png",
-        "back": "Red-winged Blackbird Back.png"
+        "front": "Red-winged Blackbird Front.jpg",
+        "back": "Red-winged Blackbird Back.jpg"
     },
     {
         "name": "White-breasted Nuthatch",
-        "front": "White-breasted Nuthatch Front.png",
-        "back": "White-breasted Nuthatch Back.png"
+        "front": "White-breasted Nuthatch Front.jpg",
+        "back": "White-breasted Nuthatch Back.jpg"
     },
     {
         "name": "Western Tanager",
-        "front": "Western Tanager Front.png",
-        "back": "Western Tanager Back.png"
+        "front": "Western Tanager Front.jpg",
+        "back": "Western Tanager Back.jpg"
     },
     {
         "name": "Turkey Vulture",
-        "front": "Turkey Vulture Front.png",
-        "back": "Turkey Vulture Back.png"
+        "front": "Turkey Vulture Front.jpg",
+        "back": "Turkey Vulture Back.jpg"
     },
     {
         "name": "California Quail",
-        "front": "California Quail Front.png",
-        "back": "California Quail Back.png"
+        "front": "California Quail Front.jpg",
+        "back": "California Quail Back.jpg"
     },
     {
         "name": "White-crowned Sparrow",
-        "front": "White-crowned Sparrow Front.png",
-        "back": "White-crowned Sparrow Back.png"
+        "front": "White-crowned Sparrow Front.jpg",
+        "back": "White-crowned Sparrow Back.jpg"
     },
     {
         "name": "Yellow Warbler",
-        "front": "Yellow Warbler Front.png",
-        "back": "Yellow Warbler Back.png"
+        "front": "Yellow Warbler Front.jpg",
+        "back": "Yellow Warbler Back.jpg"
     },
     {
         "name": "Northern Mockingbird",
-        "front": "Northern Mockingbird Front.png",
-        "back": "Northern Mockingbird Back.png"
+        "front": "Northern Mockingbird Front.jpg",
+        "back": "Northern Mockingbird Back.jpg"
     },
     {
         "name": "Say's Phoebe",
-        "front": "Say's Phoebe Front.png",
-        "back": "Say's Phoebe Back.png"
+        "front": "Say's Phoebe Front.jpg",
+        "back": "Say's Phoebe Back.jpg"
     },
     {
         "name": "House Sparrow",
-        "front": "House Sparrow Front.png",
-        "back": "House Sparrow Back.png"
+        "front": "House Sparrow Front.jpg",
+        "back": "House Sparrow Back.jpg"
     },
     {
         "name": "Cooper's Hawk",
-        "front": "Cooper's Hawk Front.png",
-        "back": "Cooper's Hawk Back.png"
+        "front": "Cooper's Hawk Front.jpg",
+        "back": "Cooper's Hawk Back.jpg"
     },
     {
         "name": "California Towhee",
-        "front": "California Towhee Front.png",
-        "back": "California Towhee Back.png"
+        "front": "California Towhee Front.jpg",
+        "back": "California Towhee Back.jpg"
     },
     {
         "name": "Bushtit",
-        "front": "Bushtit Front.png",
-        "back": "Bushtit Back.png"
+        "front": "Bushtit Front.jpg",
+        "back": "Bushtit Back.jpg"
     },
     {
         "name": "California Scrub Jay",
-        "front": "California Scrub Jay Front.png",
-        "back": "California Scrub Jay Back.png"
+        "front": "California Scrub Jay Front.jpg",
+        "back": "California Scrub Jay Back.jpg"
     },
     {
         "name": "Nuttall's Woodpecker",
-        "front": "Nuttall's Woodpecker Front.png",
-        "back": "Nuttall's Woodpecker Back.png"
+        "front": "Nuttall's Woodpecker Front.jpg",
+        "back": "Nuttall's Woodpecker Back.jpg"
     },
     {
         "name": "Allen's Hummingbird",
-        "front": "Allen's Hummingbird Front.png",
-        "back": "Allen's Hummingbird Back.png"
+        "front": "Allen's Hummingbird Front.jpg",
+        "back": "Allen's Hummingbird Back.jpg"
     },
     {
         "name": "Northern Flicker",
-        "front": "Northern Flicker Front.png",
-        "back": "Northern Flicker Back.png"
+        "front": "Northern Flicker Front.jpg",
+        "back": "Northern Flicker Back.jpg"
     },
     {
         "name": "Dark-eyed Junco",
-        "front": "Dark-eyed Junco Front.png",
-        "back": "Dark-eyed Junco Back.png"
+        "front": "Dark-eyed Junco Front.jpg",
+        "back": "Dark-eyed Junco Back.jpg"
     },
     {
         "name": "Bewick's Wren",
-        "front": "Bewick's Wren Front.png",
-        "back": "Bewick's Wren Back.png"
+        "front": "Bewick's Wren Front.jpg",
+        "back": "Bewick's Wren Back.jpg"
     },
     {
         "name": "European Starling",
-        "front": "European Starling Front.png",
-        "back": "European Starling Back.png"
+        "front": "European Starling Front.jpg",
+        "back": "European Starling Back.jpg"
     },
     {
         "name": "Yellow-rumped Warbler",
-        "front": "Yellow-rumped Warbler Front.png",
-        "back": "Yellow-rumped Warbler Back.png"
+        "front": "Yellow-rumped Warbler Front.jpg",
+        "back": "Yellow-rumped Warbler Back.jpg"
     },
     {
         "name": "Anna's Hummingbird",
-        "front": "Anna's Hummingbird Front.png",
-        "back": "Anna's Hummingbird Back.png"
+        "front": "Anna's Hummingbird Front.jpg",
+        "back": "Anna's Hummingbird Back.jpg"
     },
     {
         "name": "Western Flycatcher",
-        "front": "Western Flycatcher Front.png",
-        "back": "Western Flycatcher Back.png"
+        "front": "Western Flycatcher Front.jpg",
+        "back": "Western Flycatcher Back.jpg"
     },
     {
         "name": "Scaly-breasted Munia",
-        "front": "Scaly-breasted Munia Front.png",
-        "back": "Scaly-breasted Munia Back.png"
+        "front": "Scaly-breasted Munia Front.jpg",
+        "back": "Scaly-breasted Munia Back.jpg"
     },
     {
         "name": "Common Yellowthroat",
-        "front": "Common Yellowthroat Front.png",
-        "back": "Common Yellowthroat Back.png"
+        "front": "Common Yellowthroat Front.jpg",
+        "back": "Common Yellowthroat Back.jpg"
     },
     {
         "name": "Wilson's Warbler",
-        "front": "Wilson's Warbler Front.png",
-        "back": "Wilson's Warbler Back.png"
+        "front": "Wilson's Warbler Front.jpg",
+        "back": "Wilson's Warbler Back.jpg"
     },
     {
         "name": "Red-shouldered Hawk",
-        "front": "Red-shouldered Hawk Front.png",
-        "back": "Red-shouldered Hawk Back.png"
+        "front": "Red-shouldered Hawk Front.jpg",
+        "back": "Red-shouldered Hawk Back.jpg"
     },
     {
         "name": "Least Bell's Vireo",
-        "front": "Least Bell's Vireo Front.png",
-        "back": "Least Bell's Vireo Back.png"
+        "front": "Least Bell's Vireo Front.jpg",
+        "back": "Least Bell's Vireo Back.jpg"
     },
     {
         "name": "Townsend's Warbler",
-        "front": "Townsend's Warbler Front.png",
-        "back": "Townsend's Warbler Back.png"
+        "front": "Townsend's Warbler Front.jpg",
+        "back": "Townsend's Warbler Back.jpg"
     },
     {
         "name": "Orange-crowned Warbler",
-        "front": "Orange-crowned Warbler Front.png",
-        "back": "Orange-crowned Warbler Back.png"
+        "front": "Orange-crowned Warbler Front.jpg",
+        "back": "Orange-crowned Warbler Back.jpg"
     },
     {
         "name": "Coastal Cactus Wren",
-        "front": "Coastal Cactus Wren Front.png",
-        "back": "Coastal Cactus Wren Back.png"
+        "front": "Coastal Cactus Wren Front.jpg",
+        "back": "Coastal Cactus Wren Back.jpg"
     },
     {
         "name": "Western Meadowlark",
-        "front": "Western Meadowlark Front.png",
-        "back": "Western Meadowlark Back.png"
+        "front": "Western Meadowlark Front.jpg",
+        "back": "Western Meadowlark Back.jpg"
     },
     {
         "name": "Eurasian Collared Dove",
-        "front": "Eurasian Collared Dove Front.png",
-        "back": "Eurasian Collared Dove Back.png"
+        "front": "Eurasian Collared Dove Front.jpg",
+        "back": "Eurasian Collared Dove Back.jpg"
     },
     {
         "name": "Light-footed Ridgeway's Rail",
-        "front": "Light-footed Ridgeway's Rail Front.png",
-        "back": "Light-footed Ridgeway's Rail Back.png"
+        "front": "Light-footed Ridgeway's Rail Front.jpg",
+        "back": "Light-footed Ridgeway's Rail Back.jpg"
     },
     {
         "name": "Cedar Waxwing",
-        "front": "Cedar Waxwing Front.png",
-        "back": "Cedar Waxwing Back.png"
+        "front": "Cedar Waxwing Front.jpg",
+        "back": "Cedar Waxwing Back.jpg"
     },
     {
         "name": "Coastal California Gnatcatcher",
-        "front": "Coastal California Gnatcatcher Front.png",
-        "back": "Coastal California Gnatcatcher Back.png"
+        "front": "Coastal California Gnatcatcher Front.jpg",
+        "back": "Coastal California Gnatcatcher Back.jpg"
     },
     {
         "name": "American Kestrel",
-        "front": "American Kestrel Front.png",
-        "back": "American Kestrel Back.png"
+        "front": "American Kestrel Front.jpg",
+        "back": "American Kestrel Back.jpg"
     },
     {
         "name": "Common Raven",
-        "front": "Common Raven Front.png",
-        "back": "Common Raven Back.png"
+        "front": "Common Raven Front.jpg",
+        "back": "Common Raven Back.jpg"
     },
     {
         "name": "Northern House Wren",
-        "front": "Northern House Wren Front.png",
-        "back": "Northern House Wren Back.png"
+        "front": "Northern House Wren Front.jpg",
+        "back": "Northern House Wren Back.jpg"
     },
     {
         "name": "Western Barn Owl",
-        "front": "Western Barn Owl Front.png",
-        "back": "Western Barn Owl Back.png"
+        "front": "Western Barn Owl Front.jpg",
+        "back": "Western Barn Owl Back.jpg"
     },
     {
         "name": "California Thrasher",
-        "front": "California Thrasher Front.png",
-        "back": "California Thrasher Back.png"
+        "front": "California Thrasher Front.jpg",
+        "back": "California Thrasher Back.jpg"
     },
     {
         "name": "Great Horned Owl",
-        "front": "Great Horned Owl Front.png",
-        "back": "Great Horned Owl Back.png"
+        "front": "Great Horned Owl Front.jpg",
+        "back": "Great Horned Owl Back.jpg"
     },
     {
         "name": "Oak Titmouse",
-        "front": "Oak Titmouse Front.png",
-        "back": "Oak Titmouse Back.png"
+        "front": "Oak Titmouse Front.jpg",
+        "back": "Oak Titmouse Back.jpg"
     },
     {
         "name": "Hutton's Vireo",
-        "front": "Hutton's Vireo Front.png",
-        "back": "Hutton's Vireo Back.png"
+        "front": "Hutton's Vireo Front.jpg",
+        "back": "Hutton's Vireo Back.jpg"
     },
     {
         "name": "Hooded Oriole",
-        "front": "Hooded Oriole Front.png",
-        "back": "Hooded Oriole Back.png"
+        "front": "Hooded Oriole Front.jpg",
+        "back": "Hooded Oriole Back.jpg"
     },
     {
         "name": "Western Bluebird",
-        "front": "Western Bluebird Front.png",
-        "back": "Western Bluebird Back.png"
+        "front": "Western Bluebird Front.jpg",
+        "back": "Western Bluebird Back.jpg"
     }
 ]
 
 export const plants = [
     {
         "name": "Chamise",
-        "front": "Chamise Front.png",
-        "back": "Chamise Back.png"
+        "front": "Chamise Front.jpg",
+        "back": "Chamise Back.jpg"
     },
     {
         "name": "Mallow",
-        "front": "Mallow Front.png",
-        "back": "Mallow Back.png"
+        "front": "Mallow Front.jpg",
+        "back": "Mallow Back.jpg"
     },
     {
         "name": "Himalayan Blackberry",
-        "front": "Himalayan Blackberry Front.png",
-        "back": "Himalayan Blackberry Back.png"
+        "front": "Himalayan Blackberry Front.jpg",
+        "back": "Himalayan Blackberry Back.jpg"
     },
     {
         "name": "Tree Tobacco",
-        "front": "Tree Tobacco Front.png",
-        "back": "Tree Tobacco Back.png"
+        "front": "Tree Tobacco Front.jpg",
+        "back": "Tree Tobacco Back.jpg"
     },
     {
         "name": "Cottonwood",
-        "front": "Cottonwood Front.png",
-        "back": "Cottonwood Back.png"
+        "front": "Cottonwood Front.jpg",
+        "back": "Cottonwood Back.jpg"
     },
     {
         "name": "Bridal Creeper",
-        "front": "Bridal Creeper Front.png",
-        "back": "Bridal Creeper Back.png"
+        "front": "Bridal Creeper Front.jpg",
+        "back": "Bridal Creeper Back.jpg"
     },
     {
         "name": "African Flag",
-        "front": "African Flag Front.png",
-        "back": "African Flag Back.png"
+        "front": "African Flag Front.jpg",
+        "back": "African Flag Back.jpg"
     },
     {
         "name": "Beggarticks",
-        "front": "Beggarticks Front.png",
-        "back": "Beggarticks Back.png"
+        "front": "Beggarticks Front.jpg",
+        "back": "Beggarticks Back.jpg"
     },
     {
         "name": "Mexican Fan Palm",
-        "front": "Mexican Fan Palm Front.png",
-        "back": "Mexican Fan Palm Back.png"
+        "front": "Mexican Fan Palm Front.jpg",
+        "back": "Mexican Fan Palm Back.jpg"
     },
     {
         "name": "San Diego Sunflower",
-        "front": "San Diego Sunflower Front.png",
-        "back": "San Diego Sunflower Back.png"
+        "front": "San Diego Sunflower Front.jpg",
+        "back": "San Diego Sunflower Back.jpg"
     },
     {
         "name": "Coast Live Oak",
-        "front": "Coast Live Oak Front.png",
-        "back": "Coast Live Oak Back.png"
+        "front": "Coast Live Oak Front.jpg",
+        "back": "Coast Live Oak Back.jpg"
     },
     {
         "name": "Marsh Elder",
-        "front": "Marsh Elder Front.png",
-        "back": "Marsh Elder Back.png"
+        "front": "Marsh Elder Front.jpg",
+        "back": "Marsh Elder Back.jpg"
     },
     {
         "name": "Sweet Pea",
-        "front": "Sweet Pea Front.png",
-        "back": "Sweet Pea Back.png"
+        "front": "Sweet Pea Front.jpg",
+        "back": "Sweet Pea Back.jpg"
     },
     {
         "name": "Honeysuckle",
-        "front": "Honeysuckle Front.png",
-        "back": "Honeysuckle Back.png"
+        "front": "Honeysuckle Front.jpg",
+        "back": "Honeysuckle Back.jpg"
     },
     {
         "name": "Gooseberry",
-        "front": "Gooseberry Front.png",
-        "back": "Gooseberry Back.png"
+        "front": "Gooseberry Front.jpg",
+        "back": "Gooseberry Back.jpg"
     },
     {
         "name": "Umbrella Sedge",
-        "front": "Umbrella Sedge Front.png",
-        "back": "Umbrella Sedge Back.png"
+        "front": "Umbrella Sedge Front.jpg",
+        "back": "Umbrella Sedge Back.jpg"
     },
     {
         "name": "Wild Cucumber",
-        "front": "Wild Cucumber Front.png",
-        "back": "Wild Cucumber Back.png"
+        "front": "Wild Cucumber Front.jpg",
+        "back": "Wild Cucumber Back.jpg"
     },
     {
         "name": "Deerweed",
-        "front": "Deerweed Front.png",
-        "back": "Deerweed Back.png"
+        "front": "Deerweed Front.jpg",
+        "back": "Deerweed Back.jpg"
     },
     {
         "name": "Coyote brush",
-        "front": "Coyote brush Front.png",
-        "back": "Coyote brush Back.png"
+        "front": "Coyote brush Front.jpg",
+        "back": "Coyote brush Back.jpg"
     },
     {
         "name": "Brazilian Pepper",
-        "front": "Brazilian Pepper Front.png",
-        "back": "Brazilian Pepper Back.png"
+        "front": "Brazilian Pepper Front.jpg",
+        "back": "Brazilian Pepper Back.jpg"
     },
     {
         "name": "Elderberry",
-        "front": "Elderberry Front.png",
-        "back": "Elderberry Back.png"
+        "front": "Elderberry Front.jpg",
+        "back": "Elderberry Back.jpg"
     },
     {
         "name": "Mulefat",
-        "front": "Mulefat Front.png",
-        "back": "Mulefat Back.png"
+        "front": "Mulefat Front.jpg",
+        "back": "Mulefat Back.jpg"
     },
     {
         "name": "California wild rose",
-        "front": "California wild rose Front.png",
-        "back": "California wild rose Back.png"
+        "front": "California wild rose Front.jpg",
+        "back": "California wild rose Back.jpg"
     },
     {
         "name": "California Sagebrush",
-        "front": "California Sagebrush Front.png",
-        "back": "California Sagebrush Back.png"
+        "front": "California Sagebrush Front.jpg",
+        "back": "California Sagebrush Back.jpg"
     },
     {
         "name": "Pampas Grass",
-        "front": "Pampas Grass Front.png",
-        "back": "Pampas Grass Back.png"
+        "front": "Pampas Grass Front.jpg",
+        "back": "Pampas Grass Back.jpg"
     },
     {
         "name": "Blue Eyed Grass",
-        "front": "Blue Eyed Grass Front.png",
-        "back": "Blue Eyed Grass Back.png"
+        "front": "Blue Eyed Grass Front.jpg",
+        "back": "Blue Eyed Grass Back.jpg"
     },
     {
         "name": "Myoporum",
-        "front": "Myoporum Front.png",
-        "back": "Myoporum Back.png"
+        "front": "Myoporum Front.jpg",
+        "back": "Myoporum Back.jpg"
     },
     {
         "name": "Curly Dock",
-        "front": "Curly Dock Front.png",
-        "back": "Curly Dock Back.png"
+        "front": "Curly Dock Front.jpg",
+        "back": "Curly Dock Back.jpg"
     },
     {
         "name": "California buckwheat",
-        "front": "California buckwheat Front.png",
-        "back": "California buckwheat Back.png"
+        "front": "California buckwheat Front.jpg",
+        "back": "California buckwheat Back.jpg"
     },
     {
         "name": "Prickly Pear",
-        "front": "Prickly Pear Front.png",
-        "back": "Prickly Pear Back.png"
+        "front": "Prickly Pear Front.jpg",
+        "back": "Prickly Pear Back.jpg"
     },
     {
         "name": "Scrub Oak",
-        "front": "Scrub Oak Front.png",
-        "back": "Scrub Oak Back.png"
+        "front": "Scrub Oak Front.jpg",
+        "back": "Scrub Oak Back.jpg"
     },
     {
         "name": "Mustard",
-        "front": "Mustard Front.png",
-        "back": "Mustard Back.png"
+        "front": "Mustard Front.jpg",
+        "back": "Mustard Back.jpg"
     },
     {
         "name": "Jade",
-        "front": "Jade Front.png",
-        "back": "Jade Back.png"
+        "front": "Jade Front.jpg",
+        "back": "Jade Back.jpg"
     },
     {
         "name": "Golden Bush",
-        "front": "Golden Bush Front.png",
-        "back": "Golden Bush Back.png"
+        "front": "Golden Bush Front.jpg",
+        "back": "Golden Bush Back.jpg"
     },
     {
         "name": "Hollyleaf Cherry",
-        "front": "Hollyleaf Cherry Front.png",
-        "back": "Hollyleaf Cherry Back.png"
+        "front": "Hollyleaf Cherry Front.jpg",
+        "back": "Hollyleaf Cherry Back.jpg"
     },
     {
         "name": "Yucca",
-        "front": "Yucca Front.png",
-        "back": "Yucca Back.png"
+        "front": "Yucca Front.jpg",
+        "back": "Yucca Back.jpg"
     },
     {
         "name": "Spiny redberry",
-        "front": "Spiny redberry Front.png",
-        "back": "Spiny redberry Back.png"
+        "front": "Spiny redberry Front.jpg",
+        "back": "Spiny redberry Back.jpg"
     },
     {
         "name": "Stinkwort",
-        "front": "Stinkwort Front.png",
-        "back": "Stinkwort Back.png"
+        "front": "Stinkwort Front.jpg",
+        "back": "Stinkwort Back.jpg"
     },
     {
         "name": "Narrowleaf Milkweed",
-        "front": "Narrowleaf Milkweed Front.png",
-        "back": "Narrowleaf Milkweed Back.png"
+        "front": "Narrowleaf Milkweed Front.jpg",
+        "back": "Narrowleaf Milkweed Back.jpg"
     },
     {
         "name": "Yerba Mansa",
-        "front": "Yerba Mansa Front.png",
-        "back": "Yerba Mansa Back.png"
+        "front": "Yerba Mansa Front.jpg",
+        "back": "Yerba Mansa Back.jpg"
     },
     {
         "name": "Ice Plant",
-        "front": "Ice Plant Front.png",
-        "back": "Ice Plant Back.png"
+        "front": "Ice Plant Front.jpg",
+        "back": "Ice Plant Back.jpg"
     },
     {
         "name": "Black Sage",
-        "front": "Black Sage Front.png",
-        "back": "Black Sage Back.png"
+        "front": "Black Sage Front.jpg",
+        "back": "Black Sage Back.jpg"
     },
     {
         "name": "Lupine",
-        "front": "Lupine Front.png",
-        "back": "Lupine Back.png"
+        "front": "Lupine Front.jpg",
+        "back": "Lupine Back.jpg"
     },
     {
         "name": "Toyon",
-        "front": "Toyon Front.png",
-        "back": "Toyon Back.png"
+        "front": "Toyon Front.jpg",
+        "back": "Toyon Back.jpg"
     },
     {
         "name": "Thistle",
-        "front": "Thistle Front.png",
-        "back": "Thistle Back.png"
+        "front": "Thistle Front.jpg",
+        "back": "Thistle Back.jpg"
     },
     {
         "name": "Primrose",
-        "front": "Primrose Front.png",
-        "back": "Primrose Back.png"
+        "front": "Primrose Front.jpg",
+        "back": "Primrose Back.jpg"
     },
     {
         "name": "Broom baccharis",
-        "front": "Broom baccharis Front.png",
-        "back": "Broom baccharis Back.png"
+        "front": "Broom baccharis Front.jpg",
+        "back": "Broom baccharis Back.jpg"
     },
     {
         "name": "Willow",
-        "front": "Willow Front.png",
-        "back": "Willow Back.png"
+        "front": "Willow Front.jpg",
+        "back": "Willow Back.jpg"
     },
     {
         "name": "Sagewort",
-        "front": "Sagewort Front.png",
-        "back": "Sagewort Back.png"
+        "front": "Sagewort Front.jpg",
+        "back": "Sagewort Back.jpg"
     },
     {
         "name": "Golden Yarrow",
-        "front": "Golden Yarrow Front.png",
-        "back": "Golden Yarrow Back.png"
+        "front": "Golden Yarrow Front.jpg",
+        "back": "Golden Yarrow Back.jpg"
     },
     {
         "name": "Eucalyptus",
-        "front": "Eucalyptus Front.png",
-        "back": "Eucalyptus Back.png"
+        "front": "Eucalyptus Front.jpg",
+        "back": "Eucalyptus Back.jpg"
     },
     {
         "name": "Horehound",
-        "front": "Horehound Front.png",
-        "back": "Horehound Back.png"
+        "front": "Horehound Front.jpg",
+        "back": "Horehound Back.jpg"
     },
     {
         "name": "Canary Island Date Palm",
-        "front": "Canary Island Date Palm Front.png",
-        "back": "Canary Island Date Palm Back.png"
+        "front": "Canary Island Date Palm Front.jpg",
+        "back": "Canary Island Date Palm Back.jpg"
     },
     {
         "name": "Nightshade",
-        "front": "Nightshade Front.png",
-        "back": "Nightshade Back.png"
+        "front": "Nightshade Front.jpg",
+        "back": "Nightshade Back.jpg"
     },
     {
         "name": "Mugwort",
-        "front": "Mugwort Front.png",
-        "back": "Mugwort Back.png"
+        "front": "Mugwort Front.jpg",
+        "back": "Mugwort Back.jpg"
     },
     {
         "name": "Sycamore",
-        "front": "Sycamore Front.png",
-        "back": "Sycamore Back.png"
+        "front": "Sycamore Front.jpg",
+        "back": "Sycamore Back.jpg"
     },
     {
         "name": "Yerba Santa",
-        "front": "Yerba Santa Front.png",
-        "back": "Yerba Santa Back.png"
+        "front": "Yerba Santa Front.jpg",
+        "back": "Yerba Santa Back.jpg"
     },
     {
         "name": "Wild Rye",
-        "front": "Wild Rye Front.png",
-        "back": "Wild Rye Back.png"
+        "front": "Wild Rye Front.jpg",
+        "back": "Wild Rye Back.jpg"
     },
     {
         "name": "Ceanothus",
-        "front": "Ceanothus Front.png",
-        "back": "Ceanothus Back.png"
+        "front": "Ceanothus Front.jpg",
+        "back": "Ceanothus Back.jpg"
     },
     {
         "name": "Arundo",
-        "front": "Arundo Front.png",
-        "back": "Arundo Back.png"
+        "front": "Arundo Front.jpg",
+        "back": "Arundo Back.jpg"
     },
     {
         "name": "Bladderpod",
-        "front": "Bladderpod Front.png",
-        "back": "Bladderpod Back.png"
+        "front": "Bladderpod Front.jpg",
+        "back": "Bladderpod Back.jpg"
     },
     {
         "name": "Nasturtium",
-        "front": "Nasturtium Front.png",
-        "back": "Nasturtium Back.png"
+        "front": "Nasturtium Front.jpg",
+        "back": "Nasturtium Back.jpg"
     },
     {
         "name": "Blue Plumbago",
-        "front": "Blue Plumbago Front.png",
-        "back": "Blue Plumbago Back.png"
+        "front": "Blue Plumbago Front.jpg",
+        "back": "Blue Plumbago Back.jpg"
     },
     {
         "name": "Radish",
-        "front": "Radish Front.png",
-        "back": "Radish Back.png"
+        "front": "Radish Front.jpg",
+        "back": "Radish Back.jpg"
     },
     {
         "name": "Mission Manzanita",
-        "front": "Mission Manzanita Front.png",
-        "back": "Mission Manzanita Back.png"
+        "front": "Mission Manzanita Front.jpg",
+        "back": "Mission Manzanita Back.jpg"
     },
     {
         "name": "Monkeyflower",
-        "front": "Monkeyflower Front.png",
-        "back": "Monkeyflower Back.png"
+        "front": "Monkeyflower Front.jpg",
+        "back": "Monkeyflower Back.jpg"
     },
     {
         "name": "Peruvian Pepper",
-        "front": "Peruvian Pepper Front.png",
-        "back": "Peruvian Pepper Back.png"
+        "front": "Peruvian Pepper Front.jpg",
+        "back": "Peruvian Pepper Back.jpg"
     },
     {
         "name": "Cape Ivy",
-        "front": "Cape Ivy Front.png",
-        "back": "Cape Ivy Back.png"
+        "front": "Cape Ivy Front.jpg",
+        "back": "Cape Ivy Back.jpg"
     },
     {
         "name": "Cholla",
-        "front": "Cholla Front.png",
-        "back": "Cholla Back.png"
+        "front": "Cholla Front.jpg",
+        "back": "Cholla Back.jpg"
     },
     {
         "name": "Fennel",
-        "front": "Fennel Front.png",
-        "back": "Fennel Back.png"
+        "front": "Fennel Front.jpg",
+        "back": "Fennel Back.jpg"
     },
     {
         "name": "Everlasting",
-        "front": "Everlasting Front.png",
-        "back": "Everlasting Back.png"
+        "front": "Everlasting Front.jpg",
+        "back": "Everlasting Back.jpg"
     },
     {
         "name": "Cheeseweed",
-        "front": "Cheeseweed Front.png",
-        "back": "Cheeseweed Back.png"
+        "front": "Cheeseweed Front.jpg",
+        "back": "Cheeseweed Back.jpg"
     },
     {
         "name": "Poison Oak",
-        "front": "Poison Oak Front.png",
-        "back": "Poison Oak Back.png"
+        "front": "Poison Oak Front.jpg",
+        "back": "Poison Oak Back.jpg"
     },
     {
         "name": "California sunflower",
-        "front": "California sunflower Front.png",
-        "back": "California sunflower Back.png"
+        "front": "California sunflower Front.jpg",
+        "back": "California sunflower Back.jpg"
     },
     {
         "name": "Lemonadeberry",
-        "front": "Lemonadeberry Front.png",
-        "back": "Lemonadeberry Back.png"
+        "front": "Lemonadeberry Front.jpg",
+        "back": "Lemonadeberry Back.jpg"
     },
     {
         "name": "Purple Fountain Grass",
-        "front": "Purple Fountain Grass Front.png",
-        "back": "Purple Fountain Grass Back.png"
+        "front": "Purple Fountain Grass Front.jpg",
+        "back": "Purple Fountain Grass Back.jpg"
     },
     {
         "name": "Tarweed",
-        "front": "Tarweed Front.png",
-        "back": "Tarweed Back.png"
+        "front": "Tarweed Front.jpg",
+        "back": "Tarweed Back.jpg"
     },
     {
         "name": "Poison Hemlock",
-        "front": "Poison Hemlock Front.png",
-        "back": "Poison Hemlock Back.png"
+        "front": "Poison Hemlock Front.jpg",
+        "back": "Poison Hemlock Back.jpg"
     },
     {
         "name": "Acacia",
-        "front": "Acacia Front.png",
-        "back": "Acacia Back.png"
+        "front": "Acacia Front.jpg",
+        "back": "Acacia Back.jpg"
     },
     {
         "name": "Castor",
-        "front": "Castor Front.png",
-        "back": "Castor Back.png"
+        "front": "Castor Front.jpg",
+        "back": "Castor Back.jpg"
     },
     {
         "name": "Tamarisk",
-        "front": "Tamarisk Front.png",
-        "back": "Tamarisk Back.png"
+        "front": "Tamarisk Front.jpg",
+        "back": "Tamarisk Back.jpg"
     },
     {
         "name": "Ox Tongue",
-        "front": "Ox Tongue Front.png",
-        "back": "Ox Tongue Back.png"
+        "front": "Ox Tongue Front.jpg",
+        "back": "Ox Tongue Back.jpg"
     },
     {
         "name": "Laurel sumac",
-        "front": "Laurel sumac Front.png",
-        "back": "Laurel sumac Back.png"
+        "front": "Laurel sumac Front.jpg",
+        "back": "Laurel sumac Back.jpg"
     },
     {
         "name": "Crown Daisy",
-        "front": "Crown Daisy Front.png",
-        "back": "Crown Daisy Back.png"
+        "front": "Crown Daisy Front.jpg",
+        "back": "Crown Daisy Back.jpg"
     },
     {
         "name": "White Sage",
-        "front": "White Sage Front.png",
-        "back": "White Sage Back.png"
+        "front": "White Sage Front.jpg",
+        "back": "White Sage Back.jpg"
     }
 ]
 

@@ -31,8 +31,8 @@ describe('Card', () => {
 
     const images = screen.getAllByRole('img');
     expect(images).toHaveLength(2);
-    expect(images[0]).toHaveAttribute('src', '/cards/Test Card Front.png');
-    expect(images[1]).toHaveAttribute('src', '/cards/Test Card Back.png');
+    expect(images[0]).toHaveAttribute('src', '/cards/Test Card Front.jpg');
+    expect(images[1]).toHaveAttribute('src', '/cards/Test Card Back.jpg');
   });
 
   it('applies invasive class conditionally', () => {
@@ -65,8 +65,8 @@ describe('Card', () => {
     render(<Card card="Card with spaces & symbols" flipped={false} widthRef={mockWidthRef} flipSpeed={0.8} />);
 
     const images = screen.getAllByRole('img');
-    expect(images[0]).toHaveAttribute('src', '/cards/Card with spaces & symbols Front.png');
-    expect(images[1]).toHaveAttribute('src', '/cards/Card with spaces & symbols Back.png');
+    expect(images[0]).toHaveAttribute('src', '/cards/Card with spaces & symbols Front.jpg');
+    expect(images[1]).toHaveAttribute('src', '/cards/Card with spaces & symbols Back.jpg');
   });
 
   it('renders with correct CSS classes', () => {
@@ -102,8 +102,8 @@ describe('Card', () => {
     render(<Card card="Nonexistent Card" flipped={false} widthRef={mockWidthRef} flipSpeed={0.8} />);
     const images = screen.getAllByRole('img');
     expect(images).toHaveLength(2);
-    expect(images[0]).toHaveAttribute('src', '/cards/Nonexistent Card Front.png');
-    expect(images[1]).toHaveAttribute('src', '/cards/Nonexistent Card Back.png');
+    expect(images[0]).toHaveAttribute('src', '/cards/Nonexistent Card Front.jpg');
+    expect(images[1]).toHaveAttribute('src', '/cards/Nonexistent Card Back.jpg');
   });
 
   it('does not apply flip-card-inner-animated class when flipSpeed is 0', () => {

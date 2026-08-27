@@ -23,8 +23,8 @@ self.addEventListener('install', event => {
 self.addEventListener('fetch', event => {
     console.log('Service Worker fetching:', event.request.url);
 
-    // Handle PNG images (existing logic)
-    if (event.request.url.endsWith('.png')) {
+    // Handle JPEG images (existing logic)
+    if (event.request.url.endsWith('.jpg')) {
         const url = new URL(event.request.url);
         const normalizedRequest = new Request(url.origin + url.pathname);
         event.respondWith((async () => {
@@ -33,12 +33,12 @@ self.addEventListener('fetch', event => {
             
             // If image is in cache, return it
             if (response) {
-                console.log('Serving PNG from cache:', event.request.url);
+                console.log('Serving JPEG from cache:', event.request.url);
                 return response;
             }
 
             // Otherwise, fetch from network and add to cache
-            console.log('Fetching PNG from network:', event.request.url);
+            console.log('Fetching JPEG from network:', event.request.url);
 
             let network_response;
             try {
@@ -49,7 +49,7 @@ self.addEventListener('fetch', event => {
                 const old_cache = await caches.open(OLD_CACHE_NAME)
                 response = old_cache.match(normalizedRequest)
                 if (response) {
-                    console.log('Serving PNG from old cache:', event.request.url);
+                    console.log('Serving JPEG from old cache:', event.request.url);
                     return response;
                 } else {
                     return error;
@@ -60,7 +60,7 @@ self.addEventListener('fetch', event => {
                 const old_cache = await caches.open(OLD_CACHE_NAME)
                 response = old_cache.match(normalizedRequest)
                 if (response) {
-                    console.log('Serving PNG from old cache:', event.request.url);
+                    console.log('Serving JPEG from old cache:', event.request.url);
                     return response;
                 } else {
                     return network_response;

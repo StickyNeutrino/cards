@@ -16,8 +16,8 @@ describe('card-lists', () => {
         expect(typeof bird.name).toBe('string');
         expect(typeof bird.front).toBe('string');
         expect(typeof bird.back).toBe('string');
-        expect(bird.front).toBe(`${bird.name} Front.png`);
-        expect(bird.back).toBe(`${bird.name} Back.png`);
+        expect(bird.front).toBe(`${bird.name} Front.jpg`);
+        expect(bird.back).toBe(`${bird.name} Back.jpg`);
       });
 
       const names = birds.map(bird => bird.name);
@@ -38,8 +38,8 @@ describe('card-lists', () => {
         expect(typeof plant.name).toBe('string');
         expect(typeof plant.front).toBe('string');
         expect(typeof plant.back).toBe('string');
-        expect(plant.front).toBe(`${plant.name} Front.png`);
-        expect(plant.back).toBe(`${plant.name} Back.png`);
+        expect(plant.front).toBe(`${plant.name} Front.jpg`);
+        expect(plant.back).toBe(`${plant.name} Back.jpg`);
       });
 
       const names = plants.map(plant => plant.name);
@@ -60,8 +60,8 @@ describe('card-lists', () => {
         expect(item.name).toBeTruthy();
         expect(item.name.trim()).toBe(item.name);
         expect(Object.keys(item)).toHaveLength(3);
-        expect(item.front).toMatch(/\.png$/);
-        expect(item.back).toMatch(/\.png$/);
+        expect(item.front).toMatch(/\.jpg$/);
+        expect(item.back).toMatch(/\.jpg$/);
         expect(item.front).toContain(item.name);
         expect(item.back).toContain(item.name);
       });
