@@ -114,6 +114,7 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
+  touch-action: manipulation;
 }
 
 .flip-card {
@@ -141,10 +142,6 @@ main {
   transition: transform var(--flip-speed, 0.8s);
 }
 
-
-.flip-card-enabled:hover .flip-card-inner {
-  transform: rotateY(180deg);
-}
 
 .flipped .flip-card-inner {
   transform: rotateY(180deg);
