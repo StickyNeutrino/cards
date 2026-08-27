@@ -112,6 +112,40 @@ test.describe('Home Page E2E Tests', () => {
     await expect(card).toHaveAttribute('data-flipped', 'false');
   });
 
+  test('Card returns to the front when clicked again while the pointer stays over it', async ({ page }) => {
+    const card = page.locator('[data-testid="card"]');
+    const inner = card.locator('.flip-card-inner');
+
+    await card.click();
+    await expect(card).toHaveAttribute('data-flipped', 'true');
+
+    await card.click();
+    await expect(card).toHaveAttribute('data-flipped', 'false');
+    await expect
+      .poll(() => inner.evaluate((el) => getComputedStyle(el).transform))
+      .toBe('none');
+  });
+
+  test('Hovering the card previews the back and returns to the front when the pointer leaves', async ({ page }) => {
+    const hoverCapable = await page.evaluate(() => window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+    test.skip(!hoverCapable, 'Hover preview requires a hover-capable pointer');
+
+    const card = page.locator('[data-testid="card"]');
+    const inner = card.locator('.flip-card-inner');
+
+    await card.hover();
+    await expect(card).toHaveAttribute('data-flipped', 'true');
+    await expect
+      .poll(() => inner.evaluate((el) => getComputedStyle(el).transform))
+      .not.toBe('none');
+
+    await page.mouse.move(5, 5);
+    await expect(card).toHaveAttribute('data-flipped', 'false');
+    await expect
+      .poll(() => inner.evaluate((el) => getComputedStyle(el).transform))
+      .toBe('none');
+  });
+
   test('Card flipping with keyboard', async ({ page }) => {
     const card = page.locator('[data-testid="card"]');
 

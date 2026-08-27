@@ -1,12 +1,29 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Card } from '../../app/card/card';
+
+function mockHoverCapability(capable: boolean) {
+  vi.stubGlobal('matchMedia', vi.fn().mockImplementation((query: string) => ({
+    matches: capable && query === '(hover: hover) and (pointer: fine)',
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })));
+}
 
 describe('Card', () => {
   let mockWidthRef: { current: HTMLDivElement | null };
 
   beforeEach(() => {
     mockWidthRef = { current: null };
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('renders front and back images with correct sources', () => {
@@ -139,5 +156,55 @@ describe('Card', () => {
 
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(ancestorClick).not.toHaveBeenCalled();
+  });
+
+  it('previews the back face while hovered on hover-capable devices', () => {
+    mockHoverCapability(true);
+    render(<Card card="Test Card" flipped={false} widthRef={mockWidthRef} flipSpeed={0.8} />);
+    const card = screen.getByTestId('card');
+
+    fireEvent.mouseEnter(card);
+    expect(card).toHaveAttribute('data-flipped', 'true');
+
+    fireEvent.mouseLeave(card);
+    expect(card).toHaveAttribute('data-flipped', 'false');
+  });
+
+  it('clears the hover preview on click so the card returns to the front under the pointer', () => {
+    mockHoverCapability(true);
+    const onClick = vi.fn();
+    render(<Card card="Test Card" flipped={false} widthRef={mockWidthRef} flipSpeed={0.8} onClick={onClick} />);
+    const card = screen.getByTestId('card');
+
+    fireEvent.mouseEnter(card);
+    expect(card).toHaveAttribute('data-flipped', 'true');
+
+    fireEvent.click(card);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(card).toHaveAttribute('data-flipped', 'false');
+  });
+
+  it('does not preview on hover for devices without a hover-capable pointer', () => {
+    mockHoverCapability(false);
+    render(<Card card="Test Card" flipped={false} widthRef={mockWidthRef} flipSpeed={0.8} />);
+    const card = screen.getByTestId('card');
+
+    fireEvent.mouseEnter(card);
+    expect(card).toHaveAttribute('data-flipped', 'false');
+  });
+
+  it('clears the hover preview when the card is unflipped by other means such as the keyboard', () => {
+    mockHoverCapability(true);
+    const { rerender } = render(<Card card="Test Card" flipped={false} widthRef={mockWidthRef} flipSpeed={0.8} />);
+    const card = screen.getByTestId('card');
+
+    fireEvent.mouseEnter(card);
+    expect(card).toHaveAttribute('data-flipped', 'true');
+
+    rerender(<Card card="Test Card" flipped={true} widthRef={mockWidthRef} flipSpeed={0.8} />);
+    expect(card).toHaveAttribute('data-flipped', 'true');
+
+    rerender(<Card card="Test Card" flipped={false} widthRef={mockWidthRef} flipSpeed={0.8} />);
+    expect(card).toHaveAttribute('data-flipped', 'false');
   });
 });
