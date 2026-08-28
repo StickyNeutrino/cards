@@ -147,7 +147,7 @@ test/              # Vitest unit tests + Playwright e2e suites
 
 ## License
 
-The application code is licensed under the [GNU Affero General Public License v3](LICENSE) (AGPL-3.0-or-later). Card imagery is courtesy of San Diego Canyonlands and is not covered by the code license.
+The application code is licensed under the [GNU Affero General Public License v3](LICENSE) (AGPL-3.0-or-later), with the source available at [github.com/StickyNeutrino/cards](https://github.com/StickyNeutrino/cards). Card imagery is courtesy of San Diego Canyonlands and is not covered by the code license.
 
 ## Credits
 

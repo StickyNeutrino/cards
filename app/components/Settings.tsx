@@ -124,6 +124,15 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
       <p className="text-xs text-gray-400 pt-3 text-center" data-testid="build-version">
         Build: {import.meta.env.VITE_BUILD_SHA || 'dev'}
       </p>
+      <p className="text-xs text-gray-400 pb-1 text-center">
+        <a
+          href="https://github.com/StickyNeutrino/cards"
+          className="underline hover:text-gray-600"
+          rel="noopener noreferrer"
+        >
+          Source
+        </a>
+      </p>
     </div>
   );
 });

@@ -135,6 +135,22 @@ export default function Privacy() {
           </section>
 
           <section>
+            <h2 className="text-lg font-semibold mb-2">Source code and license</h2>
+            <p>
+              The app's source code is licensed under the GNU Affero General
+              Public License v3 and is available at{" "}
+              <a
+                href="https://github.com/StickyNeutrino/cards"
+                className="underline"
+                rel="noopener noreferrer"
+              >
+                github.com/StickyNeutrino/cards
+              </a>
+              .
+            </p>
+          </section>
+
+          <section>
             <h2 className="text-lg font-semibold mb-2">Contact</h2>
             <p>
               Questions, requests, or concerns about your data? Email us at{" "}
