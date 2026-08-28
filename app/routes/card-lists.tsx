@@ -1,5 +1,5 @@
 import type { Route } from "./+types/card-lists";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -826,6 +826,19 @@ export const invasives = [
 export default function CardLists() {
   const [filter, setFilter] = useState<'plants' | 'birds' | 'both'>('both');
   const [search, setSearch] = useState('');
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const handleListKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    const items = Array.from(
+      listRef.current?.querySelectorAll<HTMLButtonElement>('[data-testid="card-item"]') ?? []
+    );
+    const current = items.indexOf(document.activeElement as HTMLButtonElement);
+    if (current === -1) return;
+    e.preventDefault();
+    const next = e.key === 'ArrowDown' ? current + 1 : current - 1;
+    items[next]?.focus();
+  };
 
   const allCards = useMemo(() => {
     const cards = [];
@@ -852,7 +865,12 @@ export default function CardLists() {
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
-      <div className="card-list-container" data-testid="card-list">
+      <div
+        className="card-list-container"
+        data-testid="card-list"
+        ref={listRef}
+        onKeyDown={handleListKeyDown}
+      >
         {allCards.map((card, index) => (
           <button
             key={index}
