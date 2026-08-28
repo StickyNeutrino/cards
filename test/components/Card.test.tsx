@@ -16,7 +16,7 @@ function mockHoverCapability(capable: boolean) {
 }
 
 describe('Card', () => {
-  let mockWidthRef: { current: HTMLDivElement | null };
+  let mockWidthRef: { current: HTMLImageElement | null };
 
   beforeEach(() => {
     mockWidthRef = { current: null };
@@ -53,12 +53,13 @@ describe('Card', () => {
     expect(screen.getAllByRole('img')[0].parentElement?.parentElement).not.toHaveClass('flipped');
   });
 
-  it('sets ref on card-area div', () => {
+  it('sets ref on the card image so the button row can match the visible card width', () => {
     render(<Card card="Test Card" flipped={false} widthRef={mockWidthRef} flipSpeed={0.8} />);
 
     const cardArea = screen.getAllByRole('img')[0].parentElement?.parentElement?.parentElement;
     expect(cardArea).toBeInTheDocument();
-    expect(mockWidthRef.current).toBe(cardArea);
+    expect(mockWidthRef.current).toBe(screen.getAllByRole('img')[1]);
+    expect(mockWidthRef.current).toHaveClass('flip-card-back');
   });
 
   it('handles special characters in card names', () => {

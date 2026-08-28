@@ -81,4 +81,27 @@ describe('app.css', () => {
     expect(cardAreaRule!.mediaConditions).toHaveLength(0);
     expect(cardAreaRule!.declarations).toContain('touch-action: manipulation');
   });
+
+  it('keeps the card image box hugging the image and inside the card area on any screen', () => {
+    const imgRule = rules.find((r) => r.selector === '.flip-card img');
+    expect(imgRule).toBeDefined();
+    expect(imgRule!.declarations).toContain('width: auto');
+    expect(imgRule!.declarations).toContain('height: auto');
+    expect(imgRule!.declarations).toContain('max-width: 100%');
+    expect(imgRule!.declarations).toContain('max-height: 100%');
+    expect(imgRule!.declarations).toContain('object-fit: contain');
+  });
+
+  it('keeps the card-to-buttons gap at least half the button-to-button gap on any screen', () => {
+    const buttonContainerRule = rules.find((r) => r.selector === '#button-container');
+    expect(buttonContainerRule).toBeDefined();
+    const marginTop = parseFloat(
+      buttonContainerRule!.declarations.match(/margin-top: ([\d.]+)em/)?.[1] ?? '0'
+    );
+    const buttonGap = parseFloat(
+      buttonContainerRule!.declarations.match(/gap: ([\d.]+)em/)?.[1] ?? '0'
+    );
+    expect(buttonGap).toBeGreaterThan(0);
+    expect(marginTop).toBeGreaterThanOrEqual(buttonGap / 2);
+  });
 });

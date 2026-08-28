@@ -77,6 +77,13 @@ global.Image = class MockImage {
   }
 } as any;
 
+// Mock ResizeObserver for card width tracking
+global.ResizeObserver = class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+} as any;
+
 // Prevent vitest from reporting unhandled rejections from mocks
 window.addEventListener('unhandledrejection', (event) => {
   event.preventDefault();

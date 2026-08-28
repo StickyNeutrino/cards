@@ -222,13 +222,17 @@ export default function Home() {
     };
   }, [showSettings]);
 
-  const elementRef = useRef<HTMLDivElement>(null);
+  const elementRef = useRef<HTMLImageElement>(null);
   const [elementWidth, setElementWidth] = useState(0);
 
   useLayoutEffect(() => {
-    if (elementRef.current) {
-      setElementWidth(elementRef.current.offsetWidth);
-    }
+    const el = elementRef.current;
+    if (!el) return;
+    const update = () => setElementWidth(el.offsetWidth);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   const toggleMode = () => {
@@ -337,7 +341,7 @@ export default function Home() {
     />
 
     <Card card={currentCard} flipped={flipped} widthRef={elementRef} flipSpeed={parseFloat(flipSpeed)} onClick={toggleFlipped}/>
-    <div id="button-container" style={{ width: `calc(${elementWidth}px)` }}>
+    <div id="button-container" style={{ width: `calc(${elementWidth}px)`, fontSize: `${elementWidth / 28.125}px` }}>
       <button id="back-button" className="control-button" onClick={backAction}>
         <img src="/arrow-left-solid-full.svg" alt="Previous card" />
       </button>

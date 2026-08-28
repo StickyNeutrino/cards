@@ -4,7 +4,7 @@ import { invasives } from "~/routes/card-lists";
 interface CardProps {
   card: string;
   flipped: boolean;
-  widthRef: React.RefObject<HTMLDivElement | null>;
+  widthRef: React.RefObject<HTMLImageElement | null>;
   flipSpeed: number;
   onClick?: () => void;
 }
@@ -37,7 +37,6 @@ export function Card({card, flipped, widthRef, flipSpeed, onClick}:CardProps) {
     return (
         <div
             className="card-area"
-            ref={widthRef}
             data-testid="card"
             data-card={card}
             data-flipped={showBack}
@@ -50,7 +49,7 @@ export function Card({card, flipped, widthRef, flipSpeed, onClick}:CardProps) {
             <div className={`flip-card ${showBack ? "flipped" : "flip-card-enabled"}`} style={{ '--flip-speed': `${flipSpeed}s` } as React.CSSProperties}>
                 <div className={`flip-card-inner ${flipSpeed === 0 ? "" : "flip-card-inner-animated"}`}>
                     {card && <img className="flip-card-front" src={`/cards/${card} Front.jpg`}/>}
-                    {card && <img className={`flip-card-back ${invasive ? "invasive" : ""}`} src={`/cards/${card} Back.jpg`}/>}
+                    {card && <img className={`flip-card-back ${invasive ? "invasive" : ""}`} ref={widthRef} src={`/cards/${card} Back.jpg`}/>}
                 </div>
             </div>
         </div>
