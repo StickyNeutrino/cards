@@ -6,7 +6,7 @@
 
 A digital companion to San Diego Canyonlands' physical flashcard deck — 154 species (69 birds, 85 plants), each with field photos on the front and the common name, scientific name, family, and Kumeyaay name on the back.
 
-## 🚀 [Open the app — cards.unimpossy.com](https://cards.unimpossy.com)
+## [Open the app — cards.unimpossy.com](https://cards.unimpossy.com)
 
 [![React 19](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -103,4 +103,4 @@ Ingresses use Traefik with cert-manager-issued Let's Encrypt certificates; deplo
 
 ## License & credits
 
-The application code is licensed under the [GNU Affero General Public License v3](LICENSE) (AGPL-3.0-or-later), with source available at [github.com/StickyNeutrino/cards](https://github.com/StickyNeutrino/cards). Card imagery is courtesy of [San Diego Canyonlands](https://www.sdcanyonlands.org/), whose physical native-species flashcard deck this app digitizes, and is not covered by the code license.
+The application code is licensed under the [GNU Affero General Public License v3](LICENSE) (AGPL-3.0-or-later), with source available at [github.com/StickyNeutrino/cards](https://github.com/StickyNeutrino/cards). Card imagery is courtesy of [San Diego Canyonlands](https://www.sdcanyonlands.org/) and is not covered by the code license.
