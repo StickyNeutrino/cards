@@ -1,48 +1,28 @@
+// Sync deck repositories into the app. Plain JS (no build step) so the
+// prebuild/predev hooks run on any Node >= 20, including the Docker image.
+//
+// Each directory under decks/<id>/ is a standalone deck repository containing
+// manifest.json (card metadata, portable bare filenames) and cards/*.jpg.
+// This script:
+//   1. copies each deck's card images into public/decks/<id>/cards/
+//   2. resolves filenames into served URLs
+//   3. writes app/data/decks/<id>.json — one manifest per deck, with the
+//      survey-specific data (per-canyon species records) stripped; the full
+//      manifest stays in the private deck repository only
+//
+// Run automatically before `dev` and `build`; also runnable directly:
+//   node scripts/sync-decks.mjs
+
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-/**
- * Sync deck repositories into the app.
- *
- * Each directory under decks/<id>/ is a standalone deck repository containing
- * manifest.json (card metadata, portable bare filenames) and cards/*.jpg.
- * This script:
- *   1. copies each deck's card images into public/decks/<id>/cards/
- *   2. resolves filenames into served URLs
- *   3. writes app/data/decks.json — the registry the app is built from
- *
- * Run automatically before `dev` and `build`; also runnable directly:
- *   node scripts/sync-decks.ts
- */
-
 const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const decksRoot = path.join(appRoot, "decks");
 const publicDecksRoot = path.join(appRoot, "public", "decks");
-const outFile = path.join(appRoot, "app", "data", "decks.json");
+const outDir = path.join(appRoot, "app", "data", "decks");
 
-interface CardJson {
-  name: string;
-  front: string;
-  back: string;
-  invasive: boolean;
-  [key: string]: unknown;
-}
-
-interface CategoryJson {
-  id: string;
-  label: string;
-  cards: CardJson[];
-}
-
-interface DeckJson {
-  id: string;
-  label: string;
-  description?: string;
-  categories: CategoryJson[];
-}
-
-function copyTree(srcDir: string, destDir: string): number {
+function copyTree(srcDir, destDir) {
   let copied = 0;
   fs.mkdirSync(destDir, { recursive: true });
   for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
@@ -66,7 +46,7 @@ function copyTree(srcDir: string, destDir: string): number {
   return copied;
 }
 
-function main(): void {
+function main() {
   if (!fs.existsSync(decksRoot)) {
     console.error(`No decks/ directory found at ${decksRoot}. Clone deck repositories there first.`);
     process.exit(1);
@@ -82,7 +62,8 @@ function main(): void {
     process.exit(1);
   }
 
-  const decksOut: Array<Record<string, unknown>> = [];
+  fs.mkdirSync(outDir, { recursive: true });
+  const written = new Set();
   let totalCopied = 0;
 
   for (const id of deckIds) {
@@ -92,7 +73,7 @@ function main(): void {
       console.error(`Deck "${id}" has no manifest.json — skipping. (${manifestPath})`);
       continue;
     }
-    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8")) as DeckJson;
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
     const cardsDir = path.join(deckDir, "cards");
     if (fs.existsSync(cardsDir)) {
       totalCopied += copyTree(cardsDir, path.join(publicDecksRoot, id, "cards"));
@@ -100,32 +81,40 @@ function main(): void {
       console.warn(`Deck "${id}" has no cards/ directory — manifest only.`);
     }
 
-    const resolveUrl = (file: string) => `/decks/${id}/cards/${file.split("/").map(encodeURIComponent).join("/")}`;
-    decksOut.push({
+    const resolveUrl = (file) => `/decks/${id}/cards/${file.split("/").map(encodeURIComponent).join("/")}`;
+    const deckOut = {
       id: manifest.id ?? id,
       label: manifest.label ?? id,
       description: manifest.description ?? "",
       categories: (manifest.categories ?? []).map((cat) => ({
         id: cat.id,
         label: cat.label,
-        cards: cat.cards.map((c) => ({
-          ...c,
-          front: resolveUrl(c.front),
-          back: resolveUrl(c.back),
-        })),
+        cards: cat.cards.map((c) => {
+          const { canyons: _surveyData, ...card } = c;
+          return {
+            ...card,
+            front: resolveUrl(c.front),
+            back: resolveUrl(c.back),
+          };
+        }),
       })),
-    });
-    const cardCount = (manifest.categories ?? []).reduce((n, cat) => n + cat.cards.length, 0);
-    console.log(`  ${manifest.id ?? id}: ${cardCount} cards`);
+    };
+    const outPath = path.join(appRoot, "app", "data", "decks", `${id}.json`);
+    fs.writeFileSync(outPath, JSON.stringify(deckOut, null, 2) + "\n");
+    written.add(id);
+    const cardCount = deckOut.categories.reduce((n, cat) => n + cat.cards.length, 0);
+    console.log(`  ${deckOut.id}: ${cardCount} cards`);
   }
 
-  fs.mkdirSync(path.dirname(outFile), { recursive: true });
-  // No timestamp: sync must be idempotent so rebuilds don't dirty the file.
-  fs.writeFileSync(
-    outFile,
-    JSON.stringify({ decks: decksOut }, null, 2) + "\n",
-  );
-  console.log(`Copied ${totalCopied} image(s); wrote ${outFile}`);
+  // Remove stale per-deck manifests for decks that no longer exist.
+  for (const entry of fs.readdirSync(path.join(appRoot, "app", "data", "decks"))) {
+    if (!written.has(entry.replace(/\.json$/, ""))) {
+      fs.rmSync(path.join(appRoot, "app", "data", "decks", entry));
+      console.log(`  removed stale ${entry}`);
+    }
+  }
+
+  console.log(`Copied ${totalCopied} image(s); wrote ${written.size} deck manifest(s)`);
 }
 
 main();

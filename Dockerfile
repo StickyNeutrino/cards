@@ -14,8 +14,8 @@ COPY --from=development-dependencies-env /app/node_modules /app/node_modules
 WORKDIR /app
 ARG BUILD_SHA=dev
 ENV VITE_BUILD_SHA=$BUILD_SHA
-# prebuild hook runs scripts/sync-decks.ts, which copies deck images from
-# decks/<id>/cards/ into public/decks/ and generates app/data/decks.json
+# prebuild hook runs scripts/sync-decks.mjs, which copies deck images from
+# decks/<id>/cards/ into public/decks/ and writes app/data/decks/<id>.json
 RUN npm run build
 
 FROM node:20-alpine

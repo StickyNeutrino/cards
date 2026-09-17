@@ -18,6 +18,7 @@ export interface CardItem {
   front: string;
   back: string;
   invasive: boolean;
+  altNames?: string[];
 }
 
 export function cardsForDeck(deck: DeckId, mode: DeckMode): CardItem[] {
@@ -31,6 +32,7 @@ export function cardsForDeck(deck: DeckId, mode: DeckMode): CardItem[] {
       front: card.front,
       back: card.back,
       invasive: card.invasive,
+      altNames: card.altNames,
     })),
   );
 }
@@ -58,7 +60,10 @@ export default function CardLists() {
 
   const allCards = useMemo(() => {
     const mode = modes.includes(filter) ? filter : BOTH_MODE;
-    return cardsForDeck(deck, mode).filter(card => card.name.toLowerCase().includes(search.toLowerCase()));
+    const q = search.toLowerCase();
+    return cardsForDeck(deck, mode).filter(card =>
+      card.name.toLowerCase().includes(q) ||
+      (card.altNames ?? []).some(alt => alt.toLowerCase().includes(q)));
   }, [deck, filter, search, modes]);
 
   const changeDeck = (next: DeckId) => {

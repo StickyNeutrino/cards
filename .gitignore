@@ -22,3 +22,4 @@ data/healthy/fetch.log
 # Deck repositories (standalone git repos cloned here) and their synced copies
 /decks/
 /public/decks/
+opencode.json

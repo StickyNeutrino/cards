@@ -1,0 +1,943 @@
+{
+  "id": "canyonlands",
+  "label": "🏔 Canyonlands",
+  "description": "The 154-species physical flashcard deck from San Diego Canyonlands: 69 birds and 85 plants, scanned from the printed deck. Backs carry the common name, scientific name, family, and Kumeyaay name.",
+  "categories": [
+    {
+      "id": "birds",
+      "label": "🐦 Birds",
+      "cards": [
+        {
+          "name": "Acorn Woodpecker",
+          "front": "/decks/canyonlands/cards/Acorn%20Woodpecker%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Acorn%20Woodpecker%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "American Robin",
+          "front": "/decks/canyonlands/cards/American%20Robin%20Front.jpg",
+          "back": "/decks/canyonlands/cards/American%20Robin%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Northern Rough-winged Swallow",
+          "front": "/decks/canyonlands/cards/Northern%20Rough-winged%20Swallow%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Northern%20Rough-winged%20Swallow%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "American Crow",
+          "front": "/decks/canyonlands/cards/American%20Crow%20Front.jpg",
+          "back": "/decks/canyonlands/cards/American%20Crow%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Brown-headed Cowbird",
+          "front": "/decks/canyonlands/cards/Brown-headed%20Cowbird%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Brown-headed%20Cowbird%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Song Sparrow",
+          "front": "/decks/canyonlands/cards/Song%20Sparrow%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Song%20Sparrow%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Blue-gray Gnatcatcher",
+          "front": "/decks/canyonlands/cards/Blue-gray%20Gnatcatcher%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Blue-gray%20Gnatcatcher%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Wrentit",
+          "front": "/decks/canyonlands/cards/Wrentit%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Wrentit%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Rufous Hummingbird",
+          "front": "/decks/canyonlands/cards/Rufous%20Hummingbird%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Rufous%20Hummingbird%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Black-headed Grosbeak",
+          "front": "/decks/canyonlands/cards/Black-headed%20Grosbeak%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Black-headed%20Grosbeak%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Greater Roadrunner",
+          "front": "/decks/canyonlands/cards/Greater%20Roadrunner%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Greater%20Roadrunner%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Ash-throated Flycatcher",
+          "front": "/decks/canyonlands/cards/Ash-throated%20Flycatcher%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Ash-throated%20Flycatcher%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Cassin's Kingbird",
+          "front": "/decks/canyonlands/cards/Cassin's%20Kingbird%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Cassin's%20Kingbird%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Mourning Dove",
+          "front": "/decks/canyonlands/cards/Mourning%20Dove%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Mourning%20Dove%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Downy Woodpecker",
+          "front": "/decks/canyonlands/cards/Downy%20Woodpecker%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Downy%20Woodpecker%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Cliff Swallow",
+          "front": "/decks/canyonlands/cards/Cliff%20Swallow%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Cliff%20Swallow%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Ruby-crowned Kinglet",
+          "front": "/decks/canyonlands/cards/Ruby-crowned%20Kinglet%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Ruby-crowned%20Kinglet%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Spotted Towhee",
+          "front": "/decks/canyonlands/cards/Spotted%20Towhee%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Spotted%20Towhee%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Black Phoebe",
+          "front": "/decks/canyonlands/cards/Black%20Phoebe%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Black%20Phoebe%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "House Finch",
+          "front": "/decks/canyonlands/cards/House%20Finch%20Front.jpg",
+          "back": "/decks/canyonlands/cards/House%20Finch%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Red-tailed Hawk",
+          "front": "/decks/canyonlands/cards/Red-tailed%20Hawk%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Red-tailed%20Hawk%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Band-tailed Pigeon",
+          "front": "/decks/canyonlands/cards/Band-tailed%20Pigeon%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Band-tailed%20Pigeon%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Lesser Goldfinch",
+          "front": "/decks/canyonlands/cards/Lesser%20Goldfinch%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Lesser%20Goldfinch%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Red-winged Blackbird",
+          "front": "/decks/canyonlands/cards/Red-winged%20Blackbird%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Red-winged%20Blackbird%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "White-breasted Nuthatch",
+          "front": "/decks/canyonlands/cards/White-breasted%20Nuthatch%20Front.jpg",
+          "back": "/decks/canyonlands/cards/White-breasted%20Nuthatch%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Western Tanager",
+          "front": "/decks/canyonlands/cards/Western%20Tanager%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Western%20Tanager%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Turkey Vulture",
+          "front": "/decks/canyonlands/cards/Turkey%20Vulture%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Turkey%20Vulture%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "California Quail",
+          "front": "/decks/canyonlands/cards/California%20Quail%20Front.jpg",
+          "back": "/decks/canyonlands/cards/California%20Quail%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "White-crowned Sparrow",
+          "front": "/decks/canyonlands/cards/White-crowned%20Sparrow%20Front.jpg",
+          "back": "/decks/canyonlands/cards/White-crowned%20Sparrow%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Yellow Warbler",
+          "front": "/decks/canyonlands/cards/Yellow%20Warbler%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Yellow%20Warbler%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Northern Mockingbird",
+          "front": "/decks/canyonlands/cards/Northern%20Mockingbird%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Northern%20Mockingbird%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Say's Phoebe",
+          "front": "/decks/canyonlands/cards/Say's%20Phoebe%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Say's%20Phoebe%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "House Sparrow",
+          "front": "/decks/canyonlands/cards/House%20Sparrow%20Front.jpg",
+          "back": "/decks/canyonlands/cards/House%20Sparrow%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Cooper's Hawk",
+          "front": "/decks/canyonlands/cards/Cooper's%20Hawk%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Cooper's%20Hawk%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "California Towhee",
+          "front": "/decks/canyonlands/cards/California%20Towhee%20Front.jpg",
+          "back": "/decks/canyonlands/cards/California%20Towhee%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Bushtit",
+          "front": "/decks/canyonlands/cards/Bushtit%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Bushtit%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "California Scrub Jay",
+          "front": "/decks/canyonlands/cards/California%20Scrub%20Jay%20Front.jpg",
+          "back": "/decks/canyonlands/cards/California%20Scrub%20Jay%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Nuttall's Woodpecker",
+          "front": "/decks/canyonlands/cards/Nuttall's%20Woodpecker%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Nuttall's%20Woodpecker%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Allen's Hummingbird",
+          "front": "/decks/canyonlands/cards/Allen's%20Hummingbird%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Allen's%20Hummingbird%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Northern Flicker",
+          "front": "/decks/canyonlands/cards/Northern%20Flicker%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Northern%20Flicker%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Dark-eyed Junco",
+          "front": "/decks/canyonlands/cards/Dark-eyed%20Junco%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Dark-eyed%20Junco%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Bewick's Wren",
+          "front": "/decks/canyonlands/cards/Bewick's%20Wren%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Bewick's%20Wren%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "European Starling",
+          "front": "/decks/canyonlands/cards/European%20Starling%20Front.jpg",
+          "back": "/decks/canyonlands/cards/European%20Starling%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Yellow-rumped Warbler",
+          "front": "/decks/canyonlands/cards/Yellow-rumped%20Warbler%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Yellow-rumped%20Warbler%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Anna's Hummingbird",
+          "front": "/decks/canyonlands/cards/Anna's%20Hummingbird%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Anna's%20Hummingbird%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Western Flycatcher",
+          "front": "/decks/canyonlands/cards/Western%20Flycatcher%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Western%20Flycatcher%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Scaly-breasted Munia",
+          "front": "/decks/canyonlands/cards/Scaly-breasted%20Munia%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Scaly-breasted%20Munia%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Common Yellowthroat",
+          "front": "/decks/canyonlands/cards/Common%20Yellowthroat%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Common%20Yellowthroat%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Wilson's Warbler",
+          "front": "/decks/canyonlands/cards/Wilson's%20Warbler%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Wilson's%20Warbler%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Red-shouldered Hawk",
+          "front": "/decks/canyonlands/cards/Red-shouldered%20Hawk%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Red-shouldered%20Hawk%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Least Bell's Vireo",
+          "front": "/decks/canyonlands/cards/Least%20Bell's%20Vireo%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Least%20Bell's%20Vireo%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Townsend's Warbler",
+          "front": "/decks/canyonlands/cards/Townsend's%20Warbler%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Townsend's%20Warbler%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Orange-crowned Warbler",
+          "front": "/decks/canyonlands/cards/Orange-crowned%20Warbler%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Orange-crowned%20Warbler%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Coastal Cactus Wren",
+          "front": "/decks/canyonlands/cards/Coastal%20Cactus%20Wren%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Coastal%20Cactus%20Wren%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Western Meadowlark",
+          "front": "/decks/canyonlands/cards/Western%20Meadowlark%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Western%20Meadowlark%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Eurasian Collared Dove",
+          "front": "/decks/canyonlands/cards/Eurasian%20Collared%20Dove%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Eurasian%20Collared%20Dove%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Light-footed Ridgeway's Rail",
+          "front": "/decks/canyonlands/cards/Light-footed%20Ridgeway's%20Rail%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Light-footed%20Ridgeway's%20Rail%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Cedar Waxwing",
+          "front": "/decks/canyonlands/cards/Cedar%20Waxwing%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Cedar%20Waxwing%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Coastal California Gnatcatcher",
+          "front": "/decks/canyonlands/cards/Coastal%20California%20Gnatcatcher%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Coastal%20California%20Gnatcatcher%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "American Kestrel",
+          "front": "/decks/canyonlands/cards/American%20Kestrel%20Front.jpg",
+          "back": "/decks/canyonlands/cards/American%20Kestrel%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Common Raven",
+          "front": "/decks/canyonlands/cards/Common%20Raven%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Common%20Raven%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Northern House Wren",
+          "front": "/decks/canyonlands/cards/Northern%20House%20Wren%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Northern%20House%20Wren%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Western Barn Owl",
+          "front": "/decks/canyonlands/cards/Western%20Barn%20Owl%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Western%20Barn%20Owl%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "California Thrasher",
+          "front": "/decks/canyonlands/cards/California%20Thrasher%20Front.jpg",
+          "back": "/decks/canyonlands/cards/California%20Thrasher%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Great Horned Owl",
+          "front": "/decks/canyonlands/cards/Great%20Horned%20Owl%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Great%20Horned%20Owl%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Oak Titmouse",
+          "front": "/decks/canyonlands/cards/Oak%20Titmouse%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Oak%20Titmouse%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Hutton's Vireo",
+          "front": "/decks/canyonlands/cards/Hutton's%20Vireo%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Hutton's%20Vireo%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Hooded Oriole",
+          "front": "/decks/canyonlands/cards/Hooded%20Oriole%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Hooded%20Oriole%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Western Bluebird",
+          "front": "/decks/canyonlands/cards/Western%20Bluebird%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Western%20Bluebird%20Back.jpg",
+          "invasive": false
+        }
+      ]
+    },
+    {
+      "id": "plants",
+      "label": "🌿 Plants",
+      "cards": [
+        {
+          "name": "Chamise",
+          "front": "/decks/canyonlands/cards/Chamise%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Chamise%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Mallow",
+          "front": "/decks/canyonlands/cards/Mallow%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Mallow%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Himalayan Blackberry",
+          "front": "/decks/canyonlands/cards/Himalayan%20Blackberry%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Himalayan%20Blackberry%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Tree Tobacco",
+          "front": "/decks/canyonlands/cards/Tree%20Tobacco%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Tree%20Tobacco%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Cottonwood",
+          "front": "/decks/canyonlands/cards/Cottonwood%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Cottonwood%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Bridal Creeper",
+          "front": "/decks/canyonlands/cards/Bridal%20Creeper%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Bridal%20Creeper%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "African Flag",
+          "front": "/decks/canyonlands/cards/African%20Flag%20Front.jpg",
+          "back": "/decks/canyonlands/cards/African%20Flag%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Beggarticks",
+          "front": "/decks/canyonlands/cards/Beggarticks%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Beggarticks%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Mexican Fan Palm",
+          "front": "/decks/canyonlands/cards/Mexican%20Fan%20Palm%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Mexican%20Fan%20Palm%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "San Diego Sunflower",
+          "front": "/decks/canyonlands/cards/San%20Diego%20Sunflower%20Front.jpg",
+          "back": "/decks/canyonlands/cards/San%20Diego%20Sunflower%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Coast Live Oak",
+          "front": "/decks/canyonlands/cards/Coast%20Live%20Oak%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Coast%20Live%20Oak%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Marsh Elder",
+          "front": "/decks/canyonlands/cards/Marsh%20Elder%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Marsh%20Elder%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Sweet Pea",
+          "front": "/decks/canyonlands/cards/Sweet%20Pea%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Sweet%20Pea%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Honeysuckle",
+          "front": "/decks/canyonlands/cards/Honeysuckle%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Honeysuckle%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Gooseberry",
+          "front": "/decks/canyonlands/cards/Gooseberry%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Gooseberry%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Umbrella Sedge",
+          "front": "/decks/canyonlands/cards/Umbrella%20Sedge%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Umbrella%20Sedge%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Wild Cucumber",
+          "front": "/decks/canyonlands/cards/Wild%20Cucumber%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Wild%20Cucumber%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Deerweed",
+          "front": "/decks/canyonlands/cards/Deerweed%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Deerweed%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Coyote brush",
+          "front": "/decks/canyonlands/cards/Coyote%20brush%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Coyote%20brush%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Brazilian Pepper",
+          "front": "/decks/canyonlands/cards/Brazilian%20Pepper%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Brazilian%20Pepper%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Elderberry",
+          "front": "/decks/canyonlands/cards/Elderberry%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Elderberry%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Mulefat",
+          "front": "/decks/canyonlands/cards/Mulefat%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Mulefat%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "California wild rose",
+          "front": "/decks/canyonlands/cards/California%20wild%20rose%20Front.jpg",
+          "back": "/decks/canyonlands/cards/California%20wild%20rose%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "California Sagebrush",
+          "front": "/decks/canyonlands/cards/California%20Sagebrush%20Front.jpg",
+          "back": "/decks/canyonlands/cards/California%20Sagebrush%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Pampas Grass",
+          "front": "/decks/canyonlands/cards/Pampas%20Grass%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Pampas%20Grass%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Blue Eyed Grass",
+          "front": "/decks/canyonlands/cards/Blue%20Eyed%20Grass%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Blue%20Eyed%20Grass%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Myoporum",
+          "front": "/decks/canyonlands/cards/Myoporum%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Myoporum%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Curly Dock",
+          "front": "/decks/canyonlands/cards/Curly%20Dock%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Curly%20Dock%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "California buckwheat",
+          "front": "/decks/canyonlands/cards/California%20buckwheat%20Front.jpg",
+          "back": "/decks/canyonlands/cards/California%20buckwheat%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Prickly Pear",
+          "front": "/decks/canyonlands/cards/Prickly%20Pear%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Prickly%20Pear%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Scrub Oak",
+          "front": "/decks/canyonlands/cards/Scrub%20Oak%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Scrub%20Oak%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Mustard",
+          "front": "/decks/canyonlands/cards/Mustard%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Mustard%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Jade",
+          "front": "/decks/canyonlands/cards/Jade%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Jade%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Golden Bush",
+          "front": "/decks/canyonlands/cards/Golden%20Bush%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Golden%20Bush%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Hollyleaf Cherry",
+          "front": "/decks/canyonlands/cards/Hollyleaf%20Cherry%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Hollyleaf%20Cherry%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Yucca",
+          "front": "/decks/canyonlands/cards/Yucca%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Yucca%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Spiny redberry",
+          "front": "/decks/canyonlands/cards/Spiny%20redberry%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Spiny%20redberry%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Stinkwort",
+          "front": "/decks/canyonlands/cards/Stinkwort%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Stinkwort%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Narrowleaf Milkweed",
+          "front": "/decks/canyonlands/cards/Narrowleaf%20Milkweed%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Narrowleaf%20Milkweed%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Yerba Mansa",
+          "front": "/decks/canyonlands/cards/Yerba%20Mansa%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Yerba%20Mansa%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Ice Plant",
+          "front": "/decks/canyonlands/cards/Ice%20Plant%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Ice%20Plant%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Black Sage",
+          "front": "/decks/canyonlands/cards/Black%20Sage%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Black%20Sage%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Lupine",
+          "front": "/decks/canyonlands/cards/Lupine%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Lupine%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Toyon",
+          "front": "/decks/canyonlands/cards/Toyon%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Toyon%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Thistle",
+          "front": "/decks/canyonlands/cards/Thistle%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Thistle%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Primrose",
+          "front": "/decks/canyonlands/cards/Primrose%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Primrose%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Broom baccharis",
+          "front": "/decks/canyonlands/cards/Broom%20baccharis%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Broom%20baccharis%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Willow",
+          "front": "/decks/canyonlands/cards/Willow%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Willow%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Sagewort",
+          "front": "/decks/canyonlands/cards/Sagewort%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Sagewort%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Golden Yarrow",
+          "front": "/decks/canyonlands/cards/Golden%20Yarrow%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Golden%20Yarrow%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Eucalyptus",
+          "front": "/decks/canyonlands/cards/Eucalyptus%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Eucalyptus%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Horehound",
+          "front": "/decks/canyonlands/cards/Horehound%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Horehound%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Canary Island Date Palm",
+          "front": "/decks/canyonlands/cards/Canary%20Island%20Date%20Palm%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Canary%20Island%20Date%20Palm%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Nightshade",
+          "front": "/decks/canyonlands/cards/Nightshade%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Nightshade%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Mugwort",
+          "front": "/decks/canyonlands/cards/Mugwort%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Mugwort%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Sycamore",
+          "front": "/decks/canyonlands/cards/Sycamore%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Sycamore%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Yerba Santa",
+          "front": "/decks/canyonlands/cards/Yerba%20Santa%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Yerba%20Santa%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Wild Rye",
+          "front": "/decks/canyonlands/cards/Wild%20Rye%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Wild%20Rye%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Ceanothus",
+          "front": "/decks/canyonlands/cards/Ceanothus%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Ceanothus%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Arundo",
+          "front": "/decks/canyonlands/cards/Arundo%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Arundo%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Bladderpod",
+          "front": "/decks/canyonlands/cards/Bladderpod%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Bladderpod%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Nasturtium",
+          "front": "/decks/canyonlands/cards/Nasturtium%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Nasturtium%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Blue Plumbago",
+          "front": "/decks/canyonlands/cards/Blue%20Plumbago%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Blue%20Plumbago%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Radish",
+          "front": "/decks/canyonlands/cards/Radish%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Radish%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Mission Manzanita",
+          "front": "/decks/canyonlands/cards/Mission%20Manzanita%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Mission%20Manzanita%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Monkeyflower",
+          "front": "/decks/canyonlands/cards/Monkeyflower%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Monkeyflower%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Peruvian Pepper",
+          "front": "/decks/canyonlands/cards/Peruvian%20Pepper%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Peruvian%20Pepper%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Cape Ivy",
+          "front": "/decks/canyonlands/cards/Cape%20Ivy%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Cape%20Ivy%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Cholla",
+          "front": "/decks/canyonlands/cards/Cholla%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Cholla%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Fennel",
+          "front": "/decks/canyonlands/cards/Fennel%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Fennel%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Everlasting",
+          "front": "/decks/canyonlands/cards/Everlasting%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Everlasting%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Cheeseweed",
+          "front": "/decks/canyonlands/cards/Cheeseweed%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Cheeseweed%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Poison Oak",
+          "front": "/decks/canyonlands/cards/Poison%20Oak%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Poison%20Oak%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "California sunflower",
+          "front": "/decks/canyonlands/cards/California%20sunflower%20Front.jpg",
+          "back": "/decks/canyonlands/cards/California%20sunflower%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Lemonadeberry",
+          "front": "/decks/canyonlands/cards/Lemonadeberry%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Lemonadeberry%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Purple Fountain Grass",
+          "front": "/decks/canyonlands/cards/Purple%20Fountain%20Grass%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Purple%20Fountain%20Grass%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Tarweed",
+          "front": "/decks/canyonlands/cards/Tarweed%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Tarweed%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Poison Hemlock",
+          "front": "/decks/canyonlands/cards/Poison%20Hemlock%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Poison%20Hemlock%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Acacia",
+          "front": "/decks/canyonlands/cards/Acacia%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Acacia%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Castor",
+          "front": "/decks/canyonlands/cards/Castor%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Castor%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Tamarisk",
+          "front": "/decks/canyonlands/cards/Tamarisk%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Tamarisk%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Ox Tongue",
+          "front": "/decks/canyonlands/cards/Ox%20Tongue%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Ox%20Tongue%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "Laurel sumac",
+          "front": "/decks/canyonlands/cards/Laurel%20sumac%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Laurel%20sumac%20Back.jpg",
+          "invasive": false
+        },
+        {
+          "name": "Crown Daisy",
+          "front": "/decks/canyonlands/cards/Crown%20Daisy%20Front.jpg",
+          "back": "/decks/canyonlands/cards/Crown%20Daisy%20Back.jpg",
+          "invasive": true
+        },
+        {
+          "name": "White Sage",
+          "front": "/decks/canyonlands/cards/White%20Sage%20Front.jpg",
+          "back": "/decks/canyonlands/cards/White%20Sage%20Back.jpg",
+          "invasive": false
+        }
+      ]
+    }
+  ]
+}
