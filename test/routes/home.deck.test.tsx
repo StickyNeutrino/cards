@@ -52,7 +52,7 @@ describe('Home deck switching', () => {
   it('switches to the healthy-canyons deck via the deck picker', async () => {
     renderHome();
 
-    await userEvent.click(screen.getByTestId('deck-button-healthy-canyons'));
+    await userEvent.selectOptions(screen.getByTestId('deck-select'), 'healthy-canyons');
 
     await waitFor(() => {
       const card = screen.getByTestId('card');
@@ -78,7 +78,7 @@ describe('Home deck switching', () => {
     renderHome();
     expect(screen.getByTestId('mode-button').textContent).toBe('🐦 Birds');
 
-    await userEvent.click(screen.getByTestId('deck-button-healthy-canyons'));
+    await userEvent.selectOptions(screen.getByTestId('deck-select'), 'healthy-canyons');
 
     await waitFor(() => {
       expect(screen.getByTestId('mode-button').textContent).toBe('🌿 Plants');

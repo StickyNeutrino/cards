@@ -74,12 +74,13 @@ describe('HamburgerMenu', () => {
     expect(settingsButton).toHaveAttribute('title', 'Settings');
   });
 
-  it('renders all buttons', () => {
+  it('renders all buttons plus the deck dropdown', () => {
     render(<HamburgerMenu {...defaultProps} />);
 
     const buttons = screen.getAllByRole('button');
-    // 2 deck buttons + mode + card list + credits + settings
-    expect(buttons).toHaveLength(6);
+    // deck dropdown (not a button) + mode + card list + credits + settings
+    expect(buttons).toHaveLength(4);
+    expect(screen.getByTestId('deck-select').tagName).toBe('SELECT');
   });
 
   it('handles all mode prop values correctly', () => {

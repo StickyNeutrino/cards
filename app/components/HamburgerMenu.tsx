@@ -27,17 +27,21 @@ export const HamburgerMenu = forwardRef<HTMLDivElement, HamburgerMenuProps>(({
       <button onClick={changeModeClicked} className="menu-button" data-testid="mode-button">
         {activeDef ? modeLabelFor(activeDef, mode) : mode}
       </button>
-      {DECK_DEFS.map((d) => (
-        <button
-          key={d.id}
-          onClick={(e) => { e.stopPropagation(); changeDeckClicked?.(d.id); }}
-          className={d.id === deck ? "menu-button active" : "menu-button"}
-          data-testid={`deck-button-${d.id}`}
-          title={d.id === deck ? "Current deck" : "Switch deck"}
-        >
-          {d.label}
-        </button>
-      ))}
+      <select
+        className="menu-button ml-2 deck-select"
+        data-testid="deck-select"
+        aria-label="Select deck"
+        value={deck}
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onChange={(e) => changeDeckClicked?.(e.target.value as DeckId)}
+      >
+        {DECK_DEFS.map((d) => (
+          <option key={d.id} value={d.id}>
+            {d.label}
+          </option>
+        ))}
+      </select>
       <button
         onClick={cardListsClicked}
         className="menu-button ml-2"

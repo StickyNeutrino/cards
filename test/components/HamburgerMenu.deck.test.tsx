@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { HamburgerMenu } from '../../app/components/HamburgerMenu';
 
 // HamburgerMenu reads the real deck registry (app/data/decks.json):
@@ -16,32 +16,31 @@ describe('HamburgerMenu deck picker', () => {
     creditsClicked: vi.fn(),
   };
 
-  it('renders both deck buttons with the active deck highlighted', () => {
+  it('renders a deck dropdown with both decks and the active deck selected', () => {
     render(<HamburgerMenu {...defaultProps} />);
 
-    const canyonlands = screen.getByTestId('deck-button-canyonlands');
-    const healthy = screen.getByTestId('deck-button-healthy-canyons');
-    expect(canyonlands).toHaveClass('active');
-    expect(healthy).not.toHaveClass('active');
-    expect(canyonlands).toHaveTextContent('Canyonlands');
-    expect(healthy).toHaveTextContent('Healthy Canyons');
+    const select = screen.getByTestId('deck-select');
+    expect(select).toHaveValue('canyonlands');
+    const options = within(select).getAllByRole('option') as HTMLOptionElement[];
+    expect(options.map((o) => o.value)).toEqual(['canyonlands', 'healthy-canyons']);
+    expect(options[0]).toHaveTextContent('Canyonlands');
+    expect(options[1]).toHaveTextContent('Healthy Canyons');
   });
 
-  it('highlights the healthy deck when it is active', () => {
+  it('shows the healthy deck as selected when it is active', () => {
     render(<HamburgerMenu {...defaultProps} deck="healthy-canyons" />);
 
-    expect(screen.getByTestId('deck-button-healthy-canyons')).toHaveClass('active');
-    expect(screen.getByTestId('deck-button-canyonlands')).not.toHaveClass('active');
+    expect(screen.getByTestId('deck-select')).toHaveValue('healthy-canyons');
   });
 
-  it('calls changeDeckClicked with the target deck', () => {
+  it('calls changeDeckClicked with the chosen deck', () => {
     const changeDeckClicked = vi.fn();
     render(<HamburgerMenu {...defaultProps} changeDeckClicked={changeDeckClicked} />);
 
-    fireEvent.click(screen.getByTestId('deck-button-healthy-canyons'));
+    fireEvent.change(screen.getByTestId('deck-select'), { target: { value: 'healthy-canyons' } });
     expect(changeDeckClicked).toHaveBeenCalledWith('healthy-canyons');
 
-    fireEvent.click(screen.getByTestId('deck-button-canyonlands'));
+    fireEvent.change(screen.getByTestId('deck-select'), { target: { value: 'canyonlands' } });
     expect(changeDeckClicked).toHaveBeenCalledWith('canyonlands');
   });
 

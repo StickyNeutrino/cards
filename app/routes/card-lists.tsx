@@ -70,17 +70,19 @@ export default function CardLists() {
   return (
     <main className="card-list-main">
       <div className="controls-container">
-        {DECK_DEFS.map((d) => (
-          <button
-            key={d.id}
-            type="button"
-            data-testid={`deck-${d.id}`}
-            className={deck === d.id ? "menu-button active" : "menu-button"}
-            onClick={() => changeDeck(d.id)}
-          >
-            {d.label}
-          </button>
-        ))}
+        <select
+          className="menu-button deck-select"
+          data-testid="deck-select"
+          aria-label="Select deck"
+          value={deck}
+          onChange={(e) => changeDeck(e.target.value as DeckId)}
+        >
+          {DECK_DEFS.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.label}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="controls-container">
         {modes.map((m) => (

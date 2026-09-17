@@ -90,22 +90,22 @@ describe('CardLists page', () => {
       { initialEntries: ['/card-lists?deck=healthy-canyons'] },
     );
     render(<RouterProvider router={r} />);
-    expect(screen.getByTestId('deck-healthy-canyons')).toHaveClass('active');
+    expect(screen.getByTestId('deck-select')).toHaveValue('healthy-canyons');
     expect(screen.getByTestId('card-list')).toHaveTextContent('Coast Live Oak');
     expect(screen.getByTestId('card-list')).not.toHaveTextContent('Acorn Woodpecker');
   });
 
   it('shows the canyonlands deck by default', () => {
     render(<RouterProvider router={router()} />);
-    expect(screen.getByTestId('deck-canyonlands')).toHaveClass('active');
+    expect(screen.getByTestId('deck-select')).toHaveValue('canyonlands');
     expect(screen.getByTestId('card-list')).toHaveTextContent('Chamise');
     expect(screen.getByTestId('card-list')).not.toHaveTextContent('Mock Healthy Hawk');
   });
 
   it('switching to the healthy deck persists the choice and swaps the list', () => {
     render(<RouterProvider router={router()} />);
-    fireEvent.click(screen.getByTestId('deck-healthy-canyons'));
-    expect(screen.getByTestId('deck-healthy-canyons')).toHaveClass('active');
+    fireEvent.change(screen.getByTestId('deck-select'), { target: { value: 'healthy-canyons' } });
+    expect(screen.getByTestId('deck-select')).toHaveValue('healthy-canyons');
     expect(screen.getByTestId('card-list')).toHaveTextContent('Coast Live Oak');
     expect(screen.getByTestId('card-list')).not.toHaveTextContent('Acorn Woodpecker');
     // mode filter reset to both for the new deck

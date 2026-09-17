@@ -112,6 +112,21 @@ main {
   border: 2px solid #a1b69a;
 }
 
+/* Deck dropdown (hamburger menu + card lists page): keep the menu-button
+   look but normalize the native select widget across platforms. */
+.deck-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding-right: 2em;
+  background-color: #a1b69a;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7em center;
+  background-size: 0.75em;
+}
+
 .controls-container {
   margin-top: 1rem;
   display: flex;

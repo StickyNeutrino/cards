@@ -40,7 +40,7 @@ describe('Home with an empty Healthy Canyons deck', () => {
       <RouterProvider router={createMemoryRouter([{ path: '/', element: <Home /> }])} />,
     );
 
-    await user.click(screen.getByTestId('deck-button-healthy-canyons'));
+    await user.selectOptions(screen.getByTestId('deck-select'), 'healthy-canyons');
 
     expect(await screen.findByTestId('deck-empty')).toBeInTheDocument();
     expect(screen.getByTestId('deck-empty')).toHaveTextContent('No cards in this deck yet.');
@@ -52,12 +52,13 @@ describe('Home with an empty Healthy Canyons deck', () => {
       <RouterProvider router={createMemoryRouter([{ path: '/', element: <Home /> }])} />,
     );
 
-    await user.click(screen.getByTestId('deck-button-healthy-canyons'));
+    await user.selectOptions(screen.getByTestId('deck-select'), 'healthy-canyons');
     await screen.findByTestId('deck-empty');
 
-    // Both deck buttons remain rendered and the mode button still works
-    expect(screen.getByTestId('deck-button-canyonlands')).toBeInTheDocument();
-    expect(screen.getByTestId('deck-button-healthy-canyons')).toBeInTheDocument();
+    // The deck dropdown remains rendered with the empty deck selected and the mode button still works
+    const select = screen.getByTestId('deck-select');
+    expect(select).toBeInTheDocument();
+    expect(select).toHaveValue('healthy-canyons');
     await user.click(screen.getByTestId('mode-button'));
     // The empty deck has no categories, so the only mode left is "both"
     expect(screen.getByTestId('mode-button').textContent?.trim()).toBe('Both');
