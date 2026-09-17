@@ -42,11 +42,14 @@ describe('Credits page', () => {
       />,
     );
 
-  it('lists every photo with deck, observer, license, and observation link', () => {
+  it('groups photos by deck and card, with observer, license, and observation link', () => {
     renderPage();
 
+    // The deck name is a section heading, not a column repeated on every row.
+    expect(screen.getAllByText('Healthy Canyons')).toHaveLength(1);
+    expect(screen.getByRole('heading', { name: 'Healthy Canyons' })).toBeInTheDocument();
+
     const table = screen.getByTestId('credits-table');
-    expect(table).toHaveTextContent('Healthy Canyons');
     expect(table).toHaveTextContent('Coast Live Oak');
     expect(table).toHaveTextContent('Alice Nature');
     expect(table).toHaveTextContent('CC BY-NC');
@@ -55,6 +58,9 @@ describe('Credits page', () => {
     expect(table).toHaveTextContent('Red-tailed Hawk');
     expect(table).toHaveTextContent('Carol Hawk');
     expect(table).toHaveTextContent('CC BY');
+
+    // Each card is listed once, with all of its photos under it.
+    expect(screen.getAllByText('Coast Live Oak')).toHaveLength(1);
 
     const links = screen.getAllByRole('link', { name: /iNat #\d+/ });
     expect(links.map((l) => l.getAttribute('href'))).toContain('https://www.inaturalist.org/observations/111');

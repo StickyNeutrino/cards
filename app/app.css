@@ -307,15 +307,35 @@ main {
   margin-top: -5px;
 }
 /* ---- Photo credits page ---- */
+/* Overrides the global centered-viewport-height `main` styles: this page is a
+   long scrolling document, and content overflowing a 100vh flex container is
+   unreachable (browser find-in-page can't scroll to it). */
 .credits-main {
-  max-width: 760px;
+  display: block;
+  height: auto;
+  min-height: 100vh;
+  max-width: 860px;
   margin: 0 auto;
   padding: 24px 16px 48px;
+}
+.credits-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  padding: 20px 22px 28px;
   color: #222;
 }
 .credits-main h1 {
   font-size: 1.6rem;
   margin: 8px 0 12px;
+}
+.credits-back {
+  font-size: 0.85rem;
+  color: #666;
+  text-decoration: underline;
+}
+.credits-back:hover {
+  color: #222;
 }
 .credits-intro {
   font-size: 0.95rem;
@@ -326,20 +346,53 @@ main {
   width: 100%;
   margin-bottom: 16px;
 }
+.credits-deck h2 {
+  font-size: 1.1rem;
+  margin: 20px 0 10px;
+}
 .credits-table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.88rem;
 }
 .credits-table th,
 .credits-table td {
   text-align: left;
-  padding: 6px 10px;
-  border-bottom: 1px solid #d8d6d0;
+  padding: 7px 10px;
+  border-bottom: 1px solid #e3e1db;
+  vertical-align: top;
 }
-.credits-table th {
+.credits-table thead th {
   font-weight: 600;
   border-bottom: 2px solid #b9b7b1;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.credits-table tbody tr:nth-child(even) {
+  background: #faf9f6;
+}
+.credits-table .credits-card-name {
+  width: 34%;
+  font-weight: 600;
+}
+.credits-photo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 2px 0;
+}
+.credits-license {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #5c5a54;
+  background: #efede9;
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
 }
 .credits-table a {
   color: #1a5276;
