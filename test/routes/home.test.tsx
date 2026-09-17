@@ -1503,18 +1503,8 @@ describe('Home', () => {
         act(() => (global.Image as any).instances[idx].onload?.())
       }
 
-      // Check that all expected image URLs are set
+      // Check that all expected image URLs are set (deck order: plants, then birds)
       const expectedUrls = [
-        '/cards/Mock Bird 1 Front.jpg',
-        '/cards/Mock Bird 1 Back.jpg',
-        '/cards/Mock Bird 2 Front.jpg',
-        '/cards/Mock Bird 2 Back.jpg',
-        '/cards/Mock Bird 3 Front.jpg',
-        '/cards/Mock Bird 3 Back.jpg',
-        '/cards/Mock Bird 4 Front.jpg',
-        '/cards/Mock Bird 4 Back.jpg',
-        '/cards/Mock Bird 5 Front.jpg',
-        '/cards/Mock Bird 5 Back.jpg',
         '/cards/Mock Plant 1 Front.jpg',
         '/cards/Mock Plant 1 Back.jpg',
         '/cards/Mock Plant 2 Front.jpg',
@@ -1525,6 +1515,16 @@ describe('Home', () => {
         '/cards/Mock Plant 4 Back.jpg',
         '/cards/Mock Plant 5 Front.jpg',
         '/cards/Mock Plant 5 Back.jpg',
+        '/cards/Mock Bird 1 Front.jpg',
+        '/cards/Mock Bird 1 Back.jpg',
+        '/cards/Mock Bird 2 Front.jpg',
+        '/cards/Mock Bird 2 Back.jpg',
+        '/cards/Mock Bird 3 Front.jpg',
+        '/cards/Mock Bird 3 Back.jpg',
+        '/cards/Mock Bird 4 Front.jpg',
+        '/cards/Mock Bird 4 Back.jpg',
+        '/cards/Mock Bird 5 Front.jpg',
+        '/cards/Mock Bird 5 Back.jpg',
       ];
 
       const actualUrls = (global.Image as any).instances.map((img: any) => img.src);

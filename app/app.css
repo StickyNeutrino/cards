@@ -306,3 +306,59 @@ main {
 .card-list-item.invasive .card-name {
   margin-top: -5px;
 }
+/* ---- Photo credits page ---- */
+.credits-main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  color: #222;
+}
+.credits-main h1 {
+  font-size: 1.6rem;
+  margin: 8px 0 12px;
+}
+.credits-intro {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.credits-main .search-input {
+  width: 100%;
+  margin-bottom: 16px;
+}
+.credits-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.credits-table th,
+.credits-table td {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid #d8d6d0;
+}
+.credits-table th {
+  font-weight: 600;
+  border-bottom: 2px solid #b9b7b1;
+}
+.credits-table a {
+  color: #1a5276;
+}
+.credits-empty {
+  margin-top: 16px;
+  font-style: italic;
+  color: #666;
+}
+
+/* Empty deck notice (e.g. Healthy Canyons before generation) */
+.deck-empty {
+  width: 80%;
+  max-width: 450px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 1.1rem;
+  color: #444;
+  background: #efede9;
+  border-radius: 12px;
+}

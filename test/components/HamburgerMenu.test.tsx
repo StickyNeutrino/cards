@@ -78,7 +78,8 @@ describe('HamburgerMenu', () => {
     render(<HamburgerMenu {...defaultProps} />);
 
     const buttons = screen.getAllByRole('button');
-    expect(buttons).toHaveLength(3);
+    // 2 deck buttons + mode + card list + credits + settings
+    expect(buttons).toHaveLength(6);
   });
 
   it('handles all mode prop values correctly', () => {

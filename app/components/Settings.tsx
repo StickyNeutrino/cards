@@ -47,7 +47,7 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
           max="2.0"
           step="0.1"
           value={flipSpeed}
-          onInput={(e) => setFlipSpeed(parseFloat(e.target.value).toFixed(1))}
+          onInput={(e) => setFlipSpeed(parseFloat((e.target as HTMLInputElement).value).toFixed(1))}
           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
         />
       </div>

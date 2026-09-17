@@ -1,10 +1,13 @@
 import type { Route } from "./+types/home";
 import { Card } from "~/card/card";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { birds, plants } from "./card-lists";
+import { birds, plants, invasives } from "./card-lists";
+import { healthyPlants, healthyAnimals } from "~/data/healthyCards";
 import { trackCardView } from "~/viewtrack";
-import { make_deck } from "~/utils/deckUtils";
+import {
+  deckFromLocationOrStorage, make_deck, modesForDeck, type DeckId, type DeckMode,
+} from "~/utils/deckUtils";
 import { Settings } from "~/components/Settings";
 import { PreloadProgress } from "~/components/PreloadProgress";
 import { HamburgerMenu } from "~/components/HamburgerMenu";
@@ -16,6 +19,36 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
+interface CardRef {
+  name: string;
+  front: string;
+  back: string;
+  invasive: boolean;
+}
+
+function buildCardRefs(
+  plants: Array<{ name: string; front: string; back: string }>,
+  birds: Array<{ name: string; front: string; back: string }>,
+  animals: Array<{ name: string; front: string; back: string }>,
+  isInvasive: (card: { name: string; native?: string }) => boolean,
+): { plants: CardRef[]; birds: CardRef[]; animals: CardRef[]; byName: Map<string, CardRef>; all: CardRef[] } {
+  const toRef = (c: { name: string; front: string; back: string }, prefix: string): CardRef => ({
+    name: c.name,
+    front: c.front.startsWith("/") ? c.front : `${prefix}${c.front}`,
+    back: c.back.startsWith("/") ? c.back : `${prefix}${c.back}`,
+    invasive: isInvasive(c),
+  });
+  const p = plants.map((c) => toRef(c, "/cards/"));
+  const b = birds.map((c) => toRef(c, "/cards/"));
+  const a = animals.map((c) => toRef(c, ""));
+  return {
+    plants: p,
+    birds: b,
+    animals: a,
+    byName: new Map([...p, ...b, ...a].map((c) => [c.name, c])),
+    all: [...p, ...b, ...a],
+  };
+}
 
 let max_index = 0;
 
@@ -24,29 +57,57 @@ export default function Home() {
   const [cardIndex, setIndex] = useState(0);
   if (cardIndex < 0) { setIndex(0) }
 
-  const [mode, setMode] = useState<'plants' | 'birds' | 'both'>(() => {
+  const [deck, setDeck] = useState<DeckId>(() => {
+    if (typeof window !== 'undefined') {
+      return deckFromLocationOrStorage(window.location.search);
+    }
+    return 'canyonlands';
+  });
+
+  const [mode, setMode] = useState<DeckMode>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.has("both")) return 'both';
       if (params.has("birds")) return 'birds';
+      if (params.has("animals")) return 'animals';
+      if (params.has("plants")) return 'plants';
       const saved = localStorage.getItem('mode');
-      if (saved === 'plants' || saved === 'birds' || saved === 'both') return saved;
-      return 'plants'; // Changed default to 'plants'
+      if (saved === 'plants' || saved === 'birds' || saved === 'animals' || saved === 'both') return saved;
+      return 'plants';
     }
     return 'plants';
   })
-  const [deck, setDeck] = useState(make_deck(mode, plants, birds))
+
+  const cardRefs = useMemo(() => ({
+    canyonlands: buildCardRefs(plants, birds, [], (c) => invasives.includes(c.name)),
+    healthy: buildCardRefs(healthyPlants, [], healthyAnimals, (c) => c.native === "non-native"),
+  }), []);
+  const activeDeck = deck === 'healthy' ? cardRefs.healthy : cardRefs.canyonlands;
+
+  const makeDeck = useCallback((d: DeckId, m: DeckMode) => {
+    const refs = d === 'healthy' ? cardRefs.healthy : cardRefs.canyonlands;
+    return make_deck(m, refs.plants, refs.birds, refs.animals);
+  }, [cardRefs]);
+
+  const [deckNames, setDeckNames] = useState<string[]>(() => makeDeck(deck, mode));
   const [preloadProgress, setPreloadProgress] = useState<{ current: number; total: number; isVisible: boolean }>({
     current: 0,
     total: 0,
     isVisible: false
   });
+  const preloadKey = deck === 'healthy' ? 'pwa-cards-preloaded-healthy' : 'pwa-cards-preloaded';
   const [isPreloaded, setIsPreloaded] = useState(() => {
     if (typeof window !== 'undefined') {
-        return localStorage.getItem('pwa-cards-preloaded') === 'true';
+        return localStorage.getItem(preloadKeyFor(deck)) === 'true';
     }
     return false;
   });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsPreloaded(localStorage.getItem(preloadKeyFor(deck)) === 'true');
+    }
+  }, [deck]);
   const [isPreloading, setIsPreloading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -85,65 +146,86 @@ export default function Home() {
     }
   }, [mode]);
 
-  const currentCard = deck[cardIndex % deck.length];
-  const nextCard = deck[(cardIndex + 1) % deck.length];
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('deck', deck);
+    }
+  }, [deck]);
 
-  const makeDeckCallback = useCallback(() => {setDeck(make_deck(mode, plants, birds)); max_index = 0}, [mode])
+  const deckIsEmpty = deckNames.length === 0;
+  const currentCardName = deckIsEmpty ? null : deckNames[cardIndex % deckNames.length];
+  const nextCardName = deckIsEmpty ? null : deckNames[(cardIndex + 1) % deckNames.length];
+  const currentCard = currentCardName ? activeDeck.byName.get(currentCardName) : undefined;
+  const nextCard = nextCardName ? activeDeck.byName.get(nextCardName) : undefined;
+
+  const makeDeckCallback = useCallback(() => {
+    setDeckNames(makeDeck(deck, mode));
+    max_index = 0;
+  }, [deck, mode, makeDeck]);
 
   useEffect(makeDeckCallback, [makeDeckCallback]);
 
+  // If the saved mode does not exist in this deck, fall back to plants.
+  useEffect(() => {
+    if (!modesForDeck(deck).includes(mode)) {
+      setMode('plants');
+    }
+  }, [deck, mode]);
+
   useEffect(() => {
     if (selectedCard) {
-      const index = deck.findIndex(card => card === selectedCard);
+      const index = deckNames.findIndex(card => card === selectedCard);
       if (index !== -1) {
         setIndex(index);
       } else {
-        // Card not found in current deck, check if it's in birds or plants
-        const isBird = birds.some(bird => bird.name === selectedCard);
-        const isPlant = plants.some(plant => plant.name === selectedCard);
-        if (isBird && mode !== 'birds' && mode !== 'both') {
-          setMode('birds');
-        } else if (isPlant && mode !== 'plants' && mode !== 'both') {
+        // Card not found in current deck: switch mode so it is.
+        const inPlants = activeDeck.plants.some(plant => plant.name === selectedCard);
+        const inBirds = activeDeck.birds.some(bird => bird.name === selectedCard);
+        const inAnimals = activeDeck.animals.some(animal => animal.name === selectedCard);
+        if (inPlants && mode !== 'plants' && mode !== 'both') {
           setMode('plants');
-        } else if (mode === 'plants' && isBird) {
-          setMode('both');
-        } else if (mode === 'birds' && isPlant) {
+        } else if (inBirds && mode !== 'birds' && mode !== 'both') {
+          setMode('birds');
+        } else if (inAnimals && mode !== 'animals' && mode !== 'both') {
+          setMode('animals');
+        } else if (mode !== 'both' && ((inPlants && inBirds) || (inPlants && inAnimals) || (inBirds && inAnimals))) {
           setMode('both');
         }
       }
     }
-  }, [selectedCard, deck]);
-  useEffect(() => {
-    if (!selectedCard && deck.length > 0) {
-      setSelectedCard(deck[0].name);
-    }
-  }, [deck, selectedCard]);
+  }, [selectedCard, deckNames]);
 
   // Separate effect to handle URL cleanup after mode change
   useEffect(() => {
-    if (selectedCard && deck.length > 0) {
-      const index = deck.findIndex(card => card.name === selectedCard);
+    if (selectedCard && deckNames.length > 0) {
+      const index = deckNames.findIndex(card => card === selectedCard);
       if (index !== -1) {
         const url = new URL(window.location.href);
         url.searchParams.delete('card');
         window.history.replaceState({}, "", url.toString());
       }
     }
-  }, [selectedCard, deck]);
+  }, [selectedCard, deckNames]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location && window.history && window.history.replaceState) {
       const url = new URL(window.location.href);
       url.searchParams.delete("plants");
       url.searchParams.delete("birds");
+      url.searchParams.delete("animals");
       url.searchParams.delete("both");
+      if (deck === 'healthy') {
+        url.searchParams.set("deck", "healthy");
+      } else {
+        url.searchParams.delete("deck");
+      }
       if (mode !== 'plants') {
         url.searchParams.set(mode, "true");
       }
       window.history.replaceState({}, "", url.toString());
     }
-  }, [mode]);
-  
+  }, [mode, deck]);
+
   const nextAction = () => {
     if (flipped) {
       setFlipped(false);
@@ -222,18 +304,20 @@ export default function Home() {
     };
   }, [showSettings]);
 
-  const elementRef = useRef<HTMLImageElement>(null);
+  // The nav button row matches the visible card's width. The card's <img>
+  // element is replaced whenever the deck changes, so track the element itself
+  // (not just its size) and re-attach the ResizeObserver to each new element.
+  const [cardImg, setCardImg] = useState<HTMLImageElement | null>(null);
   const [elementWidth, setElementWidth] = useState(0);
 
   useLayoutEffect(() => {
-    const el = elementRef.current;
-    if (!el) return;
-    const update = () => setElementWidth(el.offsetWidth);
+    if (!cardImg) return;
+    const update = () => setElementWidth(cardImg.offsetWidth);
     update();
     const observer = new ResizeObserver(update);
-    observer.observe(el);
+    observer.observe(cardImg);
     return () => observer.disconnect();
-  }, []);
+  }, [cardImg]);
 
   const toggleMode = () => {
     if (typeof window !== 'undefined') {
@@ -241,11 +325,26 @@ export default function Home() {
       url.searchParams.delete('card');
       window.history.replaceState({}, "", url.toString());
     }
-    const nextMode = mode === 'plants' ? 'birds' : mode === 'birds' ? 'both' : 'plants';
+    const modes = modesForDeck(deck);
+    const nextMode = modes[(modes.indexOf(mode) + 1) % modes.length] as DeckMode;
     setMode(nextMode);
     setSelectedCard(null);
     setFlipped(false); // Show the front of the new deck's first card
     setIndex(0); // Reset to first card when switching
+  };
+
+  const switchDeck = (next: DeckId) => {
+    if (next === deck) return;
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('card');
+      window.history.replaceState({}, "", url.toString());
+    }
+    setDeck(next);
+    setMode('plants');
+    setSelectedCard(null);
+    setFlipped(false);
+    setIndex(0);
   };
 
   const changeModeClicked = (e: React.MouseEvent) => {
@@ -263,22 +362,26 @@ export default function Home() {
     navigate('/card-lists')
   }
 
+  const creditsButtonClicked = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigate('/credits')
+  }
+
   const handlePreloadCards = () => {
     if (isPreloaded || isPreloading) return;
 
     setIsPreloading(true);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('pwa-cards-preloaded', 'true');
+      localStorage.setItem(preloadKey, 'true');
     }
 
     const imageUrls: string[] = [];
 
-    // Add all bird and plant card images
-    [...birds, ...plants].forEach(card => {
-      imageUrls.push(`/cards/${card.front}`);
-      imageUrls.push(`/cards/${card.back}`);
+    // Add all card images of the active deck
+    activeDeck.all.forEach(card => {
+      imageUrls.push(card.front);
+      imageUrls.push(card.back);
     });
-
 
     let loadedCount = 0;
 
@@ -291,7 +394,7 @@ export default function Home() {
         setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
         if (loadedCount === imageUrls.length) {
           if (typeof window !== 'undefined') {
-            localStorage.setItem('pwa-cards-preloaded', 'true');
+            localStorage.setItem(preloadKey, 'true');
             localStorage.setItem('pwa-cards-version', '3');
           }
           setIsPreloaded(true);
@@ -306,7 +409,7 @@ export default function Home() {
         setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
         if (loadedCount === imageUrls.length) {
           if (typeof window !== 'undefined') {
-            localStorage.setItem('pwa-cards-preloaded', 'true');
+            localStorage.setItem(preloadKey, 'true');
             localStorage.setItem('pwa-cards-version', '3');
           }
           setIsPreloaded(true);
@@ -322,7 +425,16 @@ export default function Home() {
 
   return (
   <main onClick={() => {setFlipped(false); setShowSettings(false)}}>
-    <HamburgerMenu ref={hamburgerRef} mode={mode} changeModeClicked={changeModeClicked} settingsClicked={settingsButtonClicked} cardListsClicked={cardListsButtonClicked} />
+    <HamburgerMenu
+      ref={hamburgerRef}
+      mode={mode}
+      deck={deck}
+      changeModeClicked={changeModeClicked}
+      changeDeckClicked={switchDeck}
+      settingsClicked={settingsButtonClicked}
+      cardListsClicked={cardListsButtonClicked}
+      creditsClicked={creditsButtonClicked}
+    />
 
     <Settings
       ref={settingsRef}
@@ -340,7 +452,22 @@ export default function Home() {
       isVisible={preloadProgress.isVisible}
     />
 
-    <Card card={currentCard} flipped={flipped} widthRef={elementRef} flipSpeed={parseFloat(flipSpeed)} onClick={toggleFlipped}/>
+    {deckIsEmpty ? (
+      <div className="deck-empty" data-testid="deck-empty">
+        No cards in this deck yet.
+      </div>
+    ) : (
+      <Card
+        card={currentCardName}
+        flipped={flipped}
+        widthRef={setCardImg}
+        flipSpeed={parseFloat(flipSpeed)}
+        onClick={toggleFlipped}
+        front={currentCard?.front}
+        back={currentCard?.back}
+        invasive={currentCard?.invasive}
+      />
+    )}
     <div id="button-container" style={{ width: `calc(${elementWidth}px)`, fontSize: `${elementWidth / 28.125}px` }}>
       <button id="back-button" className="control-button" onClick={backAction}>
         <img src="/arrow-left-solid-full.svg" alt="Previous card" />
@@ -349,7 +476,11 @@ export default function Home() {
         <img src="/arrow-right-solid-full.svg" alt="Next card" />
       </button>
     </div>
-    {nextCard && <link rel="preload" href={`/cards/${nextCard} Front.jpg`} as="image" />}
-    {nextCard && <link rel="preload" href={`/cards/${nextCard} Back.jpg`} as="image" />}
+    {nextCard && <link rel="preload" href={nextCard.front} as="image" />}
+    {nextCard && <link rel="preload" href={nextCard.back} as="image" />}
   </main>)
+}
+
+function preloadKeyFor(deck: DeckId): string {
+  return deck === 'healthy' ? 'pwa-cards-preloaded-healthy' : 'pwa-cards-preloaded';
 }

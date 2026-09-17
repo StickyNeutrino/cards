@@ -1,16 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { invasives } from "~/routes/card-lists";
+import { invasives } from "~/data/canyonlands";
 
 interface CardProps {
-  card: string;
+  card: string | null;
   flipped: boolean;
-  widthRef: React.RefObject<HTMLImageElement | null>;
+  widthRef: React.Ref<HTMLImageElement | null>;
   flipSpeed: number;
   onClick?: () => void;
+  /** Explicit image paths; defaults to the Canyonlands deck naming scheme. */
+  front?: string;
+  back?: string;
+  /** Explicit invasive flag; defaults to the Canyonlands invasives list. */
+  invasive?: boolean;
 }
 
-export function Card({card, flipped, widthRef, flipSpeed, onClick}:CardProps) {
-    const invasive = invasives.includes(card);
+export function Card({card, flipped, widthRef, flipSpeed, onClick, front, back, invasive}:CardProps) {
+    const isInvasive = invasive ?? (card !== null && invasives.includes(card));
+    const frontSrc = front ?? (card !== null ? `/cards/${card} Front.jpg` : "");
+    const backSrc = back ?? (card !== null ? `/cards/${card} Back.jpg` : "");
 
     const [peeked, setPeeked] = useState(false);
     const canHover = useMemo(() => (
@@ -40,7 +47,7 @@ export function Card({card, flipped, widthRef, flipSpeed, onClick}:CardProps) {
             data-testid="card"
             data-card={card}
             data-flipped={showBack}
-            data-invasive={invasive}
+            data-invasive={isInvasive}
             onClick={handleClick}
             onTouchStart={() => setPeeked(false)}
             onMouseEnter={canHover ? () => setPeeked(true) : undefined}
@@ -48,8 +55,8 @@ export function Card({card, flipped, widthRef, flipSpeed, onClick}:CardProps) {
         >
             <div className={`flip-card ${showBack ? "flipped" : "flip-card-enabled"}`} style={{ '--flip-speed': `${flipSpeed}s` } as React.CSSProperties}>
                 <div className={`flip-card-inner ${flipSpeed === 0 ? "" : "flip-card-inner-animated"}`}>
-                    {card && <img className="flip-card-front" src={`/cards/${card} Front.jpg`}/>}
-                    {card && <img className={`flip-card-back ${invasive ? "invasive" : ""}`} ref={widthRef} src={`/cards/${card} Back.jpg`}/>}
+                    {card && <img className="flip-card-front" src={frontSrc}/>}
+                    {card && <img className={`flip-card-back ${isInvasive ? "invasive" : ""}`} ref={widthRef} src={backSrc}/>}
                 </div>
             </div>
         </div>

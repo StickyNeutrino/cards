@@ -28,8 +28,9 @@ A digital companion to San Diego Canyonlands' physical flashcard deck — 154 sp
 Flip through the deck like real flashcards: photos on the front, names on the back. One tap downloads every card to your device, after which the app runs entirely offline.
 
 - **Study by category** — Plants, Birds, or Both, with a shuffled deck so no two sessions feel the same.
-- **Browse and search** — A filterable catalog of all 154 species with instant search and deep links to each card.
-- **Learn to spot invaders** — 35 invasive plant species are flagged with a red border to build conservation awareness.
+- **Two decks: Canyonlands & Healthy Canyons** — the original 154-card physical deck, plus a generated Healthy Canyons deck built from the Healthy Canyons summary spreadsheets (~1,300 species across 15 canyons) with photos from iNaturalist observers. Switch decks from the menu; each keeps its own category cycle.
+- **Browse and search** — A filterable catalog of all species with instant search and deep links to each card.
+- **Learn to spot invaders** — Invasive plant species are flagged with a red border to build conservation awareness; the Healthy Canyons deck flags every non-native species the same way.
 - **Works offline** — Installable to your home screen as a PWA; study with no network after a one-time download.
 - **Feels like a real deck** — 3D card flip with adjustable speed, tap-to-flip on touch screens, hover-to-peek on desktop, and keyboard shortcuts.
 - **Private by default** — No cookies. Optional analytics and crash reporting can be switched off anytime; see the [privacy policy](https://cards.unimpossy.com/privacy).
@@ -85,6 +86,43 @@ npm run test:coverage # Coverage report
 npx playwright test  # End-to-end tests across 5 browsers
 ```
 
+## Healthy Canyons deck generation
+
+The Canyonlands deck is the scanned physical flashcard deck. The **Healthy Canyons** deck is
+generated offline by scripts in `scripts/healthy-cards/` — app users never talk to the
+iNaturalist API; they just receive static card images and a bundled manifest like the
+original deck.
+
+```bash
+npm run generate:healthy            # full pipeline (parse → fetch → render → manifest)
+npm run generate:healthy:parse      #  1. spreadsheets → data/healthy/species.json
+npm run generate:healthy:fetch      #  2. iNaturalist photo download (slow, resumable)
+npm run generate:healthy:render     #  3. composite card images → public/cards-healthy/
+npm run generate:healthy:manifest   #  4. app manifest + data/healthy/report.md
+```
+
+How it works:
+
+1. **Parse** the two Healthy Canyons summary spreadsheets (one sheet per canyon) into a normalized
+   master species list. Rows that are genus-only, placeholders (`"Agyneta" #1`), or otherwise
+   unresolvable are excluded and counted.
+2. **Fetch** resolves every scientific name on iNaturalist (handling synonyms such as
+   *Dendroica* → *Setophaga*), then downloads the three highest-voted Creative Commons photos,
+   preferring observations in San Diego County, then California, then worldwide. Research-grade
+   observations are preferred; CC-ND and all-rights-reserved photos are never used. Downloads
+   are cached in `assets/healthy-raw/` (gitignored) and the stage is safe to re-run.
+3. **Render** composites the card fronts in the physical deck's layout (one large habitat
+   photo + two detail shots) and renders the backs — common name, scientific name, family,
+   native/invasive status, CNPS/CESA/FESA rarity, photo credits, and the Canyonlands logo —
+   with the app's Inter font, into `public/cards-healthy/`.
+4. **Manifest** writes `app/data/healthyCards.ts` (imported by the app) and a generation
+   report at `data/healthy/report.md` describing exactly how many cards were made, how many
+   lacked photos or failed to resolve, and why.
+
+Every stage is idempotent and cached (API responses in `data/healthy/api-cache/`), so you can
+re-run the pipeline after tweaking a spreadsheet without re-downloading everything. Photo
+attribution is shown on each card back and on the in-app credits page (`/credits`).
+
 ## Deployment
 
 The app ships as a static SPA built inside a multi-stage Docker image:
@@ -103,4 +141,4 @@ Ingresses use Traefik with cert-manager-issued Let's Encrypt certificates; deplo
 
 ## License & credits
 
-The application code is licensed under the [GNU Affero General Public License v3](LICENSE) (AGPL-3.0-or-later), with source available at [github.com/StickyNeutrino/cards](https://github.com/StickyNeutrino/cards). Card imagery is courtesy of [San Diego Canyonlands](https://www.sdcanyonlands.org/) and is not covered by the code license.
+The application code is licensed under the [GNU Affero General Public License v3](LICENSE) (AGPL-3.0-or-later), with source available at [github.com/StickyNeutrino/cards](https://github.com/StickyNeutrino/cards). Card imagery for the Canyonlands deck is courtesy of [San Diego Canyonlands](https://www.sdcanyonlands.org/) and is not covered by the code license. Healthy Canyons card photos are from [iNaturalist](https://www.inaturalist.org) contributors under Creative Commons licenses; per-photo attributions are on each card and on the credits page.
