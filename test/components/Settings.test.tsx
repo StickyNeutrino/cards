@@ -100,6 +100,6 @@ describe('Settings', () => {
   it('applies correct CSS classes', () => {
     const { container } = render(<Settings {...defaultProps} />);
 
-    expect(container.firstChild).toHaveClass('fixed', 'top-20', 'right-4', 'z-50', 'bg-white', 'rounded-lg', 'shadow-xl', 'border', 'border-gray-200', 'p-4', 'min-w-64');
+    expect(container.firstChild).toHaveClass('fixed', 'top-28', 'right-4', 'sm:top-20', 'z-50', 'bg-white', 'rounded-lg', 'shadow-xl', 'border', 'border-gray-200', 'p-4', 'min-w-64');
   });
 });

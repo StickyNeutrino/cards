@@ -33,7 +33,7 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
   if (!showSettings) return null;
 
   return (
-    <div ref={ref} className="fixed top-20 right-4 z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 min-w-64">
+    <div ref={ref} className="fixed top-28 right-4 sm:top-20 z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 min-w-64 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-8.5rem)] max-h-[calc(100svh-8.5rem)] overflow-y-auto sm:max-h-[calc(100vh-6rem)] sm:max-h-[calc(100svh-6rem)]">
       <h3 className="text-lg font-semibold mb-3 text-gray-800">Settings</h3>
 
       {/* Flip Speed Slider */}

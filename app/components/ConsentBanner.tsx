@@ -9,7 +9,7 @@ const ConsentBanner: React.FC<Props> = ({ onDismiss, onOptOut }) => {
       data-testid="consent-banner"
       role="region"
       aria-label="Privacy notice"
-      className="fixed bottom-4 right-4 z-50 max-w-sm bg-white rounded-lg shadow-xl border border-gray-200 p-4"
+      className="fixed bottom-4 left-4 right-4 sm:left-auto sm:max-w-sm z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4"
     >
       <p className="text-sm text-gray-700 mb-2">
         This app uses privacy-friendly analytics and crash reporting (on by
@@ -20,7 +20,7 @@ const ConsentBanner: React.FC<Props> = ({ onDismiss, onOptOut }) => {
           Privacy policy
         </a>
       </p>
-      <div className="flex space-x-2">
+      <div className="flex flex-wrap gap-2">
         <button
           data-testid="consent-opt-out"
           onClick={onOptOut}

@@ -54,7 +54,7 @@ describe('PreloadProgress', () => {
   it('applies correct CSS classes', () => {
     const { container } = render(<PreloadProgress current={1} total={2} isVisible={true}  />);
 
-    expect(container.firstChild).toHaveClass('fixed', 'top-4', 'left-1/2', 'transform', '-translate-x-1/2', 'z-50', 'bg-white/90', 'backdrop-blur-sm', 'rounded-lg', 'shadow-lg', 'px-4', 'py-2', 'border', 'border-gray-200');
+    expect(container.firstChild).toHaveClass('fixed', 'top-4', 'left-4', 'right-4', 'sm:left-1/2', 'sm:right-auto', 'sm:-translate-x-1/2', 'z-50', 'bg-white/90', 'backdrop-blur-sm', 'rounded-lg', 'shadow-lg', 'px-4', 'py-2', 'border', 'border-gray-200');
     const progressBar = screen.getByText('1/2').previousElementSibling?.firstElementChild;
     expect(progressBar).toHaveClass('h-full', 'bg-green-500', 'transition-all', 'duration-300', 'ease-out');
   });
