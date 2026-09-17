@@ -4,7 +4,9 @@
   "license": "AGPL-3.0-or-later",
   "type": "module",
   "scripts": {
+    "prebuild": "npm run sync:decks",
     "build": "react-router build",
+    "predev": "npm run sync:decks",
     "dev": "react-router dev",
     "start": "npx serve ./build/client --single",
     "typecheck": "react-router typegen && tsc",
@@ -13,11 +15,7 @@
     "test:run": "vitest run",
     "test:coverage": "vitest --coverage",
     "update-manifest": "node update-manifest.js",
-    "generate:healthy": "node scripts/healthy-cards/generate.ts all",
-    "generate:healthy:parse": "node scripts/healthy-cards/generate.ts parse",
-    "generate:healthy:fetch": "node scripts/healthy-cards/generate.ts fetch",
-    "generate:healthy:render": "node scripts/healthy-cards/generate.ts render",
-    "generate:healthy:manifest": "node scripts/healthy-cards/generate.ts manifest"
+    "sync:decks": "node scripts/sync-decks.ts"
   },
   "dependencies": {
     "@react-router/node": "^7.9.2",

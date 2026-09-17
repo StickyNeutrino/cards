@@ -1,83 +1,112 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fc from 'fast-check';
-import { make_deck, modesForDeck, deckFromLocationOrStorage, DECKS } from '../../app/utils/deckUtils';
+import {
+  make_deck, modesForDeck, modeLabelFor, deckFromLocationOrStorage, BOTH_MODE,
+  type DeckCategoryLike,
+} from '../../app/utils/deckUtils';
+import { DECK_DEFS } from '../../app/data/decks';
 
-describe('deck modes', () => {
-  it('canyonlands offers plants, birds, both', () => {
-    expect(modesForDeck('canyonlands')).toEqual(['plants', 'birds', 'both']);
+const canyonlands = DECK_DEFS.find((d) => d.id === 'canyonlands')!;
+const healthy = DECK_DEFS.find((d) => d.id === 'healthy-canyons')!;
+
+const plants: DeckCategoryLike = { id: 'plants', label: '🌿 Plants', cards: [{ name: 'P1' }, { name: 'P2' }] };
+const birds: DeckCategoryLike = { id: 'birds', label: '🐦 Birds', cards: [{ name: 'B1' }] };
+const animals: DeckCategoryLike = { id: 'animals', label: '🦎 Animals', cards: [{ name: 'A1' }, { name: 'A2' }] };
+
+describe('deck modes (data-driven categories)', () => {
+  it('canyonlands offers plants, birds, both (canonical: plants first)', () => {
+    expect(modesForDeck(canyonlands)).toEqual(['plants', 'birds', 'both']);
   });
 
-  it('healthy offers plants, animals, both', () => {
-    expect(modesForDeck('healthy')).toEqual(['plants', 'animals', 'both']);
+  it('healthy-canyons offers plants, animals, both', () => {
+    expect(modesForDeck(healthy)).toEqual(['plants', 'animals', 'both']);
   });
 
-  it('DECKS lists both decks with canyonlands first (the default)', () => {
-    expect(DECKS).toEqual(['canyonlands', 'healthy']);
+  it('mode labels derive from category labels', () => {
+    expect(modeLabelFor(canyonlands, 'plants')).toBe('🌿 Plants');
+    expect(modeLabelFor(canyonlands, BOTH_MODE)).toBe('🌿🐦 Both');
+    expect(modeLabelFor(healthy, BOTH_MODE)).toBe('🌿🦎 Both');
+  });
+
+  it('the registry contains both decks with canyonlands first (the default)', () => {
+    expect(DECK_DEFS.map((d) => d.id)).toEqual(['canyonlands', 'healthy-canyons']);
   });
 });
 
-describe('make_deck with animals', () => {
-  const plants = [{ name: 'P1' }, { name: 'P2' }];
-  const birds = [{ name: 'B1' }];
-  const animals = [{ name: 'A1' }, { name: 'A2' }];
+describe('make_deck (category-driven)', () => {
+  it('builds a single-category deck', () => {
+    const deck = make_deck([plants, birds], 'plants');
+    expect(deck.length).toBe(plants.cards.length * 10);
+    expect(deck.every(card => plants.cards.some(p => p.name === card))).toBe(true);
+  });
 
   it('builds an animals-only deck', () => {
-    const deck = make_deck('animals', plants, birds, animals);
-    expect(deck.length).toBe(animals.length * 10);
-    expect(deck.every(card => animals.some(a => a.name === card))).toBe(true);
+    const deck = make_deck([plants, birds, animals], 'animals');
+    expect(deck.length).toBe(animals.cards.length * 10);
+    expect(deck.every(card => animals.cards.some(a => a.name === card))).toBe(true);
   });
 
-  it('builds a healthy "both" deck from plants + animals (no birds)', () => {
-    const deck = make_deck('both', plants, [], animals);
-    expect(deck.length).toBe((plants.length + animals.length) * 10);
-    expect(deck.every(card => [...plants, ...animals].some(c => c.name === card))).toBe(true);
+  it('"both" flattens every category', () => {
+    const deck = make_deck([plants, birds, animals], BOTH_MODE);
+    expect(deck.length).toBe((plants.cards.length + birds.cards.length + animals.cards.length) * 10);
   });
 
-  it('canyonlands "both" is unchanged when no animals are passed', () => {
-    const deck = make_deck('both', plants, birds);
-    expect(deck.length).toBe((plants.length + birds.length) * 10);
-    expect(deck.every(card => [...plants, ...birds].some(c => c.name === card))).toBe(true);
+  it('"both" for the healthy deck shape is plants + animals only', () => {
+    const deck = make_deck([plants, animals], BOTH_MODE);
+    expect(deck.length).toBe((plants.cards.length + animals.cards.length) * 10);
+    expect(deck.every(card => [...plants.cards, ...animals.cards].some(c => c.name === card))).toBe(true);
   });
 
-  it('each animal appears exactly 10 times', () => {
-    const deck = make_deck('animals', plants, birds, animals);
-    for (const a of animals) {
-      expect(deck.filter(card => card === a.name).length).toBe(10);
+  it('canyonlands "both" is unchanged when no animals exist', () => {
+    const deck = make_deck([plants, birds], BOTH_MODE);
+    expect(deck.length).toBe((plants.cards.length + birds.cards.length) * 10);
+  });
+
+  it('each name appears exactly 10 times', () => {
+    const deck = make_deck([plants, birds, animals], BOTH_MODE);
+    for (const c of [...plants.cards, ...birds.cards, ...animals.cards]) {
+      expect(deck.filter(card => card === c.name).length).toBe(10);
     }
   });
 
-  it('deck length is 10 times the animals array length (property-based)', () => {
-    fc.assert(fc.property(fc.array(fc.record({ name: fc.string() })), animalArr => {
-      const deck = make_deck('animals', [], [], animalArr);
-      return deck.length === 10 * animalArr.length;
+  it('handles empty categories', () => {
+    expect(make_deck([], 'plants')).toHaveLength(0);
+    expect(make_deck([{ id: 'plants', label: 'P', cards: [] }], 'plants')).toHaveLength(0);
+  });
+
+  it('deck length is 10 times the input length (property-based)', () => {
+    fc.assert(fc.property(fc.array(fc.record({ name: fc.string() })), cards => {
+      const deck = make_deck([{ id: 'animals', label: 'A', cards }], 'animals');
+      return deck.length === 10 * cards.length;
     }));
   });
 });
 
 describe('deckFromLocationOrStorage', () => {
+  const ids = DECK_DEFS.map((d) => d.id);
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    window.location.search = '';
   });
 
-  it('defaults to canyonlands', () => {
-    expect(deckFromLocationOrStorage('')).toBe('canyonlands');
+  it('defaults to the first registered deck', () => {
+    expect(deckFromLocationOrStorage('', ids)).toBe('canyonlands');
   });
 
   it('prefers the URL param', () => {
-    expect(deckFromLocationOrStorage('?deck=healthy&card=Foo')).toBe('healthy');
-    expect(deckFromLocationOrStorage('?deck=canyonlands')).toBe('canyonlands');
+    expect(deckFromLocationOrStorage('?deck=healthy-canyons&card=Foo', ids)).toBe('healthy-canyons');
+    expect(deckFromLocationOrStorage('?deck=canyonlands', ids)).toBe('canyonlands');
   });
 
   it('falls back to the saved deck', () => {
     (localStorage.getItem as any).mockImplementation((key: string) =>
-      key === 'deck' ? 'healthy' : null);
-    expect(deckFromLocationOrStorage('')).toBe('healthy');
+      key === 'deck' ? 'healthy-canyons' : null);
+    expect(deckFromLocationOrStorage('', ids)).toBe('healthy-canyons');
   });
 
   it('ignores unknown saved values', () => {
     (localStorage.getItem as any).mockImplementation(() => 'bogus');
-    expect(deckFromLocationOrStorage('')).toBe('canyonlands');
+    expect(deckFromLocationOrStorage('', ids)).toBe('canyonlands');
   });
 });

@@ -1,4 +1,8 @@
 .react-router
 build
 node_modules
+**/node_modules
 README.md
+decks/*/data/api-cache
+decks/*/data/fonts
+decks/*/data/raw-photos

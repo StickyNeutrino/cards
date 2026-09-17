@@ -18,3 +18,7 @@ data/healthy/fetch.log
 # Generated card images — owned by the deck repositories (deck repos land next;
 # until then these exist locally only so the app can be tested).
 /public/cards-healthy/
+
+# Deck repositories (standalone git repos cloned here) and their synced copies
+/decks/
+/public/decks/

@@ -4,16 +4,23 @@ import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import Home from '../../app/routes/home';
 
-vi.mock('../../app/routes/card-lists', () => ({
-  birds: [{ name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg' }],
-  plants: [{ name: 'Mock Plant 1', front: 'Mock Plant 1 Front.jpg', back: 'Mock Plant 1 Back.jpg' }],
-  invasives: [],
-}));
-vi.mock('../../app/data/healthyCards', () => ({
-  healthyGeneratedAt: '',
-  healthyPlants: [],
-  healthyAnimals: [],
-}));
+vi.mock('../../app/data/decks', () => {
+  const canyonlands = {
+    id: 'canyonlands', label: 'Canyonlands', description: '',
+    categories: [
+      { id: 'plants', label: '🌿 Plants', cards: [{ name: 'Mock Plant 1', front: '/cards/Mock Plant 1 Front.jpg', back: '/cards/Mock Plant 1 Back.jpg', invasive: false }] },
+      { id: 'birds', label: '🐦 Birds', cards: [{ name: 'Mock Bird 1', front: '/cards/Mock Bird 1 Front.jpg', back: '/cards/Mock Bird 1 Back.jpg', invasive: false }] },
+    ],
+  };
+  const healthyCanyons = { id: 'healthy-canyons', label: 'Healthy Canyons', description: '', categories: [] };
+  return {
+    DECK_DEFS: [canyonlands, healthyCanyons],
+    DEFAULT_DECK_ID: 'canyonlands',
+    ALL_CATEGORY_IDS: ['plants', 'birds'],
+    getDeckDef: (id: string) => (id === 'canyonlands' ? canyonlands : id === 'healthy-canyons' ? healthyCanyons : undefined),
+    defaultInvasive: () => false,
+  };
+});
 vi.mock('../../app/viewtrack', () => ({ trackCardView: vi.fn() }));
 
 const mockLocation = { search: '', href: 'http://localhost:3000/' };
@@ -33,7 +40,7 @@ describe('Home with an empty Healthy Canyons deck', () => {
       <RouterProvider router={createMemoryRouter([{ path: '/', element: <Home /> }])} />,
     );
 
-    await user.click(screen.getByTestId('deck-button-healthy'));
+    await user.click(screen.getByTestId('deck-button-healthy-canyons'));
 
     expect(await screen.findByTestId('deck-empty')).toBeInTheDocument();
     expect(screen.getByTestId('deck-empty')).toHaveTextContent('No cards in this deck yet.');
@@ -45,20 +52,21 @@ describe('Home with an empty Healthy Canyons deck', () => {
       <RouterProvider router={createMemoryRouter([{ path: '/', element: <Home /> }])} />,
     );
 
-    await user.click(screen.getByTestId('deck-button-healthy'));
+    await user.click(screen.getByTestId('deck-button-healthy-canyons'));
     await screen.findByTestId('deck-empty');
 
     // Both deck buttons remain rendered and the mode button still works
     expect(screen.getByTestId('deck-button-canyonlands')).toBeInTheDocument();
-    expect(screen.getByTestId('deck-button-healthy')).toBeInTheDocument();
+    expect(screen.getByTestId('deck-button-healthy-canyons')).toBeInTheDocument();
     await user.click(screen.getByTestId('mode-button'));
-    expect(screen.getByTestId('mode-button').textContent).toBe('🦎 Animals');
+    // The empty deck has no categories, so the only mode left is "both"
+    expect(screen.getByTestId('mode-button').textContent?.trim()).toBe('Both');
   });
 
   it('shows the notice immediately when the healthy deck is saved', () => {
     (localStorage.getItem as any).mockImplementation((key: string) =>
-      key === 'deck' ? 'healthy' : null);
-    mockLocation.search = '?deck=healthy';
+      key === 'deck' ? 'healthy-canyons' : null);
+    mockLocation.search = '?deck=healthy-canyons';
     render(
       <RouterProvider router={createMemoryRouter([{ path: '/', element: <Home /> }])} />,
     );

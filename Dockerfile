@@ -14,18 +14,16 @@ COPY --from=development-dependencies-env /app/node_modules /app/node_modules
 WORKDIR /app
 ARG BUILD_SHA=dev
 ENV VITE_BUILD_SHA=$BUILD_SHA
+# prebuild hook runs scripts/sync-decks.ts, which copies deck images from
+# decks/<id>/cards/ into public/decks/ and generates app/data/decks.json
 RUN npm run build
 
 FROM node:20-alpine
-COPY public/cards /app/build/client/cards
-COPY public /app/build/client
-
 COPY ./package.json package-lock.json /app/
 COPY ./scripts/update-manifest.js /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/build/client/assets /app/build/client/assets
-COPY --from=build-env /app/build/client/index.html /app/build/client/index.html
-
+# The whole built client: app bundle, service worker, and deck card images
+COPY --from=build-env /app/build/client /app/build/client
 
 WORKDIR /app
 CMD ["npm", "run", "start"]

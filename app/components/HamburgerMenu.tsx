@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
-import { deckLabel, DECKS, modeLabelFor, type DeckId, type DeckMode } from "~/utils/deckUtils";
+import { modeLabelFor, type DeckId, type DeckMode } from "~/utils/deckUtils";
+import { DECK_DEFS } from "~/data/decks";
 
 interface HamburgerMenuProps {
   mode: DeckMode;
@@ -13,27 +14,28 @@ interface HamburgerMenuProps {
 
 export const HamburgerMenu = forwardRef<HTMLDivElement, HamburgerMenuProps>(({
   mode,
-  deck = "canyonlands",
+  deck = DECK_DEFS[0]?.id ?? 'canyonlands',
   changeModeClicked,
   changeDeckClicked,
   settingsClicked,
   cardListsClicked,
   creditsClicked,
 }, ref) => {
+  const activeDef = DECK_DEFS.find((d) => d.id === deck) ?? DECK_DEFS[0];
   return (
     <div className="hamburger-menu" ref={ref}>
       <button onClick={changeModeClicked} className="menu-button" data-testid="mode-button">
-        {modeLabelFor(deck, mode)}
+        {activeDef ? modeLabelFor(activeDef, mode) : mode}
       </button>
-      {DECKS.map((d) => (
+      {DECK_DEFS.map((d) => (
         <button
-          key={d}
-          onClick={(e) => { e.stopPropagation(); changeDeckClicked?.(d); }}
-          className={d === deck ? "menu-button active" : "menu-button"}
-          data-testid={`deck-button-${d}`}
-          title={d === deck ? "Current deck" : "Switch deck"}
+          key={d.id}
+          onClick={(e) => { e.stopPropagation(); changeDeckClicked?.(d.id); }}
+          className={d.id === deck ? "menu-button active" : "menu-button"}
+          data-testid={`deck-button-${d.id}`}
+          title={d.id === deck ? "Current deck" : "Switch deck"}
         >
-          {deckLabel[d]}
+          {d.label}
         </button>
       ))}
       <button

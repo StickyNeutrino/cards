@@ -3,31 +3,35 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import Credits from '../../app/routes/credits';
 
-vi.mock('../../app/data/healthyCards', () => ({
-  healthyGeneratedAt: '2026-09-17T00:00:00Z',
-  healthyPlants: [
+vi.mock('../../app/data/decks', () => ({
+  DECK_DEFS: [
     {
-      name: 'Coast Live Oak', front: '/cards-healthy/Coast Live Oak Front.jpg', back: '/cards-healthy/Coast Live Oak Back.jpg',
-      sciName: 'Quercus agrifolia', commonName: 'Coast Live Oak', familyCommon: null, familyLatin: 'Fagaceae',
-      group: 'Plants', category: null, native: 'native', rarity: null, canyons: ['Tecolote South'],
-      taxonId: 48624,
-      photos: [
-        { observer: 'Alice Nature', license: 'cc-by-nc', observationUrl: 'https://www.inaturalist.org/observations/111', observationId: 111, placeLabel: 'San Diego County' },
-        { observer: 'Bob Oak', license: 'cc0', observationUrl: 'https://www.inaturalist.org/observations/222', observationId: 222, placeLabel: 'San Diego County' },
+      id: 'healthy-canyons', label: 'Healthy Canyons', description: '',
+      categories: [
+        { id: 'plants', label: 'Plants', cards: [
+          {
+            name: 'Coast Live Oak', front: '/decks/healthy-canyons/cards/Coast Live Oak Front.jpg', back: '/decks/healthy-canyons/cards/Coast Live Oak Back.jpg', invasive: false,
+            sciName: 'Quercus agrifolia', native: 'native', rarity: null, credits: [
+              { observer: 'Alice Nature', license: 'cc-by-nc', observationUrl: 'https://www.inaturalist.org/observations/111', observationId: 111, placeLabel: 'San Diego County' },
+              { observer: 'Bob Oak', license: 'cc0', observationUrl: 'https://www.inaturalist.org/observations/222', observationId: 222, placeLabel: 'San Diego County' },
+            ],
+          },
+        ] },
+        { id: 'animals', label: 'Animals', cards: [
+          {
+            name: 'Red-tailed Hawk', front: '/decks/healthy-canyons/cards/Red-tailed Hawk Front.jpg', back: '/decks/healthy-canyons/cards/Red-tailed Hawk Back.jpg', invasive: false,
+            sciName: 'Buteo jamaicensis', native: 'native', rarity: null, credits: [
+              { observer: 'Carol Hawk', license: 'cc-by', observationUrl: 'https://www.inaturalist.org/observations/333', observationId: 333, placeLabel: 'worldwide' },
+            ],
+          },
+        ] },
       ],
     },
   ],
-  healthyAnimals: [
-    {
-      name: 'Red-tailed Hawk', front: '/cards-healthy/Red-tailed Hawk Front.jpg', back: '/cards-healthy/Red-tailed Hawk Back.jpg',
-      sciName: 'Buteo jamaicensis', commonName: 'Red-tailed Hawk', familyCommon: null, familyLatin: 'Accipitridae',
-      group: 'Birds', category: 'Hawks & Eagles', native: 'native', rarity: null, canyons: ['Paradise'],
-      taxonId: 1001,
-      photos: [
-        { observer: 'Carol Hawk', license: 'cc-by', observationUrl: 'https://www.inaturalist.org/observations/333', observationId: 333, placeLabel: 'worldwide' },
-      ],
-    },
-  ],
+  DEFAULT_DECK_ID: 'healthy-canyons',
+  ALL_CATEGORY_IDS: ['plants', 'animals'],
+  getDeckDef: undefined,
+  defaultInvasive: () => false,
 }));
 
 describe('Credits page', () => {
@@ -38,10 +42,11 @@ describe('Credits page', () => {
       />,
     );
 
-  it('lists every photo with observer, license, and observation link', () => {
+  it('lists every photo with deck, observer, license, and observation link', () => {
     renderPage();
 
     const table = screen.getByTestId('credits-table');
+    expect(table).toHaveTextContent('Healthy Canyons');
     expect(table).toHaveTextContent('Coast Live Oak');
     expect(table).toHaveTextContent('Alice Nature');
     expect(table).toHaveTextContent('CC BY-NC');

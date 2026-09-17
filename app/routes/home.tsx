@@ -2,12 +2,11 @@ import type { Route } from "./+types/home";
 import { Card } from "~/card/card";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { birds, plants, invasives } from "./card-lists";
-import { healthyPlants, healthyAnimals } from "~/data/healthyCards";
 import { trackCardView } from "~/viewtrack";
 import {
-  deckFromLocationOrStorage, make_deck, modesForDeck, type DeckId, type DeckMode,
+  deckFromLocationOrStorage, make_deck, modesForDeck, defaultCategoryFor, BOTH_MODE, type DeckId, type DeckMode,
 } from "~/utils/deckUtils";
+import { ALL_CATEGORY_IDS, DECK_DEFS, getDeckDef, type DeckCard, type DeckDef } from "~/data/decks";
 import { Settings } from "~/components/Settings";
 import { PreloadProgress } from "~/components/PreloadProgress";
 import { HamburgerMenu } from "~/components/HamburgerMenu";
@@ -26,28 +25,25 @@ interface CardRef {
   invasive: boolean;
 }
 
-function buildCardRefs(
-  plants: Array<{ name: string; front: string; back: string }>,
-  birds: Array<{ name: string; front: string; back: string }>,
-  animals: Array<{ name: string; front: string; back: string }>,
-  isInvasive: (card: { name: string; native?: string }) => boolean,
-): { plants: CardRef[]; birds: CardRef[]; animals: CardRef[]; byName: Map<string, CardRef>; all: CardRef[] } {
-  const toRef = (c: { name: string; front: string; back: string }, prefix: string): CardRef => ({
-    name: c.name,
-    front: c.front.startsWith("/") ? c.front : `${prefix}${c.front}`,
-    back: c.back.startsWith("/") ? c.back : `${prefix}${c.back}`,
-    invasive: isInvasive(c),
-  });
-  const p = plants.map((c) => toRef(c, "/cards/"));
-  const b = birds.map((c) => toRef(c, "/cards/"));
-  const a = animals.map((c) => toRef(c, ""));
-  return {
-    plants: p,
-    birds: b,
-    animals: a,
-    byName: new Map([...p, ...b, ...a].map((c) => [c.name, c])),
-    all: [...p, ...b, ...a],
-  };
+interface DeckRefs {
+  categories: Array<{ id: string; label: string; cards: CardRef[] }>;
+  byName: Map<string, CardRef>;
+  all: CardRef[];
+}
+
+function refsFromDef(def: DeckDef): DeckRefs {
+  const categories = def.categories.map((cat) => ({
+    id: cat.id,
+    label: cat.label,
+    cards: cat.cards.map((c: DeckCard): CardRef => ({
+      name: c.name,
+      front: c.front,
+      back: c.back,
+      invasive: c.invasive,
+    })),
+  }));
+  const all = categories.flatMap((c) => c.cards);
+  return { categories, byName: new Map(all.map((c) => [c.name, c])), all };
 }
 
 let max_index = 0;
@@ -59,35 +55,36 @@ export default function Home() {
 
   const [deck, setDeck] = useState<DeckId>(() => {
     if (typeof window !== 'undefined') {
-      return deckFromLocationOrStorage(window.location.search);
+      return deckFromLocationOrStorage(window.location.search, DECK_DEFS.map((d) => d.id));
     }
-    return 'canyonlands';
+    return DECK_DEFS[0]?.id ?? 'canyonlands';
   });
 
   const [mode, setMode] = useState<DeckMode>(() => {
+    const defaultMode = defaultCategoryFor(DECK_DEFS[0] ?? { id: '', label: '', categories: [] });
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.has("both")) return 'both';
-      if (params.has("birds")) return 'birds';
-      if (params.has("animals")) return 'animals';
-      if (params.has("plants")) return 'plants';
+      for (const m of ALL_CATEGORY_IDS) {
+        if (params.has(m)) return m;
+      }
+      if (params.has(BOTH_MODE)) return BOTH_MODE;
       const saved = localStorage.getItem('mode');
-      if (saved === 'plants' || saved === 'birds' || saved === 'animals' || saved === 'both') return saved;
-      return 'plants';
+      if (saved) return saved;
+      return defaultMode;
     }
-    return 'plants';
+    return defaultMode;
   })
 
-  const cardRefs = useMemo(() => ({
-    canyonlands: buildCardRefs(plants, birds, [], (c) => invasives.includes(c.name)),
-    healthy: buildCardRefs(healthyPlants, [], healthyAnimals, (c) => c.native === "non-native"),
-  }), []);
-  const activeDeck = deck === 'healthy' ? cardRefs.healthy : cardRefs.canyonlands;
+  const cardRefs = useMemo(() => {
+    const map = new Map<DeckId, DeckRefs>();
+    for (const def of DECK_DEFS) map.set(def.id, refsFromDef(def));
+    return map;
+  }, []);
+  const activeDeck = cardRefs.get(deck) ?? cardRefs.get(DECK_DEFS[0]?.id ?? '')!;
 
   const makeDeck = useCallback((d: DeckId, m: DeckMode) => {
-    const refs = d === 'healthy' ? cardRefs.healthy : cardRefs.canyonlands;
-    return make_deck(m, refs.plants, refs.birds, refs.animals);
-  }, [cardRefs]);
+    return make_deck(getDeckDef(d)?.categories ?? [], m);
+  }, []);
 
   const [deckNames, setDeckNames] = useState<string[]>(() => makeDeck(deck, mode));
   const [preloadProgress, setPreloadProgress] = useState<{ current: number; total: number; isVisible: boolean }>({
@@ -95,7 +92,7 @@ export default function Home() {
     total: 0,
     isVisible: false
   });
-  const preloadKey = deck === 'healthy' ? 'pwa-cards-preloaded-healthy' : 'pwa-cards-preloaded';
+  const preloadKey = deck === 'healthy-canyons' ? 'pwa-cards-preloaded-healthy' : 'pwa-cards-preloaded';
   const [isPreloaded, setIsPreloaded] = useState(() => {
     if (typeof window !== 'undefined') {
         return localStorage.getItem(preloadKeyFor(deck)) === 'true';
@@ -165,10 +162,11 @@ export default function Home() {
 
   useEffect(makeDeckCallback, [makeDeckCallback]);
 
-  // If the saved mode does not exist in this deck, fall back to plants.
+  // If the saved mode does not exist in this deck, fall back to its first category.
   useEffect(() => {
-    if (!modesForDeck(deck).includes(mode)) {
-      setMode('plants');
+    const def = getDeckDef(deck) ?? DECK_DEFS[0];
+    if (!modesForDeck(def).includes(mode)) {
+      setMode(defaultCategoryFor(def));
     }
   }, [deck, mode]);
 
@@ -178,18 +176,11 @@ export default function Home() {
       if (index !== -1) {
         setIndex(index);
       } else {
-        // Card not found in current deck: switch mode so it is.
-        const inPlants = activeDeck.plants.some(plant => plant.name === selectedCard);
-        const inBirds = activeDeck.birds.some(bird => bird.name === selectedCard);
-        const inAnimals = activeDeck.animals.some(animal => animal.name === selectedCard);
-        if (inPlants && mode !== 'plants' && mode !== 'both') {
-          setMode('plants');
-        } else if (inBirds && mode !== 'birds' && mode !== 'both') {
-          setMode('birds');
-        } else if (inAnimals && mode !== 'animals' && mode !== 'both') {
-          setMode('animals');
-        } else if (mode !== 'both' && ((inPlants && inBirds) || (inPlants && inAnimals) || (inBirds && inAnimals))) {
-          setMode('both');
+        // Card not found in current mode: switch to the category that owns it.
+        const owner = activeDeck.categories.find((cat) =>
+          cat.cards.some((c) => c.name === selectedCard))?.id;
+        if (owner && mode !== owner && mode !== BOTH_MODE) {
+          setMode(owner);
         }
       }
     }
@@ -210,16 +201,16 @@ export default function Home() {
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location && window.history && window.history.replaceState) {
       const url = new URL(window.location.href);
-      url.searchParams.delete("plants");
-      url.searchParams.delete("birds");
-      url.searchParams.delete("animals");
-      url.searchParams.delete("both");
-      if (deck === 'healthy') {
-        url.searchParams.set("deck", "healthy");
+      for (const catId of ALL_CATEGORY_IDS) {
+        url.searchParams.delete(catId);
+      }
+      url.searchParams.delete(BOTH_MODE);
+      if (deck !== (DECK_DEFS[0]?.id ?? '')) {
+        url.searchParams.set("deck", deck);
       } else {
         url.searchParams.delete("deck");
       }
-      if (mode !== 'plants') {
+      if (mode !== defaultCategoryFor(getDeckDef(deck) ?? DECK_DEFS[0])) {
         url.searchParams.set(mode, "true");
       }
       window.history.replaceState({}, "", url.toString());
@@ -325,7 +316,7 @@ export default function Home() {
       url.searchParams.delete('card');
       window.history.replaceState({}, "", url.toString());
     }
-    const modes = modesForDeck(deck);
+    const modes = modesForDeck(getDeckDef(deck) ?? DECK_DEFS[0]);
     const nextMode = modes[(modes.indexOf(mode) + 1) % modes.length] as DeckMode;
     setMode(nextMode);
     setSelectedCard(null);
@@ -341,7 +332,7 @@ export default function Home() {
       window.history.replaceState({}, "", url.toString());
     }
     setDeck(next);
-    setMode('plants');
+    setMode(defaultCategoryFor(getDeckDef(next) ?? DECK_DEFS[0]));
     setSelectedCard(null);
     setFlipped(false);
     setIndex(0);
@@ -482,5 +473,5 @@ export default function Home() {
 }
 
 function preloadKeyFor(deck: DeckId): string {
-  return deck === 'healthy' ? 'pwa-cards-preloaded-healthy' : 'pwa-cards-preloaded';
+  return deck === 'healthy-canyons' ? 'pwa-cards-preloaded-healthy' : 'pwa-cards-preloaded';
 }

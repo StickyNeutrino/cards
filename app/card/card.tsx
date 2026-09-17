@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { invasives } from "~/data/canyonlands";
+import { defaultInvasive } from "~/data/decks";
 
 interface CardProps {
   card: string | null;
@@ -10,12 +10,12 @@ interface CardProps {
   /** Explicit image paths; defaults to the Canyonlands deck naming scheme. */
   front?: string;
   back?: string;
-  /** Explicit invasive flag; defaults to the Canyonlands invasives list. */
+  /** Explicit invasive flag; defaults to the deck registry's invasive lookup. */
   invasive?: boolean;
 }
 
 export function Card({card, flipped, widthRef, flipSpeed, onClick, front, back, invasive}:CardProps) {
-    const isInvasive = invasive ?? (card !== null && invasives.includes(card));
+    const isInvasive = invasive ?? (card !== null && defaultInvasive(card));
     const frontSrc = front ?? (card !== null ? `/cards/${card} Front.jpg` : "");
     const backSrc = back ?? (card !== null ? `/cards/${card} Back.jpg` : "");
 

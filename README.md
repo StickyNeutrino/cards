@@ -123,6 +123,28 @@ Every stage is idempotent and cached (API responses in `data/healthy/api-cache/`
 re-run the pipeline after tweaking a spreadsheet without re-downloading everything. Photo
 attribution is shown on each card back and on the in-app credits page (`/credits`).
 
+## Deck repositories
+
+Decks are self-contained Git repositories under `decks/`, each owning its card
+images and metadata. The app is deck-agnostic: it renders whatever the registry
+says.
+
+| Deck repo | Contents |
+| --- | --- |
+| `decks/canyonlands/` | The scanned 154-card physical deck (images + `manifest.json`). |
+| `decks/healthy-canyons/` | The generated survey deck: images, `manifest.json`, the source spreadsheets, and the full generation pipeline (`npm run generate`). |
+
+`scripts/sync-decks.ts` (run automatically before `dev` and `build`) copies each
+deck's images to `public/decks/<id>/cards/` and generates
+`app/data/decks.json` — the registry that drives deck switching, categories,
+invasive flags, and the credits page. Adding a deck = adding a repo under
+`decks/` with a `manifest.json`; no app changes required.
+
+To push the deck repos to GitHub, run `git init`/`git remote add origin …`
+inside each (they are already initialized if you cloned this workspace) and
+point CI at them. The app repo ignores `decks/` — fresh checkouts clone the
+deck repos there before running `npm run dev`/`build`.
+
 ## Deployment
 
 The app ships as a static SPA built inside a multi-stage Docker image:

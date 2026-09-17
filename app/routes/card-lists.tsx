@@ -1,11 +1,10 @@
 import type { Route } from "./+types/card-lists";
 import { useState, useMemo, useRef } from "react";
-import { birds, plants, invasives } from "~/data/canyonlands";
-import { healthyPlants, healthyAnimals, type HealthyCard } from "~/data/healthyCards";
-import { deckFromLocationOrStorage, deckLabel, DECKS, modeLabelFor, modesForDeck, type DeckId, type DeckMode } from "~/utils/deckUtils";
-
-// Re-exported for backwards compatibility (tests and other modules import from here).
-export { birds, plants, invasives };
+import { DECK_DEFS, getDeckDef } from "~/data/decks";
+import {
+  deckFromLocationOrStorage, modesForDeck, modeLabelFor,
+  BOTH_MODE, type DeckId, type DeckMode,
+} from "~/utils/deckUtils";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -22,45 +21,26 @@ export interface CardItem {
 }
 
 export function cardsForDeck(deck: DeckId, mode: DeckMode): CardItem[] {
-  const healthyIsInvasive = (c: HealthyCard) => c.native === "non-native";
-  if (deck === "healthy") {
-    const plantItems = healthyPlants.map((c) => ({
-      name: c.name,
-      front: c.front,
-      back: c.back,
-      invasive: healthyIsInvasive(c),
-    }));
-    const animalItems = healthyAnimals.map((c) => ({
-      name: c.name,
-      front: c.front,
-      back: c.back,
-      invasive: healthyIsInvasive(c),
-    }));
-    if (mode === "plants") return plantItems;
-    if (mode === "animals") return animalItems;
-    return [...plantItems, ...animalItems];
-  }
-  const plantItems = plants.map((c) => ({
-    name: c.name,
-    front: `/cards/${c.front}`,
-    back: `/cards/${c.back}`,
-    invasive: invasives.includes(c.name),
-  }));
-  const birdItems = birds.map((c) => ({
-    name: c.name,
-    front: `/cards/${c.front}`,
-    back: `/cards/${c.back}`,
-    invasive: invasives.includes(c.name),
-  }));
-  if (mode === "plants") return plantItems;
-  if (mode === "birds") return birdItems;
-  return [...birdItems, ...plantItems]; // original page showed birds first
+  const def = getDeckDef(deck);
+  if (!def) return [];
+  const categories =
+    mode === BOTH_MODE ? def.categories : def.categories.filter((c) => c.id === mode);
+  return categories.flatMap((c) =>
+    c.cards.map((card) => ({
+      name: card.name,
+      front: card.front,
+      back: card.back,
+      invasive: card.invasive,
+    })),
+  );
 }
 
 export default function CardLists() {
-  const [deck, setDeck] = useState<DeckId>(() => deckFromLocationOrStorage(typeof window !== "undefined" ? window.location.search : ""));
-  const modes = modesForDeck(deck);
-  const [filter, setFilter] = useState<DeckMode>("both");
+  const knownDeckIds = DECK_DEFS.map((d) => d.id);
+  const [deck, setDeck] = useState<DeckId>(() =>
+    deckFromLocationOrStorage(typeof window !== "undefined" ? window.location.search : "", knownDeckIds));
+  const modes = modesForDeck(getDeckDef(deck) ?? DECK_DEFS[0]);
+  const [filter, setFilter] = useState<DeckMode>(BOTH_MODE);
   const [search, setSearch] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -77,28 +57,28 @@ export default function CardLists() {
   };
 
   const allCards = useMemo(() => {
-    const mode = modes.includes(filter) ? filter : "both";
+    const mode = modes.includes(filter) ? filter : BOTH_MODE;
     return cardsForDeck(deck, mode).filter(card => card.name.toLowerCase().includes(search.toLowerCase()));
   }, [deck, filter, search, modes]);
 
   const changeDeck = (next: DeckId) => {
     setDeck(next);
     if (typeof window !== "undefined") localStorage.setItem("deck", next);
-    setFilter("both");
+    setFilter(BOTH_MODE);
   };
 
   return (
     <main className="card-list-main">
       <div className="controls-container">
-        {DECKS.map((d) => (
+        {DECK_DEFS.map((d) => (
           <button
-            key={d}
+            key={d.id}
             type="button"
-            data-testid={`deck-${d}`}
-            className={deck === d ? "menu-button active" : "menu-button"}
-            onClick={() => changeDeck(d)}
+            data-testid={`deck-${d.id}`}
+            className={deck === d.id ? "menu-button active" : "menu-button"}
+            onClick={() => changeDeck(d.id)}
           >
-            {deckLabel[d]}
+            {d.label}
           </button>
         ))}
       </div>
@@ -111,7 +91,7 @@ export default function CardLists() {
             className={filter === m ? "menu-button active" : "menu-button"}
             onClick={() => setFilter(m)}
           >
-            {modeLabelFor(deck, m)}
+            {modeLabelFor(getDeckDef(deck) ?? DECK_DEFS[0], m)}
           </button>
         ))}
         <input
@@ -134,7 +114,7 @@ export default function CardLists() {
             className={`card-list-item ${card.invasive ? "invasive" : ""}`}
             data-testid="card-item"
             data-card-name={card.name}
-            onClick={() => window.location.href = `/?${deck === "healthy" ? "deck=healthy&" : ""}card=${encodeURIComponent(card.name)}`}
+            onClick={() => window.location.href = `/?${deck !== DECK_DEFS[0]?.id ? `deck=${deck}&` : ""}card=${encodeURIComponent(card.name)}`}
           >
             <img
               src={card.front}

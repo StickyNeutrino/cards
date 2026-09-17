@@ -4,29 +4,49 @@ import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import Home from '../../app/routes/home';
 import { trackCardView } from '../../app/viewtrack';
-const mockPlantNames = ['Mock Plant 1', 'Mock Plant 2', 'Mock Plant 3', 'Mock Plant 4', 'Mock Plant 5'];
-const mockBirdNames = ['Mock Bird 1', 'Mock Bird 2', 'Mock Bird 3', 'Mock Bird 4', 'Mock Bird 5'];
+import { DECK_DEFS } from '../../app/data/decks';
+const mockPlants = DECK_DEFS[0].categories.find((c) => c.id === 'plants')!.cards;
+const mockBirds = DECK_DEFS[0].categories.find((c) => c.id === 'birds')!.cards;
+const mockPlantNames = mockPlants.map((c) => c.name);
+const mockBirdNames = mockBirds.map((c) => c.name);
 const mockAllNames = [...mockPlantNames, ...mockBirdNames];
 
 
-// Mock the card lists
-vi.mock('../../app/routes/card-lists', () => ({
-  birds: [
-    { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg' },
-    { name: 'Mock Bird 2', front: 'Mock Bird 2 Front.jpg', back: 'Mock Bird 2 Back.jpg' },
-    { name: 'Mock Bird 3', front: 'Mock Bird 3 Front.jpg', back: 'Mock Bird 3 Back.jpg' },
-    { name: 'Mock Bird 4', front: 'Mock Bird 4 Front.jpg', back: 'Mock Bird 4 Back.jpg' },
-    { name: 'Mock Bird 5', front: 'Mock Bird 5 Front.jpg', back: 'Mock Bird 5 Back.jpg' },
-  ],
-  plants: [
-    { name: 'Mock Plant 1', front: 'Mock Plant 1 Front.jpg', back: 'Mock Plant 1 Back.jpg' },
-    { name: 'Mock Plant 2', front: 'Mock Plant 2 Front.jpg', back: 'Mock Plant 2 Back.jpg' },
-    { name: 'Mock Plant 3', front: 'Mock Plant 3 Front.jpg', back: 'Mock Plant 3 Back.jpg' },
-    { name: 'Mock Plant 4', front: 'Mock Plant 4 Front.jpg', back: 'Mock Plant 4 Back.jpg' },
-    { name: 'Mock Plant 5', front: 'Mock Plant 5 Front.jpg', back: 'Mock Plant 5 Back.jpg' },
-  ],
-  invasives: []
-}));
+// Mock the deck registry
+vi.mock('../../app/data/decks', () => {
+  const canyonlands = {
+    id: 'canyonlands',
+    label: 'Canyonlands',
+    description: '',
+    categories: [
+      {
+        id: 'plants', label: '🌿 Plants', cards: [
+          { name: 'Mock Plant 1', front: '/cards/Mock Plant 1 Front.jpg', back: '/cards/Mock Plant 1 Back.jpg', invasive: false },
+          { name: 'Mock Plant 2', front: '/cards/Mock Plant 2 Front.jpg', back: '/cards/Mock Plant 2 Back.jpg', invasive: false },
+          { name: 'Mock Plant 3', front: '/cards/Mock Plant 3 Front.jpg', back: '/cards/Mock Plant 3 Back.jpg', invasive: false },
+          { name: 'Mock Plant 4', front: '/cards/Mock Plant 4 Front.jpg', back: '/cards/Mock Plant 4 Back.jpg', invasive: false },
+          { name: 'Mock Plant 5', front: '/cards/Mock Plant 5 Front.jpg', back: '/cards/Mock Plant 5 Back.jpg', invasive: false },
+        ],
+      },
+      {
+        id: 'birds', label: '🐦 Birds', cards: [
+          { name: 'Mock Bird 1', front: '/cards/Mock Bird 1 Front.jpg', back: '/cards/Mock Bird 1 Back.jpg', invasive: false },
+          { name: 'Mock Bird 2', front: '/cards/Mock Bird 2 Front.jpg', back: '/cards/Mock Bird 2 Back.jpg', invasive: false },
+          { name: 'Mock Bird 3', front: '/cards/Mock Bird 3 Front.jpg', back: '/cards/Mock Bird 3 Back.jpg', invasive: false },
+          { name: 'Mock Bird 4', front: '/cards/Mock Bird 4 Front.jpg', back: '/cards/Mock Bird 4 Back.jpg', invasive: false },
+          { name: 'Mock Bird 5', front: '/cards/Mock Bird 5 Front.jpg', back: '/cards/Mock Bird 5 Back.jpg', invasive: false },
+        ],
+      },
+    ],
+  };
+  return {
+    DECK_DEFS: [canyonlands],
+    DEFAULT_DECK_ID: 'canyonlands',
+    ALL_CATEGORY_IDS: ['plants', 'birds'],
+    getDeckDef: (id: string) => (id === 'canyonlands' ? canyonlands : undefined),
+    defaultInvasive: (name: string) => name === 'Arundo',
+  };
+});
 
 // Mock viewtrack
 vi.mock('../../app/viewtrack', () => ({
@@ -110,15 +130,22 @@ describe('Home', () => {
   it('should handle invasive species detection', async () => {
     vi.resetModules();
 
-    vi.doMock('../../app/routes/card-lists', () => ({
-      birds: [
-        { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg' },
-      ],
-      plants: [
-        { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
-      ],
-      invasives: ['Arundo']
-    }));
+    vi.doMock('../../app/data/decks', () => {
+      const canyonlands = {
+        id: 'canyonlands', label: 'Canyonlands', description: '',
+        categories: [
+          { id: 'plants', label: '🌿 Plants', cards: [{ name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg', invasive: true },] },
+          { id: 'birds', label: '🐦 Birds', cards: [{ name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg', invasive: false },] },
+        ],
+      };
+      return {
+        DECK_DEFS: [canyonlands],
+        DEFAULT_DECK_ID: 'canyonlands',
+        ALL_CATEGORY_IDS: ['plants', 'birds'],
+        getDeckDef: (id: string) => (id === 'canyonlands' ? canyonlands : undefined),
+        defaultInvasive: (name: string) => name === 'Arundo',
+      };
+    });
 
     const { default: Home } = await import('../../app/routes/home');
 
@@ -760,16 +787,23 @@ describe('Home', () => {
           it('should navigate to invasive species cards in plants mode and detect them', async () => {
             vi.resetModules();
       
-            vi.doMock('../../app/routes/card-lists', () => ({
-              birds: [
-                { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg' },
-              ],
-              plants: [
-                { name: 'Mock Plant 1', front: 'Mock Plant 1 Front.jpg', back: 'Mock Plant 1 Back.jpg' },
-                { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
-              ],
-              invasives: ['Arundo']
-            }));
+            vi.doMock('../../app/data/decks', () => {
+      const canyonlands = {
+        id: 'canyonlands', label: 'Canyonlands', description: '',
+        categories: [
+          { id: 'plants', label: '🌿 Plants', cards: [{ name: 'Mock Plant 1', front: 'Mock Plant 1 Front.jpg', back: 'Mock Plant 1 Back.jpg', invasive: false },
+                { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg', invasive: true },] },
+          { id: 'birds', label: '🐦 Birds', cards: [{ name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg', invasive: false },] },
+        ],
+      };
+      return {
+        DECK_DEFS: [canyonlands],
+        DEFAULT_DECK_ID: 'canyonlands',
+        ALL_CATEGORY_IDS: ['plants', 'birds'],
+        getDeckDef: (id: string) => (id === 'canyonlands' ? canyonlands : undefined),
+        defaultInvasive: (name: string) => name === 'Arundo',
+      };
+    });
       
             const { default: Home } = await import('../../app/routes/home');
       
@@ -803,13 +837,22 @@ describe('Home', () => {
           it('should track card views when encountering invasive species', async () => {
             vi.resetModules();
       
-            vi.doMock('../../app/routes/card-lists', () => ({
-              birds: [],
-              plants: [
-                { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
-              ],
-              invasives: ['Arundo']
-            }));
+            vi.doMock('../../app/data/decks', () => {
+      const canyonlands = {
+        id: 'canyonlands', label: 'Canyonlands', description: '',
+        categories: [
+          { id: 'plants', label: '🌿 Plants', cards: [{ name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg', invasive: true },] },
+          { id: 'birds', label: '🐦 Birds', cards: [] },
+        ],
+      };
+      return {
+        DECK_DEFS: [canyonlands],
+        DEFAULT_DECK_ID: 'canyonlands',
+        ALL_CATEGORY_IDS: ['plants', 'birds'],
+        getDeckDef: (id: string) => (id === 'canyonlands' ? canyonlands : undefined),
+        defaultInvasive: (name: string) => name === 'Arundo',
+      };
+    });
       
             const { default: Home } = await import('../../app/routes/home');
             // vi.resetModules() re-creates the viewtrack mock, so grab the
@@ -840,15 +883,22 @@ describe('Home', () => {
           it('should exclude invasive species in birds mode', async () => {
             vi.resetModules();
       
-            vi.doMock('../../app/routes/card-lists', () => ({
-              birds: [
-                { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg' },
-              ],
-              plants: [
-                { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
-              ],
-              invasives: ['Arundo']
-            }));
+            vi.doMock('../../app/data/decks', () => {
+      const canyonlands = {
+        id: 'canyonlands', label: 'Canyonlands', description: '',
+        categories: [
+          { id: 'plants', label: '🌿 Plants', cards: [{ name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg', invasive: true },] },
+          { id: 'birds', label: '🐦 Birds', cards: [{ name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg', invasive: false },] },
+        ],
+      };
+      return {
+        DECK_DEFS: [canyonlands],
+        DEFAULT_DECK_ID: 'canyonlands',
+        ALL_CATEGORY_IDS: ['plants', 'birds'],
+        getDeckDef: (id: string) => (id === 'canyonlands' ? canyonlands : undefined),
+        defaultInvasive: (name: string) => name === 'Arundo',
+      };
+    });
       
             const { default: Home } = await import('../../app/routes/home');
       
@@ -872,15 +922,22 @@ describe('Home', () => {
           it('should include invasive species in both mode', async () => {
             vi.resetModules();
       
-            vi.doMock('../../app/routes/card-lists', () => ({
-              birds: [
-                { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg' },
-              ],
-              plants: [
-                { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
-              ],
-              invasives: ['Arundo']
-            }));
+            vi.doMock('../../app/data/decks', () => {
+      const canyonlands = {
+        id: 'canyonlands', label: 'Canyonlands', description: '',
+        categories: [
+          { id: 'plants', label: '🌿 Plants', cards: [{ name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg', invasive: true },] },
+          { id: 'birds', label: '🐦 Birds', cards: [{ name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg', invasive: false },] },
+        ],
+      };
+      return {
+        DECK_DEFS: [canyonlands],
+        DEFAULT_DECK_ID: 'canyonlands',
+        ALL_CATEGORY_IDS: ['plants', 'birds'],
+        getDeckDef: (id: string) => (id === 'canyonlands' ? canyonlands : undefined),
+        defaultInvasive: (name: string) => name === 'Arundo',
+      };
+    });
       
             const { default: Home } = await import('../../app/routes/home');
       
@@ -915,13 +972,22 @@ describe('Home', () => {
           it('should flip invasive cards correctly', async () => {
             vi.resetModules();
       
-            vi.doMock('../../app/routes/card-lists', () => ({
-              birds: [],
-              plants: [
-                { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
-              ],
-              invasives: ['Arundo']
-            }));
+            vi.doMock('../../app/data/decks', () => {
+      const canyonlands = {
+        id: 'canyonlands', label: 'Canyonlands', description: '',
+        categories: [
+          { id: 'plants', label: '🌿 Plants', cards: [{ name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg', invasive: true },] },
+          { id: 'birds', label: '🐦 Birds', cards: [] },
+        ],
+      };
+      return {
+        DECK_DEFS: [canyonlands],
+        DEFAULT_DECK_ID: 'canyonlands',
+        ALL_CATEGORY_IDS: ['plants', 'birds'],
+        getDeckDef: (id: string) => (id === 'canyonlands' ? canyonlands : undefined),
+        defaultInvasive: (name: string) => name === 'Arundo',
+      };
+    });
       
             const { default: Home } = await import('../../app/routes/home');
       
@@ -958,15 +1024,22 @@ describe('Home', () => {
           it('should handle encountering invasives in different modes', async () => {
             vi.resetModules();
       
-            vi.doMock('../../app/routes/card-lists', () => ({
-              birds: [
-                { name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg' },
-              ],
-              plants: [
-                { name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg' },
-              ],
-              invasives: ['Arundo']
-            }));
+            vi.doMock('../../app/data/decks', () => {
+      const canyonlands = {
+        id: 'canyonlands', label: 'Canyonlands', description: '',
+        categories: [
+          { id: 'plants', label: '🌿 Plants', cards: [{ name: 'Arundo', front: 'Arundo Front.jpg', back: 'Arundo Back.jpg', invasive: true },] },
+          { id: 'birds', label: '🐦 Birds', cards: [{ name: 'Mock Bird 1', front: 'Mock Bird 1 Front.jpg', back: 'Mock Bird 1 Back.jpg', invasive: false },] },
+        ],
+      };
+      return {
+        DECK_DEFS: [canyonlands],
+        DEFAULT_DECK_ID: 'canyonlands',
+        ALL_CATEGORY_IDS: ['plants', 'birds'],
+        getDeckDef: (id: string) => (id === 'canyonlands' ? canyonlands : undefined),
+        defaultInvasive: (name: string) => name === 'Arundo',
+      };
+    });
       
             const { default: Home } = await import('../../app/routes/home');
       

@@ -1,5 +1,9 @@
 import { test, expect, type Page } from '@playwright/test';
-import { birds, plants } from '~/routes/card-lists';
+import { DECK_DEFS } from '~/data/decks';
+
+const canyonlands = DECK_DEFS.find((d) => d.id === 'canyonlands')!;
+const birds = canyonlands.categories.find((c) => c.id === 'birds')!.cards;
+const plants = canyonlands.categories.find((c) => c.id === 'plants')!.cards;
 
 async function handleConsentPopup(page: Page) {
   const dismissButton = page.getByTestId('consent-dismiss');

@@ -3,6 +3,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { HamburgerMenu } from '../../app/components/HamburgerMenu';
 
+// HamburgerMenu reads the real deck registry (app/data/decks.json):
+// canyonlands (🏔 Canyonlands; birds, plants) and healthy-canyons (🌿 Healthy Canyons).
 describe('HamburgerMenu deck picker', () => {
   const defaultProps = {
     mode: 'plants' as const,
@@ -18,15 +20,17 @@ describe('HamburgerMenu deck picker', () => {
     render(<HamburgerMenu {...defaultProps} />);
 
     const canyonlands = screen.getByTestId('deck-button-canyonlands');
-    const healthy = screen.getByTestId('deck-button-healthy');
+    const healthy = screen.getByTestId('deck-button-healthy-canyons');
     expect(canyonlands).toHaveClass('active');
     expect(healthy).not.toHaveClass('active');
+    expect(canyonlands).toHaveTextContent('Canyonlands');
+    expect(healthy).toHaveTextContent('Healthy Canyons');
   });
 
   it('highlights the healthy deck when it is active', () => {
-    render(<HamburgerMenu {...defaultProps} deck="healthy" />);
+    render(<HamburgerMenu {...defaultProps} deck="healthy-canyons" />);
 
-    expect(screen.getByTestId('deck-button-healthy')).toHaveClass('active');
+    expect(screen.getByTestId('deck-button-healthy-canyons')).toHaveClass('active');
     expect(screen.getByTestId('deck-button-canyonlands')).not.toHaveClass('active');
   });
 
@@ -34,18 +38,18 @@ describe('HamburgerMenu deck picker', () => {
     const changeDeckClicked = vi.fn();
     render(<HamburgerMenu {...defaultProps} changeDeckClicked={changeDeckClicked} />);
 
-    fireEvent.click(screen.getByTestId('deck-button-healthy'));
-    expect(changeDeckClicked).toHaveBeenCalledWith('healthy');
+    fireEvent.click(screen.getByTestId('deck-button-healthy-canyons'));
+    expect(changeDeckClicked).toHaveBeenCalledWith('healthy-canyons');
 
     fireEvent.click(screen.getByTestId('deck-button-canyonlands'));
     expect(changeDeckClicked).toHaveBeenCalledWith('canyonlands');
   });
 
   it('labels the mode button per deck', () => {
-    const { rerender } = render(<HamburgerMenu {...defaultProps} deck="healthy" mode="animals" />);
+    const { rerender } = render(<HamburgerMenu {...defaultProps} deck="healthy-canyons" mode="animals" />);
     expect(screen.getByTestId('mode-button').textContent).toBe('🦎 Animals');
 
-    rerender(<HamburgerMenu {...defaultProps} deck="healthy" mode="both" />);
+    rerender(<HamburgerMenu {...defaultProps} deck="healthy-canyons" mode="both" />);
     expect(screen.getByTestId('mode-button').textContent).toBe('🌿🦎 Both');
   });
 
