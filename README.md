@@ -134,7 +134,7 @@ says.
 | `decks/canyonlands/` | The scanned 154-card physical deck (images + `manifest.json`). |
 | `decks/healthy-canyons/` | The generated survey deck: images, `manifest.json`, the source spreadsheets, and the full generation pipeline (`npm run generate`). |
 
-`scripts/sync-decks.mjs` (run automatically before `dev` and `build`) copies each
+`scripts/sync-decks.ts` (run automatically before `dev` and `build`) copies each
 deck's images to `public/decks/<id>/cards/` and writes each deck's manifest to
 `app/data/decks/<id>.json` (with survey-specific data stripped — it stays only
 in the private deck repository). The manifests drive deck switching,

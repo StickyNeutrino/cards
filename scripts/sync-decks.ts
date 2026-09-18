@@ -1,5 +1,5 @@
-// Sync deck repositories into the app. Plain JS (no build step) so the
-// prebuild/predev hooks run on any Node >= 20, including the Docker image.
+// Sync deck repositories into the app. Runs with plain `node` on any Node
+// >= 23 (native TypeScript support), including the Node 26 Docker image.
 //
 // Each directory under decks/<id>/ is a standalone deck repository containing
 // manifest.json (card metadata, portable bare filenames) and cards/*.jpg.
@@ -11,7 +11,7 @@
 //      manifest stays in the private deck repository only
 //
 // Run automatically before `dev` and `build`; also runnable directly:
-//   node scripts/sync-decks.mjs
+//   node scripts/sync-decks.ts
 
 import fs from "node:fs";
 import path from "node:path";

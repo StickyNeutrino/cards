@@ -1,24 +1,24 @@
-FROM node:20-alpine AS development-dependencies-env
+FROM node:26-alpine AS development-dependencies-env
 COPY . /app
 WORKDIR /app
 RUN npm ci
 
-FROM node:20-alpine AS production-dependencies-env
+FROM node:26-alpine AS production-dependencies-env
 COPY ./package.json package-lock.json /app/
 WORKDIR /app
 RUN npm ci --omit=dev
 
-FROM node:20-alpine AS build-env
+FROM node:26-alpine AS build-env
 COPY . /app/
 COPY --from=development-dependencies-env /app/node_modules /app/node_modules
 WORKDIR /app
 ARG BUILD_SHA=dev
 ENV VITE_BUILD_SHA=$BUILD_SHA
-# prebuild hook runs scripts/sync-decks.mjs, which copies deck images from
+# prebuild hook runs scripts/sync-decks.ts, which copies deck images from
 # decks/<id>/cards/ into public/decks/ and writes app/data/decks/<id>.json
 RUN npm run build
 
-FROM node:20-alpine
+FROM node:26-alpine
 COPY ./package.json package-lock.json /app/
 COPY ./scripts/update-manifest.js /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules

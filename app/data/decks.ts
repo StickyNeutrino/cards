@@ -3,7 +3,7 @@ import healthyCanyons from "./decks/healthy-canyons.json" with { type: "json" };
 
 /**
  * Each deck is a standalone repository under decks/<id>/ with its own
- * manifest.json. `scripts/sync-decks.mjs` copies that manifest here (with the
+ * manifest.json. `scripts/sync-decks.ts` copies that manifest here (with the
  * survey's per-canyon data stripped — that stays in the private deck repo),
  * and the copies are committed so builds and tests work without the private
  * repos checked out. Adding a deck = add its manifest here.

@@ -6,3 +6,9 @@ README.md
 decks/*/data/api-cache
 decks/*/data/fonts
 decks/*/data/raw-photos
+/.git
+**/.git
+/public/decks
+/coverage
+/test-results
+/playwright-report
