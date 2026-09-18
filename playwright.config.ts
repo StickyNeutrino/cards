@@ -63,7 +63,16 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
+  /* Run your local dev server before starting the tests.
+   *
+   * VITE_DISABLE_UMAMI keeps the Umami analytics script out of the served
+   * HTML so test traffic never reaches production analytics.
+   *
+   * Caveat: reuseExistingServer means an already-running dev server on :5173
+   * that was started WITHOUT VITE_DISABLE_UMAMI (e.g. a plain `npm run dev`)
+   * will be reused as-is, re-enabling analytics. The shared fixture in
+   * test/e2e-helpers.ts blocks and fails on any umami.is request, so such a
+   * setup fails loudly instead of leaking test views into production. */
   webServer: {
     command: 'npm run dev',
     port: 5173,

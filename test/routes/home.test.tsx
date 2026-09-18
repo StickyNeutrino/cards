@@ -204,9 +204,21 @@ describe('Home', () => {
     expect(card.getAttribute('data-card')).toBeTruthy();
   });
 
-  it('should track card views when advancing', () => {
-    // Tracking functionality is tested in viewtrack tests
-    expect(true).toBe(true);
+  it('should track card views when advancing', async () => {
+    render(<RouterProvider router={router} />);
+
+    expect(trackCardView).not.toHaveBeenCalled();
+
+    const nextButton = screen.getByTestId('card').nextElementSibling?.querySelector('#next-button') as HTMLElement;
+    await userEvent.click(nextButton);
+
+    // Advancing to a new highest index records a card view
+    expect(trackCardView).toHaveBeenCalledTimes(1);
+
+    // Going back does not count as a new view
+    const backButton = screen.getByTestId('card').nextElementSibling?.querySelector('#back-button') as HTMLElement;
+    await userEvent.click(backButton);
+    expect(trackCardView).toHaveBeenCalledTimes(1);
   });
 
   it('should not track card views when going back', async () => {
@@ -426,8 +438,13 @@ describe('Home', () => {
         });
 
         // Let the delayed advance fire, then go back —
-        // should return to the card we started with
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // should return to the card we started with.
+        // Wrap the wait in act(): navigating while flipped schedules a
+        // delayed setIndex (flipSpeed/2), which would otherwise fire
+        // outside act() and log a warning.
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        });
         await userEvent.click(backButton);
 
         await waitFor(() => {
@@ -1113,8 +1130,11 @@ describe('Home', () => {
         await waitFor(() => expect(card).toHaveAttribute('data-flipped', 'false'));
 
         // Navigating while flipped schedules a delayed index change
-        // (flipSpeed/2), so let any pending delayed navigation settle
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // (flipSpeed/2), so let any pending delayed navigation settle.
+        // Wrapped in act() so the delayed setIndex fires inside act.
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        });
 
         await waitFor(() => {
           expect(card.getAttribute('data-card')).toBe(initialCard);
@@ -1445,8 +1465,12 @@ describe('Home', () => {
       });
 
       // Let the delayed advance fire, then go back —
-      // should return to the card we started with
-      await new Promise(resolve => setTimeout(resolve, 600));
+      // should return to the card we started with.
+      // Wrapped in act() so the delayed setIndex (flipSpeed/2 = 500ms
+      // at the 1.0s speed set above) fires inside act.
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 600));
+      });
       const backButton = screen.getByTestId('card').nextElementSibling?.querySelector('#back-button') as HTMLElement;
       await userEvent.click(backButton);
 
@@ -1752,7 +1776,11 @@ describe('Home', () => {
       const nextButton = screen.getByTestId('card').nextElementSibling?.querySelector('#next-button') as HTMLElement;
       await userEvent.click(nextButton);
 
-      await new Promise(resolve => setTimeout(resolve, 400)); // default flip / 2
+      // Wrapped in act(): navigating while flipped schedules a delayed
+      // setIndex (default flipSpeed 0.8 → 400ms) that fires inside this window.
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 400)); // default flip / 2
+      });
       await waitFor(() => {
         expect(card).toHaveAttribute('data-flipped', 'false');
         expect(mockPlantNames).toContain(card.getAttribute('data-card'));

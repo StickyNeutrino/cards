@@ -6,7 +6,7 @@ import { Settings } from '../../app/components/Settings';
 describe('Settings', () => {
   const defaultProps = {
     showSettings: true,
-    flipSpeed: 0.8,
+    flipSpeed: '0.8',
     setFlipSpeed: vi.fn(),
     isPreloaded: false,
     isPreloading: false,
@@ -30,7 +30,7 @@ describe('Settings', () => {
   });
 
   it('displays instant for flipSpeed of 0', () => {
-    render(<Settings {...defaultProps} flipSpeed={0} />);
+    render(<Settings {...defaultProps} flipSpeed={'0'} />);
 
     expect(screen.getByText('Card Flip Speed: Instant')).toBeInTheDocument();
   });
@@ -83,18 +83,25 @@ describe('Settings', () => {
     expect(ref.current).toBeInstanceOf(HTMLDivElement);
   });
 
-  it('prevents event propagation on slider container', () => {
-    render(<Settings {...defaultProps} />);
+  it('keeps clicks inside the panel from closing it (stopPropagation on panel sections)', () => {
+    // Home's <main> closes the settings panel on any click that reaches it,
+    // so the panel's sections must stop click propagation.
+    const onOutsideClick = vi.fn();
+    render(
+      <div onClick={onOutsideClick}>
+        <Settings {...defaultProps} />
+      </div>,
+    );
 
-    // The slider container has onClick to prevent propagation
-    expect(screen.getByText('Card Flip Speed: 0.8s')).toBeInTheDocument();
-  });
+    // Control: a click on the panel root itself bubbles to the parent
+    fireEvent.click(screen.getByText('Settings'));
+    expect(onOutsideClick).toHaveBeenCalledTimes(1);
 
-  it('prevents event propagation on button container', () => {
-    render(<Settings {...defaultProps} />);
-
-    // The button container has onClick to prevent propagation
-    expect(screen.getByRole('button')).toBeInTheDocument();
+    // Clicks inside each section (slider, preload, privacy) must not bubble
+    fireEvent.click(screen.getByRole('slider'));
+    fireEvent.click(screen.getByText('Download for Offline'));
+    fireEvent.click(screen.getByText('Enable Analytics Tracking'));
+    expect(onOutsideClick).toHaveBeenCalledTimes(1);
   });
 
   it('applies correct CSS classes', () => {

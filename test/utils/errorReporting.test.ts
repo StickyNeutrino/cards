@@ -161,7 +161,7 @@ describe('errorReporting', () => {
       });
 
       // Trigger the error handler
-      const errorHandler = addEventListenerSpy.mock.calls.find(call => call[0] === 'error')?.[1];
+      const errorHandler = addEventListenerSpy.mock.calls.find((call: any) => call[0] === 'error')?.[1];
       errorHandler?.(errorEvent);
 
       expect(mockFetch).toHaveBeenCalledWith('https://errors.cards.unimpossy.com/report', {
@@ -195,7 +195,7 @@ describe('errorReporting', () => {
       });
 
       // Trigger the rejection handler
-      const rejectionHandler = addEventListenerSpy.mock.calls.find(call => call[0] === 'unhandledrejection')?.[1];
+      const rejectionHandler = addEventListenerSpy.mock.calls.find((call: any) => call[0] === 'unhandledrejection')?.[1];
       rejectionHandler?.(rejectionEvent);
 
       expect(mockFetch).toHaveBeenCalledWith('https://errors.cards.unimpossy.com/report', {
@@ -228,7 +228,7 @@ describe('errorReporting', () => {
         promise: Promise.resolve(),
       });
 
-      const rejectionHandler = addEventListenerSpy.mock.calls.find(call => call[0] === 'unhandledrejection')?.[1];
+      const rejectionHandler = addEventListenerSpy.mock.calls.find((call: any) => call[0] === 'unhandledrejection')?.[1];
       rejectionHandler?.(rejectionEvent);
 
       expect(mockFetch).toHaveBeenCalledWith('https://errors.cards.unimpossy.com/report', {
@@ -263,45 +263,6 @@ describe('errorReporting', () => {
     });
   });
 
-  describe('ErrorReport interface', () => {
-    it('validates required fields', () => {
-      const validReport: ErrorReport = {
-        message: 'Test message',
-        url: 'http://example.com',
-        userAgent: 'Test Agent',
-        timestamp: '2023-01-01T00:00:00.000Z',
-        type: 'javascript',
-      };
-
-      expect(validReport).toBeDefined();
-    });
-
-    it('allows optional stack field', () => {
-      const reportWithStack: ErrorReport = {
-        message: 'Test message',
-        stack: 'Error stack',
-        url: 'http://example.com',
-        userAgent: 'Test Agent',
-        timestamp: '2023-01-01T00:00:00.000Z',
-        type: 'react',
-      };
-
-      expect(reportWithStack.stack).toBe('Error stack');
-    });
-
-    it('supports all error types', () => {
-      const types: ErrorReport['type'][] = ['javascript', 'promise', 'react'];
-
-      types.forEach(type => {
-        const report: ErrorReport = {
-          message: 'Test',
-          url: 'http://example.com',
-          userAgent: 'Test Agent',
-          timestamp: '2023-01-01T00:00:00.000Z',
-          type,
-        };
-        expect(report.type).toBe(type);
-      });
-    });
-  });
+  // Note: the ErrorReport TypeScript interface is enforced by
+  // `npm run typecheck`, not by runtime assertions.
 });

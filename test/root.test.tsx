@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { Layout, ErrorBoundary } from '../app/root';
 import App from '../app/root';
 import * as viewtrack from '../app/viewtrack';
@@ -28,72 +29,66 @@ vi.mock('../app/utils/errorReporting', () => ({
 }));
 
 describe('Layout', () => {
-  beforeEach(() => {
-    vi.stubGlobal('navigator', {
-      ...global.navigator,
-      serviceWorker: {
-        register: vi.fn().mockResolvedValue({}),
-      },
-    });
-    global.fetch = vi.fn().mockResolvedValue({});
-  });
+  // Layout renders the full document shell (<html>/<head>/<body>), so it is
+  // asserted as a server-rendered string. Rendering it into a jsdom <div>
+  // would both trip React's "<html> cannot be a child of <div>" validation
+  // and have React 19 hoist the <script>/<meta> tags out of the container.
+  const renderLayoutHtml = () =>
+    renderToStaticMarkup(<Layout><div>Test content</div></Layout>);
 
   it('renders HTML structure with correct lang attribute', () => {
-    render(<Layout><div>Test content</div></Layout>);
+    const html = renderLayoutHtml();
 
-    const html = document.querySelector('html');
-    expect(html).toHaveAttribute('lang', 'en');
+    expect(html.startsWith('<html lang="en">')).toBe(true);
+    expect(html).toContain('<body>');
+    expect(html).toContain('Test content');
   });
 
   it('renders head with meta tags', () => {
-    render(<Layout><div>Test content</div></Layout>);
+    const html = renderLayoutHtml();
 
-    const metaCharset = document.querySelector('meta[charset]');
-    expect(metaCharset).toHaveAttribute('charset', 'utf-8');
-
-    const metaViewport = document.querySelector('meta[name="viewport"]');
-    expect(metaViewport).toHaveAttribute('content', 'width=device-width, initial-scale=1');
-
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    expect(metaThemeColor).toHaveAttribute('content', '#9e4829');
-
-    const metaAppleMobileCapable = document.querySelector('meta[name="apple-mobile-web-app-capable"]');
-    expect(metaAppleMobileCapable).toHaveAttribute('content', 'yes');
-
-    const metaAppleStatusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-    expect(metaAppleStatusBar).toHaveAttribute('content', 'default');
-
-    const metaAppleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-    expect(metaAppleTitle).toHaveAttribute('content', 'Flash Cards');
+    expect(html).toContain('charSet="utf-8"');
+    expect(html).toContain('name="viewport"');
+    expect(html).toContain('content="width=device-width, initial-scale=1"');
+    expect(html).toContain('name="theme-color" content="#9e4829"');
+    expect(html).toContain('name="apple-mobile-web-app-capable" content="yes"');
+    expect(html).toContain('name="apple-mobile-web-app-status-bar-style" content="default"');
+    expect(html).toContain('name="apple-mobile-web-app-title" content="Flash Cards"');
   });
 
   it('renders links and meta components', () => {
-    render(<Layout><div>Test content</div></Layout>);
+    const html = renderLayoutHtml();
 
-    // Check that the components are rendered by looking for their test ids
-    const linksElement = document.querySelector('[data-testid="links"]');
-    const metaElement = document.querySelector('[data-testid="meta"]');
-
-    expect(linksElement).toBeInTheDocument();
-    expect(metaElement).toBeInTheDocument();
+    expect(html).toContain('data-testid="links"');
+    expect(html).toContain('data-testid="meta"');
   });
 
-  it('renders umami script', () => {
-    render(<Layout><div>Test content</div></Layout>);
+  it('renders the umami analytics script when tracking is not disabled', () => {
+    const html = renderLayoutHtml();
 
-    const script = document.querySelector('script[src*="cloud.umami.is"]');
-    expect(script).toBeInTheDocument();
-    expect(script).toHaveAttribute('defer');
-    expect(script).toHaveAttribute('data-website-id', '37372e71-04e7-45d4-9227-634088b621b7');
-    expect(script).toHaveAttribute('data-auto-track', 'false');
+    expect(html).toContain('<script defer="" src="https://cloud.umami.is/script.js"');
+    expect(html).toContain('data-website-id="37372e71-04e7-45d4-9227-634088b621b7"');
+    expect(html).toContain('data-auto-track="false"');
+  });
+
+  it('omits the umami analytics script when VITE_DISABLE_UMAMI is set', () => {
+    const original = import.meta.env.VITE_DISABLE_UMAMI;
+    (import.meta.env as any).VITE_DISABLE_UMAMI = 'true';
+    try {
+      const html = renderLayoutHtml();
+
+      expect(html).not.toContain('umami');
+    } finally {
+      (import.meta.env as any).VITE_DISABLE_UMAMI = original;
+    }
   });
 
   it('renders body with children and React Router components', () => {
-    render(<Layout><div>Test content</div></Layout>);
+    const html = renderLayoutHtml();
 
-    expect(screen.getByText('Test content')).toBeInTheDocument();
-    expect(screen.getByTestId('scroll-restoration')).toBeInTheDocument();
-    expect(screen.getByTestId('scripts')).toBeInTheDocument();
+    expect(html).toContain('<div>Test content</div>');
+    expect(html).toContain('data-testid="scroll-restoration"');
+    expect(html).toContain('data-testid="scripts"');
   });
 });
 
@@ -157,29 +152,19 @@ describe('ErrorBoundary', () => {
     vi.mocked(isRouteErrorResponse).mockRestore();
   });
 
-  it('renders error message in development', () => {
-    const originalEnv = import.meta.env.DEV;
-    import.meta.env.DEV = true;
-
+  it('renders the error details for generic errors', () => {
     const error = new Error('Development error message');
     render(<ErrorBoundary error={error} params={{}} />);
 
     expect(screen.getByText('Development error message')).toBeInTheDocument();
-
-    import.meta.env.DEV = originalEnv;
   });
 
-  it('renders stack trace in development', () => {
-    const originalEnv = import.meta.env.DEV;
-    import.meta.env.DEV = true;
-
+  it('renders the stack trace when one is available', () => {
     const error = new Error('Test error');
     error.stack = 'Error stack trace';
     render(<ErrorBoundary error={error} params={{}} />);
 
     expect(screen.getByText('Error stack trace')).toBeInTheDocument();
-
-    import.meta.env.DEV = originalEnv;
   });
 
   it('calls reportError when error is present', () => {

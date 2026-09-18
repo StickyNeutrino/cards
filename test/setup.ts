@@ -87,6 +87,8 @@ global.ResizeObserver = class MockResizeObserver {
 // Prevent vitest from reporting unhandled rejections from mocks
 window.addEventListener('unhandledrejection', (event) => {
   event.preventDefault();
+});
+
 // Mock PromiseRejectionEvent for jsdom
 global.PromiseRejectionEvent = class PromiseRejectionEvent extends Event {
   reason: any;
@@ -98,4 +100,3 @@ global.PromiseRejectionEvent = class PromiseRejectionEvent extends Event {
     this.promise = eventInitDict?.promise || Promise.resolve();
   }
 };
-});

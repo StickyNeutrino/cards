@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../e2e-helpers';
+import type { Page } from '@playwright/test';
 import { DECK_DEFS } from '~/data/decks';
 
 const canyonlands = DECK_DEFS.find((d) => d.id === 'canyonlands')!;

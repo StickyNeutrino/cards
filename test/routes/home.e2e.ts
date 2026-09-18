@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../e2e-helpers';
+import type { Page } from '@playwright/test';
 
 async function handleConsentPopup(page: Page) {
   const dismissButton = page.getByTestId('consent-dismiss');

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../e2e-helpers';
 
 test.describe('Privacy Policy Page', () => {
   test('content is reachable from the top of the page', async ({ page }) => {

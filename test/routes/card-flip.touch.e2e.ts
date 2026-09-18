@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../e2e-helpers';
 
 test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
 

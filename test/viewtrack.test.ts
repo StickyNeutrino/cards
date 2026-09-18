@@ -35,7 +35,7 @@ describe('trackView visibility change tracking', () => {
     const cleanup = trackView();
     expect(typeof cleanup).toBe('function');
 
-    cleanup();
+    cleanup!();
     expect(document.removeEventListener).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
   });
 

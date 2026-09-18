@@ -10,7 +10,7 @@ A digital companion to San Diego Canyonlands' physical flashcard deck — 154 sp
 
 [![React 19](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Tests](https://img.shields.io/badge/tests-258_passing-brightgreen)](#engineering-highlights)
+[![Tests](https://img.shields.io/badge/tests-306_passing-brightgreen)](#engineering-highlights)
 [![Playwright](https://img.shields.io/badge/Playwright-5_browsers-2ead33?logo=playwright&logoColor=white)](https://playwright.dev)
 [![Docker](https://img.shields.io/badge/Docker-Kubernetes-2496ed?logo=kubernetes&logoColor=white)](#deployment)
 
@@ -50,7 +50,7 @@ Flip through the deck like real flashcards: photos on the front, names on the ba
 |---|---|
 | **Offline-first architecture** | Two-tier service worker: cache-first for card images (with graceful fallback to the previous cache generation), network-first for the app shell. A one-tap preload fetches 330 progressive-JPEG card images with a live progress bar, and a post-build script injects hashed asset names into the service worker so every deploy caches correctly. |
 | **Privacy by design** | Cookieless analytics and crash reporting are enabled by default and can be disabled anytime from Settings or the first-visit banner — every tracking call re-checks the preference, so tracking stops immediately. No cookies, no persistent identifiers, self-hosted fonts. Playwright tests assert that opt-out payloads carry no identifiers and that opting out stops all network calls. |
-| **Testing culture** | 258 tests — 217 unit/integration (Vitest) and 41 end-to-end (Playwright) across Chromium, Firefox, WebKit, Mobile Chrome, and Mobile Safari, roughly 1.8 lines of test code per line of app code. fast-check property-based tests verify deck/shuffle invariants, a custom harness reruns the unit suite up to 10× to catch flaky tests, and CSS parser tests lock touch/hover behavior in as executable contracts. |
+| **Testing culture** | 306 tests — 264 unit/integration (Vitest) and 42 end-to-end (Playwright) across Chromium, Firefox, WebKit, Mobile Chrome, and Mobile Safari, roughly 1.8 lines of test code per line of app code. fast-check property-based tests verify deck/shuffle invariants, a custom harness reruns the unit suite up to 10× to catch flaky tests, and CSS parser tests lock touch/hover behavior in as executable contracts. E2E tests run with analytics hard-blocked: every `umami.is` request is aborted and fails the test, so test traffic never reaches production analytics. |
 | **Production operations** | Multi-stage Docker build with the git SHA injected at build time and surfaced in the UI. Hardened Kubernetes pods (non-root, read-only root filesystem, dropped capabilities, resource limits, health probes) behind Traefik with automatic Let's Encrypt TLS. A separate Express crash-report microservice, covered by its own supertest suite. |
 
 ## Tech stack
