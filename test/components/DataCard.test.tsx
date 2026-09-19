@@ -1,0 +1,156 @@
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { DataCard, creditLabelFor, type DataCardModel } from '../../app/card/dataCard';
+
+const trioModel: DataCardModel = {
+  name: 'Dwarf Nettle',
+  layout: 'photo-trio',
+  photos: [
+    { src: 'blob:main', role: 'main', alt: 'Flowering stalk', credit: { observer: 'joodles', license: 'cc-by-nc' } },
+    { src: 'blob:sec1', role: 'secondary', credit: { observer: 'leavenworth', license: 'cc0' } },
+    { src: 'blob:sec2', role: 'secondary', credit: { observer: 'susanbar', license: 'all-rights-reserved' } },
+  ],
+  sciName: 'Urtica urens',
+  commonName: 'Dwarf Nettle',
+  altNames: ['Burning Nettle'],
+  familyCommon: 'Nettle Family',
+  familyLatin: 'Urticaceae',
+  native: 'non-native',
+  invasive: true,
+};
+
+describe('creditLabelFor', () => {
+  it('formats the license codes for the caption line', () => {
+    expect(creditLabelFor('cc0')).toBe('CC0');
+    expect(creditLabelFor('cc-by-nc')).toBe('CC BY-NC');
+    expect(creditLabelFor('cc-by-nc-sa')).toBe('CC BY-NC-SA');
+    expect(creditLabelFor('all-rights-reserved')).toBe('All Rights Reserved');
+  });
+});
+
+describe('DataCard front', () => {
+  it('renders the trio slots in order with credit captions', () => {
+    render(<DataCard model={trioModel} face="front" />);
+
+    const photos = screen.getAllByTestId('data-photo');
+    expect(photos).toHaveLength(3);
+    expect(photos.map((p) => p.getAttribute('data-role'))).toEqual(['main', 'secondary', 'secondary']);
+
+    const images = photos.map((p) => p.querySelector('img'));
+    expect(images.map((i) => i?.getAttribute('src'))).toEqual(['blob:main', 'blob:sec1', 'blob:sec2']);
+    expect(images[0]).toHaveAttribute('alt', 'Flowering stalk');
+
+    const credits = screen.getAllByTestId('data-credit');
+    expect(credits.map((c) => c.textContent)).toEqual([
+      '© joodles · CC BY-NC',
+      '© leavenworth · CC0',
+      '© susanbar · All Rights Reserved',
+    ]);
+  });
+
+  it('renders a single photo (photo-single) as the main slot only', () => {
+    render(
+      <DataCard
+        model={{
+          name: 'Chamise',
+          layout: 'photo-single',
+          photos: [{ src: 'blob:main', role: 'main', credit: { observer: 'alice', license: 'cc-by' } }],
+        }}
+        face="front"
+      />,
+    );
+
+    const photos = screen.getAllByTestId('data-photo');
+    expect(photos).toHaveLength(1);
+    expect(photos[0]).toHaveAttribute('data-role', 'main');
+    expect(screen.getByTestId('data-credit').textContent).toBe('© alice · CC BY');
+  });
+
+  it('renders a photo-trio with one photo like a single (main slot only)', () => {
+    render(
+      <DataCard
+        model={{
+          name: 'Wrentit',
+          layout: 'photo-trio',
+          photos: [{ src: 'blob:main', role: 'main', credit: { observer: 'bob', license: 'cc0' } }],
+        }}
+        face="front"
+      />,
+    );
+
+    expect(screen.getAllByTestId('data-photo')).toHaveLength(1);
+  });
+
+  it('renders only the first two secondary photos even if given extras', () => {
+    render(
+      <DataCard
+        model={{
+          name: 'Extra',
+          layout: 'photo-trio',
+          photos: [
+            { src: 'blob:main', role: 'main', credit: { observer: 'a', license: 'cc0' } },
+            { src: 'blob:s1', role: 'secondary', credit: { observer: 'b', license: 'cc0' } },
+            { src: 'blob:s2', role: 'secondary', credit: { observer: 'c', license: 'cc0' } },
+            { src: 'blob:s3', role: 'secondary', credit: { observer: 'd', license: 'cc0' } },
+          ],
+        }}
+        face="front"
+      />,
+    );
+
+    expect(screen.getAllByTestId('data-photo')).toHaveLength(3);
+  });
+});
+
+describe('DataCard back', () => {
+  it('renders the full text stack', () => {
+    render(<DataCard model={trioModel} face="back" />);
+
+    expect(screen.getByTestId('data-card-title').textContent).toBe('Dwarf Nettle');
+    expect(screen.getByTestId('data-card-alt-names').textContent).toBe('aka Burning Nettle');
+    expect(screen.getByTestId('data-card-sci-name').textContent).toBe('Urtica urens');
+    expect(screen.getByTestId('data-card-family-common').textContent).toBe('Nettle Family');
+    expect(screen.getByTestId('data-card-family-latin').textContent).toBe('Urticaceae');
+    expect(screen.getByTestId('data-card-native').textContent).toBe('Non-native (Invasive)');
+  });
+
+  it('omits optional fields that are absent', () => {
+    render(
+      <DataCard
+        model={{ name: 'Chamise', native: 'native' }}
+        face="back"
+      />,
+    );
+
+    expect(screen.getByTestId('data-card-title').textContent).toBe('Chamise');
+    expect(screen.queryByTestId('data-card-alt-names')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('data-card-sci-name')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('data-card-family-common')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-card-native').textContent).toBe('Native');
+    expect(screen.queryByTestId('data-card-rarity')).not.toBeInTheDocument();
+  });
+
+  it('labels plain non-native status without the invasive suffix', () => {
+    render(<DataCard model={{ name: 'X', native: 'non-native' }} face="back" />);
+    expect(screen.getByTestId('data-card-native').textContent).toBe('Non-native');
+  });
+
+  it('shows the rarity line when present', () => {
+    render(<DataCard model={{ name: 'X', rarity: 'CNPS 1B.1' }} face="back" />);
+    expect(screen.getByTestId('data-card-rarity').textContent).toBe('CNPS 1B.1');
+  });
+
+  it('applies the invasive border class to the back canvas', () => {
+    const { container, rerender } = render(<DataCard model={trioModel} face="back" invasive />);
+    expect(screen.getByTestId('data-card-back')).toHaveClass('invasive');
+    expect(container.querySelector('.data-card')).toHaveClass('invasive');
+
+    rerender(<DataCard model={trioModel} face="back" />);
+    expect(screen.getByTestId('data-card-back')).not.toHaveClass('invasive');
+  });
+
+  it('does not apply the invasive border to the front', () => {
+    render(<DataCard model={trioModel} face="front" />);
+    expect(screen.getByTestId('data-card-front')).not.toHaveClass('invasive');
+  });
+});

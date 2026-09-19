@@ -491,3 +491,156 @@ main {
   background: #efede9;
   border-radius: 12px;
 }
+
+/* ---- Data-driven cards (uploaded decks, manifest cardFormat "data") ---- */
+/* Only data cards get .data-face, so image decks keep their exact markup and
+   CSS. The face acts as a container-query container so the 750×1050 canvas
+   can size itself to fit (like the object-fit images it replaces). */
+.flip-card .data-face {
+  container-type: size;
+}
+
+.data-card {
+  /* Canvas width = the smaller of the face width and the width implied by the
+     face height (750/1050 ≈ 71.4286% of its height). */
+  width: min(100cqw, 71.4286cqh);
+  aspect-ratio: 750 / 1050;
+  position: relative;
+  background-color: #e4e3df;
+  border-radius: 1.8667cqw; /* 14px on the 750px design canvas */
+  overflow: hidden;
+  /* Font measurements inside resolve against the canvas width. */
+  container-type: inline-size;
+}
+
+/* Design font size: 1.6cqw = 12px on the 750px canvas; children size text in
+   em so everything scales with the rendered card. */
+.data-card-content {
+  position: absolute;
+  inset: 0;
+  font-size: 1.6cqw;
+  line-height: 1.2;
+  color: #1a1a1a;
+}
+
+/* Front photo slots — the img override must beat `.flip-card img`
+   (letterboxed contain) since slot photos fill and crop instead. */
+.data-photo {
+  position: absolute;
+  margin: 0;
+}
+.flip-card .data-photo img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 1.8667cqw; /* 14px on the 750px design canvas */
+}
+.data-credit {
+  position: absolute;
+  top: calc(100% + 0.75em);
+  left: 0;
+  width: 100%;
+  color: #6b6b66;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Back — Healthy Canyons text stack (title / aka / sci name / family /
+   native status / rarity), centered, with the white logo chip top-left. */
+.data-logo-chip {
+  position: absolute;
+  left: 8%;
+  top: 5.3333%;
+  width: 11.2cqw;
+  aspect-ratio: 1;
+  background: #ffffff;
+  border: 0.8cqw solid #1a1a1a;
+  border-radius: 0.8cqw;
+}
+.data-back-stack {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0 6.6667%;
+}
+.data-back-title {
+  /* 6em = 72px on the 750px canvas; app/card/dataCard.tsx auto-shrinks it. */
+  width: 100%;
+  font-size: 6em;
+  font-weight: 700;
+  line-height: 1.05;
+  margin: 0 0 0.2em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.data-back-alt {
+  font-size: 2.1667em; /* 26px */
+  color: #555;
+  margin: 0 0 0.5em;
+}
+.data-back-sci {
+  font-size: 2.8333em; /* 34px */
+  font-style: italic;
+  margin: 0 0 3em;
+}
+.data-back-family {
+  font-size: 2.6667em; /* 32px */
+  margin: 0 0 1em;
+}
+.data-back-family-latin {
+  font-size: 2.5em; /* 30px */
+  font-style: italic;
+  margin: 0 0 4em;
+}
+.data-back-native {
+  font-size: 3em; /* 36px */
+  margin: 0 0 1.2em;
+}
+.data-back-rarity {
+  font-size: 2.3333em; /* 28px */
+  color: #444;
+  margin: 0;
+}
+
+/* ---- Deck upload (hamburger menu) ---- */
+.upload-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.upload-status {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  padding: 8px 12px;
+  font-size: 14px;
+  max-width: min(420px, calc(100vw - 40px));
+}
+.upload-status.success {
+  color: #1b5e20;
+}
+.upload-status.error {
+  color: #b3261e;
+}
+.menu-button.danger {
+  background-color: #c6543f;
+  color: #fff;
+}
+.menu-button.danger:hover {
+  background-color: #b04733;
+}
