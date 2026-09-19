@@ -10,7 +10,7 @@ import {
 import {
   importDeckZip, deleteUploadedDeck, listUploadedDecks, loadUploadedDeck,
 } from "~/utils/uploadedDecks";
-import { ALL_CATEGORY_IDS, DECK_DEFS, DEFAULT_DECK_ID, getDeckDef, type DeckCard, type DeckDef } from "~/data/decks";
+import { ALL_CATEGORY_IDS, DECK_DEFS, DEFAULT_DECK_ID, type DeckCard, type DeckDef } from "~/data/decks";
 import { Settings } from "~/components/Settings";
 import { PreloadProgress } from "~/components/PreloadProgress";
 import { HamburgerMenu, type DeckUploadState } from "~/components/HamburgerMenu";

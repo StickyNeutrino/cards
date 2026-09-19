@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { listUploadedDecks, loadUploadedDeck, type DeckImportError } from './uploadedDecks';
+import { listUploadedDecks, loadUploadedDeck } from './uploadedDecks';
 import type { DeckDef } from '~/data/decks';
-
-export type { DeckImportError };
 
 /**
  * Upload decks live in IndexedDB, so they can only be listed after mount.
