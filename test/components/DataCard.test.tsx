@@ -11,7 +11,6 @@ const trioModel: DataCardModel = {
     { src: 'blob:sec2', role: 'secondary', credit: { observer: 'susanbar', license: 'all-rights-reserved' } },
   ],
   sciName: 'Urtica urens',
-  commonName: 'Dwarf Nettle',
   altNames: ['Burning Nettle'],
   familyCommon: 'Nettle Family',
   familyLatin: 'Urticaceae',
