@@ -396,7 +396,7 @@ export default function Home() {
     setIndex(0); // Reset to first card when switching
   };
 
-  const switchDeck = (next: DeckId) => {
+  const switchDeck = (next: DeckId, defOverride?: DeckDef) => {
     if (next === deck) return;
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
@@ -404,7 +404,9 @@ export default function Home() {
       window.history.replaceState({}, "", url.toString());
     }
     setDeck(next);
-    setMode(defaultCategoryFor(defFor(next) ?? DECK_DEFS[0]));
+    // defOverride: the caller may have the def at hand (e.g. straight after
+    // import, before the registry state — and thus defFor — includes it).
+    setMode(defaultCategoryFor(defOverride ?? defFor(next) ?? DECK_DEFS[0]));
     setSelectedCard(null);
     setFlipped(false);
     setIndex(0);
@@ -426,7 +428,7 @@ export default function Home() {
       const def = await loadUploadedDeck(id);
       setUploadedDecks((prev) => [...prev.filter((d) => d.id !== id), def]);
       setUploadState({ status: 'success', message: `Imported “${label}”` });
-      switchDeck(id);
+      switchDeck(id, def);
       if (uploadNoticeTimer.current) clearTimeout(uploadNoticeTimer.current);
       // Success notices self-dismiss; errors stay until the next attempt.
       uploadNoticeTimer.current = setTimeout(() => setUploadState({ status: 'idle' }), 5000);
