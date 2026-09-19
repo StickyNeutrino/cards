@@ -17,17 +17,47 @@ export interface CardCredit {
   placeLabel: string;
 }
 
+/**
+ * Photo credit on a data-driven card (DECK_FORMAT.md "PhotoCredit"). Unlike
+ * the pre-rendered decks' CardCredit, the observation link/id are optional:
+ * user-supplied photos may have no iNat observation behind them.
+ */
+export interface PhotoCredit {
+  observer: string;
+  license: string;
+  sourceUrl?: string;
+  observationUrl?: string;
+  observationId?: number;
+  placeLabel?: string;
+}
+
+export interface DeckCardPhoto {
+  /** Archive-relative path for imported decks; resolved to a blob: URL by loadUploadedDeck. */
+  file: string;
+  role: "main" | "secondary";
+  alt?: string;
+  credit: PhotoCredit;
+}
+
 export interface DeckCard {
   name: string;
-  front: string;
-  back: string;
-  invasive: boolean;
+  /** Image decks only: pre-rendered card faces. Data decks (cardFormat
+   *  "data") have neither and are drawn by app/card/dataCard.tsx instead. */
+  front?: string;
+  back?: string;
+  invasive?: boolean;
   sciName?: string;
   commonName?: string;
   /** Alternate common names (e.g. "Toyon" is also "Christmas Berry"). */
   altNames?: string[];
+  familyCommon?: string;
+  familyLatin?: string;
   native?: "native" | "non-native" | "unknown";
   rarity?: string | null;
+  taxonId?: number;
+  /** Data decks only: "photo-trio" (1 main + up to 2 secondary) or "photo-single". */
+  layout?: "photo-trio" | "photo-single";
+  photos?: DeckCardPhoto[];
   credits?: CardCredit[];
 }
 
@@ -42,6 +72,12 @@ export interface DeckDef {
   label: string;
   description: string;
   categories: DeckCategory[];
+  /** "data" decks are rendered as HTML (see DECK_FORMAT.md); image decks
+   *  (absent cardFormat) use pre-rendered front/back JPGs. */
+  cardFormat?: "data";
+  /** True for decks loaded from IndexedDB. Never present in manifests — the
+   *  app sets it so the UI can show the "uploaded" marker and delete affordance. */
+  uploaded?: boolean;
 }
 
 const canyonlandsDeck = canyonlands as unknown as DeckDef;
