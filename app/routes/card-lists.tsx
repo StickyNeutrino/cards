@@ -1,10 +1,11 @@
 import type { Route } from "./+types/card-lists";
-import { useState, useMemo, useRef } from "react";
-import { DECK_DEFS, getDeckDef } from "~/data/decks";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { DECK_DEFS, getDeckDef, type DeckDef } from "~/data/decks";
 import {
   deckFromLocationOrStorage, modesForDeck, modeLabelFor,
   BOTH_MODE, type DeckId, type DeckMode,
 } from "~/utils/deckUtils";
+import { useUploadedDecks } from "~/utils/useUploadedDecks";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -19,29 +20,47 @@ export interface CardItem {
   back: string;
   invasive: boolean;
   altNames?: string[];
+  /** Data decks: the main photo (already a blob: URL) used as the thumbnail. */
+  thumbnail?: string;
 }
 
-export function cardsForDeck(deck: DeckId, mode: DeckMode): CardItem[] {
-  const def = getDeckDef(deck);
-  if (!def) return [];
+export function cardsForDef(def: DeckDef, mode: DeckMode): CardItem[] {
   const categories =
     mode === BOTH_MODE ? def.categories : def.categories.filter((c) => c.id === mode);
   return categories.flatMap((c) =>
     c.cards.map((card) => ({
       name: card.name,
-      front: card.front,
-      back: card.back,
-      invasive: card.invasive,
+      front: card.front ?? '',
+      back: card.back ?? '',
+      invasive: card.invasive ?? false,
       altNames: card.altNames,
+      thumbnail: def.cardFormat === 'data'
+        ? (card.photos ?? []).find((p) => p.role === 'main')?.file
+        : undefined,
     })),
   );
 }
 
+export function cardsForDeck(deck: DeckId, mode: DeckMode): CardItem[] {
+  const def = getDeckDef(deck);
+  if (!def) return [];
+  return cardsForDef(def, mode);
+}
+
 export default function CardLists() {
-  const knownDeckIds = DECK_DEFS.map((d) => d.id);
+  const { decks: uploadedDecks } = useUploadedDecks();
+  const allDecks = useMemo(() => [...DECK_DEFS, ...uploadedDecks], [uploadedDecks]);
   const [deck, setDeck] = useState<DeckId>(() =>
-    deckFromLocationOrStorage(typeof window !== "undefined" ? window.location.search : "", knownDeckIds));
-  const modes = modesForDeck(getDeckDef(deck) ?? DECK_DEFS[0]);
+    deckFromLocationOrStorage(typeof window !== "undefined" ? window.location.search : "", DECK_DEFS.map((d) => d.id)));
+  // Uploaded decks are only known after mount; honor a saved/linked uploaded deck then.
+  useEffect(() => {
+    if (uploadedDecks.length === 0 || typeof window === "undefined") return;
+    const resolved = deckFromLocationOrStorage(window.location.search, allDecks.map((d) => d.id));
+    if (resolved !== deck) setDeck(resolved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uploadedDecks]);
+  const activeDef = allDecks.find((d) => d.id === deck) ?? DECK_DEFS[0];
+  const modes = modesForDeck(activeDef);
   const [filter, setFilter] = useState<DeckMode>(BOTH_MODE);
   const [search, setSearch] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
@@ -61,10 +80,10 @@ export default function CardLists() {
   const allCards = useMemo(() => {
     const mode = modes.includes(filter) ? filter : BOTH_MODE;
     const q = search.toLowerCase();
-    return cardsForDeck(deck, mode).filter(card =>
+    return cardsForDef(activeDef, mode).filter(card =>
       card.name.toLowerCase().includes(q) ||
       (card.altNames ?? []).some(alt => alt.toLowerCase().includes(q)));
-  }, [deck, filter, search, modes]);
+  }, [activeDef, filter, search, modes]);
 
   const changeDeck = (next: DeckId) => {
     setDeck(next);
@@ -82,9 +101,9 @@ export default function CardLists() {
           value={deck}
           onChange={(e) => changeDeck(e.target.value as DeckId)}
         >
-          {DECK_DEFS.map((d) => (
+          {allDecks.map((d) => (
             <option key={d.id} value={d.id}>
-              {d.label}
+              {d.label}{d.uploaded ? ' (uploaded)' : ''}
             </option>
           ))}
         </select>
@@ -98,7 +117,7 @@ export default function CardLists() {
             className={filter === m ? "menu-button active" : "menu-button"}
             onClick={() => setFilter(m)}
           >
-            {modeLabelFor(getDeckDef(deck) ?? DECK_DEFS[0], m)}
+            {modeLabelFor(activeDef, m)}
           </button>
         ))}
         <input
@@ -124,7 +143,7 @@ export default function CardLists() {
             onClick={() => window.location.href = `/?${deck !== DECK_DEFS[0]?.id ? `deck=${deck}&` : ""}card=${encodeURIComponent(card.name)}`}
           >
             <img
-              src={card.front}
+              src={card.thumbnail ?? card.front}
               alt={`${card.name} front`}
               className="card-thumbnail"
             />

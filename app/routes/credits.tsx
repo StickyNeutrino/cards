@@ -1,6 +1,7 @@
 import type { Route } from "./+types/credits";
 import { useMemo, useState } from "react";
-import { DECK_DEFS } from "~/data/decks";
+import { DECK_DEFS, type DeckDef, type PhotoCredit } from "~/data/decks";
+import { useUploadedDecks } from "~/utils/useUploadedDecks";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -31,21 +32,26 @@ interface DeckCredits {
   cards: CardCredits[];
 }
 
-function collectCredits(): Credit[] {
+function collectCredits(decks: DeckDef[]): Credit[] {
   const credits: Credit[] = [];
-  for (const deck of DECK_DEFS) {
+  for (const deck of decks) {
     for (const category of deck.categories) {
       for (const card of category.cards) {
-        for (const photo of card.credits ?? []) {
+        // Data cards may omit the flattened credits list; derive it from the
+        // per-photo credits instead.
+        const cardCredits: PhotoCredit[] = card.credits?.length
+          ? card.credits.map((c) => ({ ...c }))
+          : (card.photos ?? []).map((p) => p.credit);
+        for (const photo of cardCredits) {
           credits.push({
             deckId: deck.id,
             deckLabel: deck.label,
             cardName: card.name,
             observer: photo.observer,
             license: photo.license,
-            observationUrl: photo.observationUrl,
-            observationId: photo.observationId,
-            placeLabel: photo.placeLabel,
+            observationUrl: photo.observationUrl ?? photo.sourceUrl ?? '',
+            observationId: photo.observationId ?? 0,
+            placeLabel: photo.placeLabel ?? '',
           });
         }
       }
@@ -85,6 +91,8 @@ function groupCredits(credits: Credit[]): DeckCredits[] {
 const licenseLabel = (code: string): string => {
   if (!code) return "(no license)";
   if (code.toLowerCase() === "cc0") return "CC0";
+  // User-uploaded decks may declare their own photos all-rights-reserved.
+  if (code.toLowerCase() === "all-rights-reserved") return "All Rights Reserved";
   return code.toLowerCase().replace(/^cc-/, "CC ").toUpperCase();
 };
 
@@ -92,7 +100,9 @@ const placeSuffix = (placeLabel: string): string =>
   placeLabel && placeLabel !== "worldwide" ? ` (${placeLabel})` : "";
 
 export default function Credits() {
-  const allCredits = useMemo(collectCredits, []);
+  const { decks: uploadedDecks } = useUploadedDecks();
+  const allDecks = useMemo(() => [...DECK_DEFS, ...uploadedDecks], [uploadedDecks]);
+  const allCredits = useMemo(() => collectCredits(allDecks), [allDecks]);
   const [search, setSearch] = useState("");
 
   const decks = useMemo(() => {
@@ -145,10 +155,14 @@ export default function Credits() {
                         <div key={`${c.observationId}-${i}`} className="credits-photo">
                           <span className="credits-observer">{c.observer}</span>
                           <span className="credits-license">{licenseLabel(c.license)}</span>
-                          <a href={c.observationUrl} target="_blank" rel="noreferrer">
-                            iNat #{c.observationId}
-                            {placeSuffix(c.placeLabel)}
-                          </a>
+                          {c.observationUrl ? (
+                            <a href={c.observationUrl} target="_blank" rel="noreferrer">
+                              {c.observationId ? `iNat #${c.observationId}` : 'Source'}
+                              {placeSuffix(c.placeLabel)}
+                            </a>
+                          ) : (
+                            <span>{placeSuffix(c.placeLabel)}</span>
+                          )}
                         </div>
                       ))}
                     </td>

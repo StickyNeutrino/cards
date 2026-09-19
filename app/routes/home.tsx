@@ -1,15 +1,19 @@
 import type { Route } from "./+types/home";
 import { Card } from "~/card/card";
+import type { DataCardModel } from "~/card/dataCard";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { trackCardView } from "~/viewtrack";
 import {
   deckFromLocationOrStorage, make_deck, modesForDeck, defaultCategoryFor, BOTH_MODE, type DeckId, type DeckMode,
 } from "~/utils/deckUtils";
-import { ALL_CATEGORY_IDS, DECK_DEFS, getDeckDef, type DeckCard, type DeckDef } from "~/data/decks";
+import {
+  importDeckZip, deleteUploadedDeck, listUploadedDecks, loadUploadedDeck,
+} from "~/utils/uploadedDecks";
+import { ALL_CATEGORY_IDS, DECK_DEFS, DEFAULT_DECK_ID, getDeckDef, type DeckCard, type DeckDef } from "~/data/decks";
 import { Settings } from "~/components/Settings";
 import { PreloadProgress } from "~/components/PreloadProgress";
-import { HamburgerMenu } from "~/components/HamburgerMenu";
+import { HamburgerMenu, type DeckUploadState } from "~/components/HamburgerMenu";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -23,6 +27,8 @@ interface CardRef {
   front: string;
   back: string;
   invasive: boolean;
+  /** Present for cardFormat "data" decks; rendered as HTML by DataCard. */
+  dataCard?: DataCardModel;
 }
 
 interface DeckRefs {
@@ -32,14 +38,34 @@ interface DeckRefs {
 }
 
 function refsFromDef(def: DeckDef): DeckRefs {
+  const isData = def.cardFormat === 'data';
   const categories = def.categories.map((cat) => ({
     id: cat.id,
     label: cat.label,
     cards: cat.cards.map((c: DeckCard): CardRef => ({
       name: c.name,
-      front: c.front,
-      back: c.back,
-      invasive: c.invasive,
+      front: c.front ?? '',
+      back: c.back ?? '',
+      invasive: c.invasive ?? false,
+      dataCard: isData
+        ? {
+            name: c.name,
+            layout: c.layout,
+            photos: (c.photos ?? []).map((p) => ({
+              src: p.file,
+              role: p.role,
+              alt: p.alt,
+              credit: p.credit,
+            })),
+            altNames: c.altNames,
+            sciName: c.sciName,
+            familyCommon: c.familyCommon,
+            familyLatin: c.familyLatin,
+            native: c.native,
+            rarity: c.rarity,
+            invasive: c.invasive ?? false,
+          }
+        : undefined,
     })),
   }));
   const all = categories.flatMap((c) => c.cards);
@@ -60,6 +86,51 @@ export default function Home() {
     return DECK_DEFS[0]?.id ?? 'canyonlands';
   });
 
+  // Uploaded decks live in IndexedDB, so they are only known after mount.
+  const [uploadedDecks, setUploadedDecks] = useState<DeckDef[]>([]);
+  const deckRef = useRef(deck);
+  useEffect(() => {
+    deckRef.current = deck;
+  }, [deck]);
+
+  useEffect(() => {
+    let cancelled = false;
+    listUploadedDecks()
+      .then(async (summaries) => {
+        const defs = (await Promise.all(summaries.map((s) => loadUploadedDeck(s.id).catch(() => null))))
+          .filter((d): d is DeckDef => d !== null);
+        if (cancelled || defs.length === 0) return;
+        // Only update state when decks actually loaded: replacing an empty
+        // list with another empty list would still rebuild (and reshuffle)
+        // the active deck for no reason.
+        setUploadedDecks(defs);
+        // Uploaded deck ids are only known now — honor a saved or linked one
+        // (the switch below runs exactly once, right after this initial load;
+        // later import/delete updates must not re-resolve and undo the user's
+        // choice, e.g. the automatic switch to a freshly imported deck).
+        const knownIds = [...DECK_DEFS.map((d) => d.id), ...defs.map((d) => d.id)];
+        const resolved = deckFromLocationOrStorage(window.location.search, knownIds);
+        if (resolved !== deckRef.current) {
+          setDeck(resolved);
+          setMode(defaultCategoryFor(defs.find((d) => d.id === resolved) ?? DECK_DEFS[0]));
+          // Keep selectedCard: a ?card= deep link must survive the resolution
+          // (the existing deep-link effects re-target it once deckNames
+          // rebuild). Flipped resets with the deck switch.
+          setFlipped(false);
+          setIndex(0);
+        }
+      })
+      .catch(() => {
+        // No IndexedDB available (or storage blocked): only built-in decks.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const allDefs = useMemo(() => [...DECK_DEFS, ...uploadedDecks], [uploadedDecks]);
+  const defFor = useCallback((id: DeckId) => allDefs.find((d) => d.id === id), [allDefs]);
+
   const [mode, setMode] = useState<DeckMode>(() => {
     const defaultMode = defaultCategoryFor(DECK_DEFS[0] ?? { id: '', label: '', categories: [] });
     if (typeof window !== 'undefined') {
@@ -77,14 +148,14 @@ export default function Home() {
 
   const cardRefs = useMemo(() => {
     const map = new Map<DeckId, DeckRefs>();
-    for (const def of DECK_DEFS) map.set(def.id, refsFromDef(def));
+    for (const def of allDefs) map.set(def.id, refsFromDef(def));
     return map;
-  }, []);
+  }, [allDefs]);
   const activeDeck = cardRefs.get(deck) ?? cardRefs.get(DECK_DEFS[0]?.id ?? '')!;
 
   const makeDeck = useCallback((d: DeckId, m: DeckMode) => {
-    return make_deck(getDeckDef(d)?.categories ?? [], m);
-  }, []);
+    return make_deck(defFor(d)?.categories ?? [], m);
+  }, [defFor]);
 
   const [deckNames, setDeckNames] = useState<string[]>(() => makeDeck(deck, mode));
   const [preloadProgress, setPreloadProgress] = useState<{ current: number; total: number; isVisible: boolean }>({
@@ -164,11 +235,11 @@ export default function Home() {
 
   // If the saved mode does not exist in this deck, fall back to its first category.
   useEffect(() => {
-    const def = getDeckDef(deck) ?? DECK_DEFS[0];
+    const def = defFor(deck) ?? DECK_DEFS[0];
     if (!modesForDeck(def).includes(mode)) {
       setMode(defaultCategoryFor(def));
     }
-  }, [deck, mode]);
+  }, [deck, mode, defFor]);
 
   useEffect(() => {
     if (selectedCard) {
@@ -210,12 +281,12 @@ export default function Home() {
       } else {
         url.searchParams.delete("deck");
       }
-      if (mode !== defaultCategoryFor(getDeckDef(deck) ?? DECK_DEFS[0])) {
+      if (mode !== defaultCategoryFor(defFor(deck) ?? DECK_DEFS[0])) {
         url.searchParams.set(mode, "true");
       }
       window.history.replaceState({}, "", url.toString());
     }
-  }, [mode, deck]);
+  }, [mode, deck, defFor]);
 
   const nextAction = () => {
     if (flipped) {
@@ -295,10 +366,11 @@ export default function Home() {
     };
   }, [showSettings]);
 
-  // The nav button row matches the visible card's width. The card's <img>
-  // element is replaced whenever the deck changes, so track the element itself
-  // (not just its size) and re-attach the ResizeObserver to each new element.
-  const [cardImg, setCardImg] = useState<HTMLImageElement | null>(null);
+  // The nav button row matches the visible card's width. The card's width
+  // element (back <img> for image decks, canvas for data decks) is replaced
+  // whenever the deck changes, so track the element itself (not just its size)
+  // and re-attach the ResizeObserver to each new element.
+  const [cardImg, setCardImg] = useState<HTMLElement | null>(null);
   const [elementWidth, setElementWidth] = useState(0);
 
   useLayoutEffect(() => {
@@ -316,7 +388,7 @@ export default function Home() {
       url.searchParams.delete('card');
       window.history.replaceState({}, "", url.toString());
     }
-    const modes = modesForDeck(getDeckDef(deck) ?? DECK_DEFS[0]);
+    const modes = modesForDeck(defFor(deck) ?? DECK_DEFS[0]);
     const nextMode = modes[(modes.indexOf(mode) + 1) % modes.length] as DeckMode;
     setMode(nextMode);
     setSelectedCard(null);
@@ -332,10 +404,52 @@ export default function Home() {
       window.history.replaceState({}, "", url.toString());
     }
     setDeck(next);
-    setMode(defaultCategoryFor(getDeckDef(next) ?? DECK_DEFS[0]));
+    setMode(defaultCategoryFor(defFor(next) ?? DECK_DEFS[0]));
     setSelectedCard(null);
     setFlipped(false);
     setIndex(0);
+  };
+
+  // ---- Uploaded decks: import, feedback, and deletion ----
+
+  const [uploadState, setUploadState] = useState<DeckUploadState>({ status: 'idle' });
+  const uploadNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (uploadNoticeTimer.current) clearTimeout(uploadNoticeTimer.current);
+  }, []);
+
+  const handleUploadDeck = async (file: File) => {
+    setUploadState({ status: 'importing' });
+    try {
+      const { id, label } = await importDeckZip(file);
+      const def = await loadUploadedDeck(id);
+      setUploadedDecks((prev) => [...prev.filter((d) => d.id !== id), def]);
+      setUploadState({ status: 'success', message: `Imported “${label}”` });
+      switchDeck(id);
+      if (uploadNoticeTimer.current) clearTimeout(uploadNoticeTimer.current);
+      // Success notices self-dismiss; errors stay until the next attempt.
+      uploadNoticeTimer.current = setTimeout(() => setUploadState({ status: 'idle' }), 5000);
+    } catch (error) {
+      setUploadState({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Import failed.',
+      });
+    }
+  };
+
+  const handleDeleteDeck = async (id: DeckId) => {
+    try {
+      await deleteUploadedDeck(id);
+    } catch (error) {
+      setUploadState({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Delete failed.',
+      });
+      return;
+    }
+    setUploadedDecks((prev) => prev.filter((d) => d.id !== id));
+    if (deck === id) switchDeck(DEFAULT_DECK_ID);
   };
 
   const changeModeClicked = (e: React.MouseEvent) => {
@@ -358,8 +472,11 @@ export default function Home() {
     navigate('/credits')
   }
 
+  const isDataDeck = defFor(deck)?.cardFormat === 'data';
+
   const handlePreloadCards = () => {
-    if (isPreloaded || isPreloading) return;
+    // Data decks keep their photos in IndexedDB — nothing to download.
+    if (isDataDeck || isPreloaded || isPreloading) return;
 
     setIsPreloading(true);
     if (typeof window !== 'undefined') {
@@ -420,8 +537,12 @@ export default function Home() {
       ref={hamburgerRef}
       mode={mode}
       deck={deck}
+      decks={allDefs}
       changeModeClicked={changeModeClicked}
       changeDeckClicked={switchDeck}
+      uploadDeckClicked={handleUploadDeck}
+      uploadState={uploadState}
+      deleteDeckClicked={handleDeleteDeck}
       settingsClicked={settingsButtonClicked}
       cardListsClicked={cardListsButtonClicked}
       creditsClicked={creditsButtonClicked}
@@ -435,6 +556,7 @@ export default function Home() {
       isPreloaded={isPreloaded}
       isPreloading={isPreloading}
       handlePreloadCards={handlePreloadCards}
+      canPreload={!isDataDeck}
     />
 
     <PreloadProgress
@@ -457,6 +579,7 @@ export default function Home() {
         front={currentCard?.front}
         back={currentCard?.back}
         invasive={currentCard?.invasive}
+        dataCard={currentCard?.dataCard}
       />
     )}
     <div id="button-container" style={{ width: `calc(${elementWidth}px)`, fontSize: `${elementWidth / 28.125}px` }}>
@@ -467,8 +590,9 @@ export default function Home() {
         <img src="/arrow-right-solid-full.svg" alt="Next card" />
       </button>
     </div>
-    {nextCard && <link rel="preload" href={nextCard.front} as="image" />}
-    {nextCard && <link rel="preload" href={nextCard.back} as="image" />}
+    {/* Data cards have no network images (blob: URLs), so only image decks preload. */}
+    {nextCard?.front && <link rel="preload" href={nextCard.front} as="image" />}
+    {nextCard?.back && <link rel="preload" href={nextCard.back} as="image" />}
   </main>)
 }
 

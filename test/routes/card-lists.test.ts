@@ -64,8 +64,8 @@ describe('deck registry (canyonlands)', () => {
 
   it('resolves every image filename to a served URL', () => {
     for (const card of [...birds, ...plants]) {
-      expect(card.front.startsWith('/decks/canyonlands/cards/')).toBe(true);
-      expect(card.back.startsWith('/decks/canyonlands/cards/')).toBe(true);
+      expect(card.front!.startsWith('/decks/canyonlands/cards/')).toBe(true);
+      expect(card.back!.startsWith('/decks/canyonlands/cards/')).toBe(true);
     }
   });
 
@@ -77,7 +77,7 @@ describe('deck registry (canyonlands)', () => {
 
   it('card names are filename-safe for the deck layout', () => {
     fc.assert(fc.property(fc.constantFrom(...[...birds, ...plants]), (card) => {
-      const front = decodeURIComponent(card.front.split('/').pop()!);
+      const front = decodeURIComponent(card.front!.split('/').pop()!);
       return front === `${card.name} Front.jpg`;
     }), { numRuns: 25 });
   });

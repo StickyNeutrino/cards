@@ -22,7 +22,7 @@ const decksRoot = path.join(appRoot, "decks");
 const publicDecksRoot = path.join(appRoot, "public", "decks");
 const outDir = path.join(appRoot, "app", "data", "decks");
 
-function copyTree(srcDir, destDir) {
+function copyTree(srcDir: string, destDir: string): number {
   let copied = 0;
   fs.mkdirSync(destDir, { recursive: true });
   for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
@@ -81,15 +81,15 @@ function main() {
       console.warn(`Deck "${id}" has no cards/ directory — manifest only.`);
     }
 
-    const resolveUrl = (file) => `/decks/${id}/cards/${file.split("/").map(encodeURIComponent).join("/")}`;
+    const resolveUrl = (file: string) => `/decks/${id}/cards/${file.split("/").map(encodeURIComponent).join("/")}`;
     const deckOut = {
       id: manifest.id ?? id,
       label: manifest.label ?? id,
       description: manifest.description ?? "",
-      categories: (manifest.categories ?? []).map((cat) => ({
+      categories: (manifest.categories ?? []).map((cat: any) => ({
         id: cat.id,
         label: cat.label,
-        cards: cat.cards.map((c) => {
+        cards: cat.cards.map((c: any) => {
           const { canyons: _surveyData, ...card } = c;
           return {
             ...card,
@@ -102,7 +102,7 @@ function main() {
     const outPath = path.join(appRoot, "app", "data", "decks", `${id}.json`);
     fs.writeFileSync(outPath, JSON.stringify(deckOut, null, 2) + "\n");
     written.add(id);
-    const cardCount = deckOut.categories.reduce((n, cat) => n + cat.cards.length, 0);
+    const cardCount = deckOut.categories.reduce((n: number, cat: any) => n + cat.cards.length, 0);
     console.log(`  ${deckOut.id}: ${cardCount} cards`);
   }
 

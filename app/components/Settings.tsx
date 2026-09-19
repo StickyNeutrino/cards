@@ -7,6 +7,8 @@ interface SettingsProps {
    isPreloaded: boolean;
    isPreloading: boolean;
    handlePreloadCards: () => void;
+   /** Data-driven decks keep their photos in IndexedDB — nothing to download, so the affordance is hidden. */
+   canPreload?: boolean;
 }
 
 export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
@@ -15,7 +17,8 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
   setFlipSpeed,
   isPreloaded,
   isPreloading,
-  handlePreloadCards
+  handlePreloadCards,
+  canPreload = true,
 }, ref) => {
   const [analyticsConsent, setAnalyticsConsent] = useState(localStorage.getItem('analyticsConsent') !== 'false');
   const [crashReportingConsent, setCrashReportingConsent] = useState(localStorage.getItem('crashReportingConsent') !== 'false');
@@ -52,7 +55,8 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
         />
       </div>
 
-      {/* Preload Button */}
+      {/* Preload Button — hidden for data decks (photos come from IndexedDB, not the network) */}
+      {canPreload && (
       <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={handlePreloadCards}
@@ -81,6 +85,7 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
           </p>
         )}
       </div>
+      )}
 
       {/* Privacy Preferences */}
       <div className="space-y-2 mt-4" onClick={(e) => e.stopPropagation()}>
