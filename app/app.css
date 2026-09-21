@@ -401,6 +401,12 @@ main {
   margin-top: -5px;
 }
 /* ---- Photo credits page ---- */
+.credits-location {
+  margin: -0.5rem 0 1rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
 /* Overrides the global centered-viewport-height `main` styles: this page is a
    long scrolling document, and content overflowing a 100vh flex container is
    unreachable (browser find-in-page can't scroll to it). */

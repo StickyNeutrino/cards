@@ -76,10 +76,19 @@ export interface DeckCategory {
   cards: DeckCard[];
 }
 
+export interface DeckLocation {
+  name?: string;
+  lat?: number;
+  lng?: number;
+  radiusKm?: number;
+}
+
 export interface DeckDef {
   id: string;
   label: string;
   description: string;
+  /** Where the deck is relevant (optional; shown on the credits page). */
+  location?: DeckLocation;
   categories: DeckCategory[];
   /** "data" decks are rendered as HTML (see DECK_FORMAT.md); image decks
    *  (absent cardFormat) use pre-rendered front/back JPGs. */

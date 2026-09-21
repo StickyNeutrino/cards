@@ -29,6 +29,7 @@ interface CardCredits {
 interface DeckCredits {
   deckId: string;
   deckLabel: string;
+  locationName?: string;
   cards: CardCredits[];
 }
 
@@ -64,7 +65,8 @@ function collectCredits(decks: DeckDef[]): Credit[] {
  * Group credits by deck, then by card, so each card is listed once with all
  * of its photos. Cards are sorted alphabetically for easy scanning.
  */
-function groupCredits(credits: Credit[]): DeckCredits[] {
+function groupCredits(credits: Credit[], decks: DeckDef[]): DeckCredits[] {
+  const locations = new Map(decks.map((d) => [d.id, d.location?.name]));
   const deckMap = new Map<string, { label: string; cards: Map<string, Credit[]> }>();
   for (const credit of credits) {
     let deck = deckMap.get(credit.deckId);
@@ -82,6 +84,7 @@ function groupCredits(credits: Credit[]): DeckCredits[] {
   return [...deckMap.entries()].map(([deckId, deck]) => ({
     deckId,
     deckLabel: deck.label,
+    locationName: locations.get(deckId),
     cards: [...deck.cards.entries()]
       .map(([cardName, credits]) => ({ cardName, credits }))
       .sort((a, b) => a.cardName.localeCompare(b.cardName, undefined, { sensitivity: "base" })),
@@ -114,7 +117,7 @@ export default function Credits() {
             c.observer.toLowerCase().includes(q),
         )
       : allCredits;
-    return groupCredits(filtered);
+    return groupCredits(filtered, allDecks);
   }, [allCredits, search]);
 
   return (
@@ -139,6 +142,11 @@ export default function Credits() {
         {decks.map((deck) => (
           <section key={deck.deckId} className="credits-deck">
             <h2>{deck.deckLabel}</h2>
+            {deck.locationName && (
+              <p className="credits-location" data-testid="credits-location">
+                📍 {deck.locationName}
+              </p>
+            )}
             <table className="credits-table" data-testid="credits-table">
               <thead>
                 <tr>
