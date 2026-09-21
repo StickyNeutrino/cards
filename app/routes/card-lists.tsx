@@ -6,6 +6,7 @@ import {
   BOTH_MODE, type DeckId, type DeckMode,
 } from "~/utils/deckUtils";
 import { useUploadedDecks } from "~/utils/useUploadedDecks";
+import { DataCard, type DataCardModel } from "~/card/dataCard";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -20,8 +21,8 @@ export interface CardItem {
   back: string;
   invasive: boolean;
   altNames?: string[];
-  /** Data decks: the main photo (already a blob: URL) used as the thumbnail. */
-  thumbnail?: string;
+  /** Data decks: front model for rendering the card itself as the thumbnail. */
+  dataModel?: DataCardModel;
 }
 
 export function cardsForDef(def: DeckDef, mode: DeckMode): CardItem[] {
@@ -34,8 +35,20 @@ export function cardsForDef(def: DeckDef, mode: DeckMode): CardItem[] {
       back: card.back ?? '',
       invasive: card.invasive ?? false,
       altNames: card.altNames,
-      thumbnail: def.cardFormat === 'data'
-        ? (card.photos ?? []).find((p) => p.role === 'main')?.file
+      dataModel: def.cardFormat === 'data'
+        ? {
+            name: card.name,
+            commonName: card.commonName,
+            layout: card.layout,
+            photos: (card.photos ?? []).map((p) => ({
+              src: p.file,
+              role: p.role,
+              alt: p.alt,
+              credit: p.credit,
+              crop: p.crop,
+              focus: p.focus,
+            })),
+          }
         : undefined,
     })),
   );
@@ -142,11 +155,17 @@ export default function CardLists() {
             data-card-name={card.name}
             onClick={() => window.location.href = `/?${deck !== DECK_DEFS[0]?.id ? `deck=${deck}&` : ""}card=${encodeURIComponent(card.name)}`}
           >
-            <img
-              src={card.thumbnail ?? card.front}
-              alt={`${card.name} front`}
-              className="card-thumbnail"
-            />
+            {card.dataModel ? (
+              <span className="card-thumbnail data-thumb" aria-hidden>
+                <DataCard model={card.dataModel} face="front" />
+              </span>
+            ) : (
+              <img
+                src={card.front}
+                alt={`${card.name} front`}
+                className="card-thumbnail"
+              />
+            )}
             <span className="card-name">{card.name}</span>
           </button>
         ))}

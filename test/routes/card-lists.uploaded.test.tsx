@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, within, fireEvent } from '@testing-library/react';
 import CardLists, { cardsForDef } from '../../app/routes/card-lists';
+import { getDeckDef } from '../../app/data/decks';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { DeckDef } from '../../app/data/decks';
 
@@ -85,7 +86,7 @@ describe('CardLists with an uploaded deck', () => {
     expect(options[1].textContent).toContain('(uploaded)');
   });
 
-  it('shows uploaded cards with the main photo as the thumbnail', async () => {
+  it('shows uploaded cards as rendered card thumbnails', async () => {
     mockLocation.search = '?deck=curated-canyon';
     render(<RouterProvider router={router('/card-lists?deck=curated-canyon')} />);
 
@@ -97,7 +98,12 @@ describe('CardLists with an uploaded deck', () => {
 
     const items = screen.getAllByTestId('card-item');
     const sage = items.find((el) => el.getAttribute('data-card-name') === 'Curated Sage')!;
-    expect(sage.querySelector('img')).toHaveAttribute('src', 'blob:curated-main');
+    // The thumbnail is the rendered card front (mini DataCard), not the raw
+    // main photo.
+    const thumb = sage.querySelector('.data-thumb');
+    expect(thumb).not.toBeNull();
+    expect(thumb!.querySelector('[data-testid="data-card-front"]')).not.toBeNull();
+    expect(thumb!.querySelector('img')).toHaveAttribute('src', 'blob:curated-main');
     // The invasive flag carries over to the list item styling.
     const arundo = items.find((el) => el.getAttribute('data-card-name') === 'Curated Arundo')!;
     expect(arundo).toHaveClass('invasive');
@@ -140,11 +146,17 @@ describe('CardLists with an uploaded deck', () => {
 });
 
 describe('cardsForDef (data decks)', () => {
-  it('uses the main photo as the thumbnail and resolves invasive flags', () => {
+  it('builds a front model for the card thumbnail and resolves invasive flags', () => {
     const cards = cardsForDef(uploadedDecks[0], 'both');
     expect(cards.map((c) => c.name)).toEqual(['Curated Sage', 'Curated Arundo', 'Curated Wrentit']);
-    expect(cards[0].thumbnail).toBe('blob:curated-main');
+    // The thumbnail is the card itself: the front model carries the resolved
+    // blob photos (with crops) for rendering a mini DataCard.
+    const main = cards[0]?.dataModel?.photos?.find((p) => p.role === 'main');
+    expect(main?.src).toBe('blob:curated-main');
+    expect(cards[0]?.dataModel?.layout).toBe('photo-trio');
     expect(cards[1].invasive).toBe(true);
     expect(cards[0].invasive).toBe(false);
+    // Image decks get no dataModel.
+    expect(cardsForDef(getDeckDef('canyonlands')!, 'both')[0]?.dataModel).toBeUndefined();
   });
 });

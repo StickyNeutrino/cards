@@ -96,6 +96,13 @@ export default function Home() {
     deckRef.current = deck;
   }, [deck]);
 
+  // The URL-cleanup effect rewrites the address as soon as effects run (it
+  // scrubs params that built-in decks don't recognize), but uploaded decks
+  // are only known after IndexedDB loads. Snapshot the address at first
+  // render so the honor-once resolution below still sees ?deck=/?card=
+  // links that point at uploaded decks.
+  const initialSearchRef = useRef(typeof window !== "undefined" ? window.location.search : "");
+
   useEffect(() => {
     let cancelled = false;
     listUploadedDecks()
@@ -112,7 +119,7 @@ export default function Home() {
         // later import/delete updates must not re-resolve and undo the user's
         // choice, e.g. the automatic switch to a freshly imported deck).
         const knownIds = [...DECK_DEFS.map((d) => d.id), ...defs.map((d) => d.id)];
-        const resolved = deckFromLocationOrStorage(window.location.search, knownIds);
+        const resolved = deckFromLocationOrStorage(initialSearchRef.current, knownIds);
         if (resolved !== deckRef.current) {
           setDeck(resolved);
           setMode(defaultCategoryFor(defs.find((d) => d.id === resolved) ?? DECK_DEFS[0]));
