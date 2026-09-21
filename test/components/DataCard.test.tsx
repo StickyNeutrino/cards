@@ -101,6 +101,25 @@ describe('DataCard front', () => {
   });
 });
 
+describe('border styles', () => {
+  it('renders classic red via the invasive class', () => {
+    render(<DataCard model={{ name: 'X', native: 'non-native', invasive: true, border: 'invasive' }} face="back" />);
+    expect(screen.getByTestId('data-card-back')).toHaveClass('invasive');
+  });
+
+  it('renders other border styles with their color inline', () => {
+    render(<DataCard model={{ name: 'X', native: 'native', border: 'rare' }} face="back" />);
+    const back = screen.getByTestId('data-card-back');
+    expect(back).not.toHaveClass('invasive');
+    expect(back).toHaveStyle({ borderColor: '#6d28d9', borderWidth: '6px', borderStyle: 'solid' });
+  });
+
+  it('no border style draws no inline border', () => {
+    render(<DataCard model={{ name: 'X', native: 'native' }} face="back" />);
+    expect(screen.getByTestId('data-card-back')).not.toHaveClass('invasive');
+  });
+});
+
 describe('variant cards', () => {
   it('shows the clean commonName as the title when the export name carries a variant suffix', () => {
     render(

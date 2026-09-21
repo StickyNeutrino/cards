@@ -67,6 +67,7 @@ function refsFromDef(def: DeckDef): DeckRefs {
             native: c.native,
             rarity: c.rarity,
             invasive: c.invasive ?? false,
+            border: c.border,
           }
         : undefined,
     })),

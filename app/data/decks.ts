@@ -43,6 +43,10 @@ export interface DeckCardPhoto {
   focus?: { x: number; y: number };
 }
 
+/** Colored card border tags (DECK_FORMAT.md). "invasive" is the classic red
+ *  marker and also sets the legacy `invasive: true` flag for image decks. */
+export type DeckCardBorder = "invasive" | "caution" | "rare" | "notable";
+
 export interface DeckCard {
   name: string;
   /** Image decks only: pre-rendered card faces. Data decks (cardFormat
@@ -50,6 +54,7 @@ export interface DeckCard {
   front?: string;
   back?: string;
   invasive?: boolean;
+  border?: DeckCardBorder;
   sciName?: string;
   commonName?: string;
   /** Alternate common names (e.g. "Toyon" is also "Christmas Berry"). */

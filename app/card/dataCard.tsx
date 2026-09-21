@@ -40,6 +40,9 @@ export interface DataCardModel {
   native?: 'native' | 'non-native' | 'unknown';
   rarity?: string | null;
   invasive?: boolean;
+  /** Colored border tag; 'invasive' uses the classic red class, the others
+   *  render with their border color inline. */
+  border?: 'invasive' | 'caution' | 'rare' | 'notable';
 }
 
 interface DataCardProps {
@@ -180,8 +183,18 @@ function CardBack({ model, invasive, widthRef }: { model: DataCardModel; invasiv
   });
 
   const nativeStatus = nativeStatusFor(model);
+  // The .invasive class supplies width/style; other colors need them inline.
+  const borderColors = { caution: '#b45309', rare: '#6d28d9', notable: '#1d4ed8' } as const;
+  const borderStyle = model.border && model.border !== 'invasive'
+    ? { borderColor: borderColors[model.border], borderWidth: '6px', borderStyle: 'solid' as const }
+    : undefined;
   return (
-    <div className={`data-card ${invasive ? 'invasive' : ''}`} data-testid="data-card-back" ref={widthRef}>
+      <div
+        className={`data-card ${invasive || model.border === 'invasive' ? 'invasive' : ''}`}
+        data-testid="data-card-back"
+        ref={widthRef}
+        style={borderStyle}
+      >
       <div className="data-card-content">
         <div className="data-logo-chip" aria-hidden="true" />
         <div className="data-back-stack">
