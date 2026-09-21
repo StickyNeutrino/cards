@@ -19,6 +19,9 @@ export interface DataCardPhoto {
   role: 'main' | 'secondary';
   alt?: string;
   credit: PhotoCredit;
+  /** Explicit crop window (normalized 0..1) over the source photo — maps
+   *  exactly onto the slot. Takes precedence over focus. */
+  crop?: { x: number; y: number; w: number; h: number };
   /** Focal point (0..1) for cover-cropping non-square photos; default center. */
   focus?: { x: number; y: number };
 }
@@ -92,6 +95,38 @@ function focusStyle(focus?: { x: number; y: number }): React.CSSProperties | und
   return { objectPosition: `${x}% ${y}%` };
 }
 
+/**
+ * Style that maps an explicit crop window (normalized 0..1 source rect,
+ * DECK_FORMAT.md `photos[].crop`) exactly onto the slot: the img is scaled so
+ * the crop region fills the slot and the figure's overflow:hidden clips the
+ * rest. Takes precedence over the legacy focal point.
+ */
+function cropStyle(crop: { x: number; y: number; w: number; h: number }): React.CSSProperties {
+  const w = Math.min(1, Math.max(0.05, crop.w));
+  const h = Math.min(1, Math.max(0.05, crop.h));
+  const x = Math.min(1 - w, Math.max(0, crop.x));
+  const y = Math.min(1 - h, Math.max(0, crop.y));
+  return {
+    position: "absolute",
+    width: `${100 / w}%`,
+    height: `${100 / h}%`,
+    left: `${(-x / w) * 100}%`,
+    top: `${(-y / h) * 100}%`,
+    objectFit: "fill",
+  };
+}
+
+/** The <img> for a photo with whatever crop treatment it declares. The CSS
+ *  gives imgs width/height 100% + object-fit cover (the default cover crop);
+ *  an explicit crop overrides via inline styles (they win over the CSS), and
+ *  a legacy focal point just shifts the cover position. */
+function Photo({ photo, alt }: { photo: DataCardPhoto; alt: string }) {
+  if (photo.crop) {
+    return <img src={photo.src} alt={alt} style={cropStyle(photo.crop)} />;
+  }
+  return <img src={photo.src} alt={alt} style={focusStyle(photo.focus)} />;
+}
+
 /** Front: the photo grid. One photo = main only; two = main + first
  *  secondary; three = the full trio — identical for trio and single layouts. */
 function CardFront({ model }: { model: DataCardModel }) {
@@ -103,7 +138,7 @@ function CardFront({ model }: { model: DataCardModel }) {
       <div className="data-card-content">
         {main && (
           <figure className="data-photo" style={{ ...MAIN_SLOT }} data-testid="data-photo" data-role="main">
-            <img src={main.src} alt={main.alt ?? model.name} style={focusStyle(main.focus)} />
+            <Photo photo={main} alt={main.alt ?? model.name} />
             <figcaption className="data-credit" data-testid="data-credit">{captionFor(main)}</figcaption>
           </figure>
         )}
@@ -115,7 +150,7 @@ function CardFront({ model }: { model: DataCardModel }) {
             data-testid="data-photo"
             data-role="secondary"
           >
-            <img src={photo.src} alt={photo.alt ?? `${model.name} photo ${index + 2}`} style={focusStyle(photo.focus)} />
+            <Photo photo={photo} alt={photo.alt ?? `${model.name} photo ${index + 2}`} />
             <figcaption className="data-credit" data-testid="data-credit">{captionFor(photo)}</figcaption>
           </figure>
         ))}

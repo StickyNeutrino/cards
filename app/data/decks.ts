@@ -37,7 +37,9 @@ export interface DeckCardPhoto {
   role: "main" | "secondary";
   alt?: string;
   credit: PhotoCredit;
-  /** Focal point (0..1) for cover-cropping non-square photos; default center. */
+  /** Explicit crop window (normalized 0..1) over the source photo; maps onto the slot. */
+  crop?: { x: number; y: number; w: number; h: number };
+  /** Legacy focal point (0..1) for cover-cropping; default center. */
   focus?: { x: number; y: number };
 }
 

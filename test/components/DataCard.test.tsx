@@ -123,6 +123,26 @@ describe('variant cards', () => {
     expect(screen.getByTestId('data-card-title').textContent).toBe('Chamise');
   });
 
+  it('maps an explicit crop window onto the slot', () => {
+    render(
+      <DataCard
+        model={{
+          name: 'Oak',
+          layout: 'photo-trio',
+          photos: [
+            { src: 'blob:main', role: 'main', credit: { observer: 'a', license: 'cc0' }, crop: { x: 0.25, y: 0.1, w: 0.5, h: 0.5 } },
+          ],
+        }}
+        face="front"
+      />,
+    );
+
+    const img = screen.getAllByTestId('data-photo')[0].querySelector('img');
+    // The crop region is scaled to fill the slot and offset so the window
+    // aligns; object-fit fill prevents double-cropping.
+    expect(img).toHaveStyle({ position: 'absolute', width: '200%', height: '200%', left: '-50%', top: '-20%', objectFit: 'fill' });
+  });
+
   it('applies the focal point as object-position on the front photos', () => {
     render(
       <DataCard

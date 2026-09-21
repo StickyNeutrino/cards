@@ -57,6 +57,7 @@ function refsFromDef(def: DeckDef): DeckRefs {
               role: p.role,
               alt: p.alt,
               credit: p.credit,
+              crop: p.crop,
               focus: p.focus,
             })),
             altNames: c.altNames,
