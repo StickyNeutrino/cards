@@ -37,6 +37,8 @@ export interface DeckCardPhoto {
   role: "main" | "secondary";
   alt?: string;
   credit: PhotoCredit;
+  /** Focal point (0..1) for cover-cropping non-square photos; default center. */
+  focus?: { x: number; y: number };
 }
 
 export interface DeckCard {

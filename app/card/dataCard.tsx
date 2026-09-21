@@ -19,10 +19,15 @@ export interface DataCardPhoto {
   role: 'main' | 'secondary';
   alt?: string;
   credit: PhotoCredit;
+  /** Focal point (0..1) for cover-cropping non-square photos; default center. */
+  focus?: { x: number; y: number };
 }
 
 export interface DataCardModel {
   name: string;
+  /** Clean species name for the back title — variant cards export unique
+   *  names ("Name (2)") but should still show the plain common name. */
+  commonName?: string;
   layout?: 'photo-trio' | 'photo-single';
   photos?: DataCardPhoto[];
   altNames?: string[];
@@ -79,6 +84,14 @@ function captionFor(photo: DataCardPhoto): string {
   return `© ${photo.credit.observer} · ${creditLabelFor(photo.credit.license)}`;
 }
 
+/** object-position for a photo's focal point (default: centered). */
+function focusStyle(focus?: { x: number; y: number }): React.CSSProperties | undefined {
+  if (!focus) return undefined;
+  const x = Math.min(1, Math.max(0, focus.x)) * 100;
+  const y = Math.min(1, Math.max(0, focus.y)) * 100;
+  return { objectPosition: `${x}% ${y}%` };
+}
+
 /** Front: the photo grid. One photo = main only; two = main + first
  *  secondary; three = the full trio — identical for trio and single layouts. */
 function CardFront({ model }: { model: DataCardModel }) {
@@ -90,7 +103,7 @@ function CardFront({ model }: { model: DataCardModel }) {
       <div className="data-card-content">
         {main && (
           <figure className="data-photo" style={{ ...MAIN_SLOT }} data-testid="data-photo" data-role="main">
-            <img src={main.src} alt={main.alt ?? model.name} />
+            <img src={main.src} alt={main.alt ?? model.name} style={focusStyle(main.focus)} />
             <figcaption className="data-credit" data-testid="data-credit">{captionFor(main)}</figcaption>
           </figure>
         )}
@@ -102,7 +115,7 @@ function CardFront({ model }: { model: DataCardModel }) {
             data-testid="data-photo"
             data-role="secondary"
           >
-            <img src={photo.src} alt={photo.alt ?? `${model.name} photo ${index + 2}`} />
+            <img src={photo.src} alt={photo.alt ?? `${model.name} photo ${index + 2}`} style={focusStyle(photo.focus)} />
             <figcaption className="data-credit" data-testid="data-credit">{captionFor(photo)}</figcaption>
           </figure>
         ))}
@@ -137,7 +150,7 @@ function CardBack({ model, invasive, widthRef }: { model: DataCardModel; invasiv
       <div className="data-card-content">
         <div className="data-logo-chip" aria-hidden="true" />
         <div className="data-back-stack">
-          <h2 className="data-back-title" data-testid="data-card-title" ref={titleRef}>{model.name}</h2>
+          <h2 className="data-back-title" data-testid="data-card-title" ref={titleRef}>{model.commonName ?? model.name}</h2>
           {model.altNames && model.altNames.length > 0 && (
             <div className="data-back-alt" data-testid="data-card-alt-names">
               aka {model.altNames.join(', ')}

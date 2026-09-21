@@ -101,6 +101,49 @@ describe('DataCard front', () => {
   });
 });
 
+describe('variant cards', () => {
+  it('shows the clean commonName as the title when the export name carries a variant suffix', () => {
+    render(
+      <DataCard
+        model={{
+          name: 'Dudleya edulis (2)',
+          commonName: 'Dudleya edulis',
+          sciName: 'Dudleya edulis',
+          native: 'native',
+        }}
+        face="back"
+      />,
+    );
+
+    expect(screen.getByTestId('data-card-title').textContent).toBe('Dudleya edulis');
+  });
+
+  it('falls back to name when commonName is absent', () => {
+    render(<DataCard model={{ name: 'Chamise', native: 'native' }} face="back" />);
+    expect(screen.getByTestId('data-card-title').textContent).toBe('Chamise');
+  });
+
+  it('applies the focal point as object-position on the front photos', () => {
+    render(
+      <DataCard
+        model={{
+          name: 'Oak',
+          layout: 'photo-trio',
+          photos: [
+            { src: 'blob:main', role: 'main', credit: { observer: 'a', license: 'cc0' }, focus: { x: 0.5, y: 0.15 } },
+            { src: 'blob:sec', role: 'secondary', credit: { observer: 'b', license: 'cc0' } },
+          ],
+        }}
+        face="front"
+      />,
+    );
+
+    const images = screen.getAllByTestId('data-photo').map((p) => p.querySelector('img'));
+    expect(images[0]).toHaveStyle({ objectPosition: '50% 15%' });
+    expect(images[1]).not.toHaveStyle({ objectPosition: '50% 50%' });
+  });
+});
+
 describe('DataCard back', () => {
   it('renders the full text stack', () => {
     render(<DataCard model={trioModel} face="back" />);

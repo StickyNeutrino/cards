@@ -50,12 +50,14 @@ function refsFromDef(def: DeckDef): DeckRefs {
       dataCard: isData
         ? {
             name: c.name,
+            commonName: c.commonName,
             layout: c.layout,
             photos: (c.photos ?? []).map((p) => ({
               src: p.file,
               role: p.role,
               alt: p.alt,
               credit: p.credit,
+              focus: p.focus,
             })),
             altNames: c.altNames,
             sciName: c.sciName,
