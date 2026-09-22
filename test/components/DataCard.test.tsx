@@ -159,7 +159,9 @@ describe('variant cards', () => {
     const img = screen.getAllByTestId('data-photo')[0].querySelector('img');
     // The crop region is scaled to fill the slot and offset so the window
     // aligns; object-fit fill prevents double-cropping.
-    expect(img).toHaveStyle({ position: 'absolute', width: '200%', height: '200%', left: '-50%', top: '-20%', objectFit: 'fill' });
+    // maxWidth/maxHeight must be unclamped or the slot CSS re-shrinks the
+    // window (the 'crop applied twice' bug).
+    expect(img).toHaveStyle({ position: 'absolute', width: '200%', height: '200%', left: '-50%', top: '-20%', objectFit: 'fill', maxWidth: 'none', maxHeight: 'none' });
   });
 
   it('applies the focal point as object-position on the front photos', () => {

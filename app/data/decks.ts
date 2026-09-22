@@ -32,7 +32,8 @@ export interface PhotoCredit {
 }
 
 export interface DeckCardPhoto {
-  /** Archive-relative path for imported decks; resolved to a blob: URL by loadUploadedDeck. */
+  /** Archive-relative path for imported decks; resolved to a blob: URL by loadUploadedDeck.
+   *  For moving media this is the still frame the curator picked. */
   file: string;
   role: "main" | "secondary";
   alt?: string;
@@ -41,6 +42,9 @@ export interface DeckCardPhoto {
   crop?: { x: number; y: number; w: number; h: number };
   /** Legacy focal point (0..1) for cover-cropping; default center. */
   focus?: { x: number; y: number };
+  /** Moving media (animated GIF / video): the clip itself; `file` above is
+   *  the display still. Cards render the still; players may add playback. */
+  animation?: { file: string; kind: "gif" | "video"; durationSec?: number };
 }
 
 /** Colored card border tags (DECK_FORMAT.md). "invasive" is the classic red

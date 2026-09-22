@@ -116,6 +116,10 @@ function cropStyle(crop: { x: number; y: number; w: number; h: number }): React.
     left: `${(-x / w) * 100}%`,
     top: `${(-y / h) * 100}%`,
     objectFit: "fill",
+    // The slot CSS clamps imgs to 100% — that would shrink the oversized
+    // crop window and re-crop the crop. Explicitly unclamp.
+    maxWidth: "none",
+    maxHeight: "none",
   };
 }
 
@@ -141,7 +145,11 @@ function CardFront({ model }: { model: DataCardModel }) {
       <div className="data-card-content">
         {main && (
           <figure className="data-photo" style={{ ...MAIN_SLOT }} data-testid="data-photo" data-role="main">
-            <Photo photo={main} alt={main.alt ?? model.name} />
+            {/* The viewport clips oversized crop windows; the caption stays
+                outside it so credits render under the photo. */}
+            <div className="data-photo-viewport">
+              <Photo photo={main} alt={main.alt ?? model.name} />
+            </div>
             <figcaption className="data-credit" data-testid="data-credit">{captionFor(main)}</figcaption>
           </figure>
         )}
@@ -153,7 +161,9 @@ function CardFront({ model }: { model: DataCardModel }) {
             data-testid="data-photo"
             data-role="secondary"
           >
-            <Photo photo={photo} alt={photo.alt ?? `${model.name} photo ${index + 2}`} />
+            <div className="data-photo-viewport">
+              <Photo photo={photo} alt={photo.alt ?? `${model.name} photo ${index + 2}`} />
+            </div>
             <figcaption className="data-credit" data-testid="data-credit">{captionFor(photo)}</figcaption>
           </figure>
         ))}

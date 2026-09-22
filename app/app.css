@@ -557,13 +557,18 @@ main {
 }
 
 /* Front photo slots — the img override must beat `.flip-card img`
-   (letterboxed contain) since slot photos fill and crop instead. The figure
-   clips, so explicit crop windows (positioned imgs larger than the slot)
-   can't bleed over neighboring slots. */
+   (letterboxed contain) since slot photos fill and crop instead. The inner
+   viewport clips, so explicit crop windows (imgs larger than the slot)
+   can't bleed — and the credit caption outside the viewport still renders. */
 .data-photo {
   position: absolute;
   margin: 0;
+}
+.data-photo-viewport {
+  position: absolute;
+  inset: 0;
   overflow: hidden;
+  border-radius: 1.8667cqw; /* 14px on the 750px design canvas */
 }
 .flip-card .data-photo img {
   width: 100%;
