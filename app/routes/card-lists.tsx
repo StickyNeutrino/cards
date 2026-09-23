@@ -3,7 +3,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { DECK_DEFS, getDeckDef, type DeckDef } from "~/data/decks";
 import {
-  deckFromLocationOrStorage, modesForDeck, modeLabelFor,
+  deckFromLocationOrStorage, modesForDeck, modeLabelFor, allLabelFor,
   BOTH_MODE, MANAGE_DECKS_OPTION, type DeckId, type DeckMode,
 } from "~/utils/deckUtils";
 import { useUploadedDecks } from "~/utils/useUploadedDecks";
@@ -77,6 +77,10 @@ export default function CardLists() {
   const activeDef = allDecks.find((d) => d.id === deck) ?? DECK_DEFS[0];
   const modes = modesForDeck(activeDef);
   const [filter, setFilter] = useState<DeckMode>(BOTH_MODE);
+  // The dropdown can only offer modes this deck actually has; if the saved
+  // filter doesn't exist here (e.g. right after a deck switch), fall back to
+  // "all" for both the select value and the card list.
+  const activeMode = modes.includes(filter) ? filter : BOTH_MODE;
   const [search, setSearch] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -93,12 +97,11 @@ export default function CardLists() {
   };
 
   const allCards = useMemo(() => {
-    const mode = modes.includes(filter) ? filter : BOTH_MODE;
     const q = search.toLowerCase();
-    return cardsForDef(activeDef, mode).filter(card =>
+    return cardsForDef(activeDef, activeMode).filter(card =>
       card.name.toLowerCase().includes(q) ||
       (card.altNames ?? []).some(alt => alt.toLowerCase().includes(q)));
-  }, [activeDef, filter, search, modes]);
+  }, [activeDef, activeMode, search]);
 
   const changeDeck = (next: DeckId) => {
     setDeck(next);
@@ -117,43 +120,55 @@ export default function CardLists() {
     changeDeck(next as DeckId);
   };
 
+  const changeModeFromSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilter(e.target.value as DeckMode);
+  };
+
   return (
     <main className="card-list-main">
-      <div className="controls-container">
-        <select
-          className="menu-button deck-select"
-          data-testid="deck-select"
-          aria-label="Select deck"
-          value={deck}
-          onChange={changeDeckFromSelect}
-        >
-          {allDecks.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.label}{d.uploaded ? ' (uploaded)' : ''}
-            </option>
-          ))}
-          <option value={MANAGE_DECKS_OPTION}>⚙️ Manage decks…</option>
-        </select>
-      </div>
-      <div className="controls-container">
-        {modes.map((m) => (
-          <button
-            key={m}
-            type="button"
-            data-testid={`mode-${m}`}
-            className={filter === m ? "menu-button active" : "menu-button"}
-            onClick={() => setFilter(m)}
+      {/* One compact, always-stuck bar: deck, category and search inline.
+          It stays pinned to the top while the card list scrolls under it. */}
+      <div className="controls-bar">
+        <div className="controls-container">
+          <select
+            className="menu-button deck-select"
+            data-testid="deck-select"
+            aria-label="Select deck"
+            value={deck}
+            onChange={changeDeckFromSelect}
           >
-            {modeLabelFor(activeDef, m)}
-          </button>
-        ))}
-        <input
-          type="search"
-          className="search-input"
-          placeholder="Search cards..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+            {allDecks.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.label}{d.uploaded ? ' (uploaded)' : ''}
+              </option>
+            ))}
+            <option value={MANAGE_DECKS_OPTION}>⚙️ Manage decks…</option>
+          </select>
+          {/* Category dropdown: the closed control always shows the selected
+              category (the old button row only hinted at it with a border),
+              and it scales to decks with many categories. First entry is
+              "all" — '🌿🐦 Both' for two-category decks, '🌿🐦🦎 All'
+              otherwise. */}
+          <select
+            className="menu-button deck-select"
+            data-testid="mode-select"
+            aria-label="Filter by category"
+            value={activeMode}
+            onChange={changeModeFromSelect}
+          >
+            <option value={BOTH_MODE}>{allLabelFor(activeDef)}</option>
+            {modes.filter((m) => m !== BOTH_MODE).map((m) => (
+              <option key={m} value={m}>{modeLabelFor(activeDef, m)}</option>
+            ))}
+          </select>
+          <input
+            type="search"
+            className="search-input"
+            placeholder="Search cards..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </div>
       <div
         className="card-list-container"

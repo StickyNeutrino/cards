@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import CardLists, { cardsForDeck } from '../../app/routes/card-lists';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 
@@ -109,7 +109,7 @@ describe('CardLists page', () => {
     expect(screen.getByTestId('card-list')).toHaveTextContent('Coast Live Oak');
     expect(screen.getByTestId('card-list')).not.toHaveTextContent('Acorn Woodpecker');
     // mode filter reset to both for the new deck
-    expect(screen.getByTestId('mode-both')).toHaveClass('active');
+    expect(screen.getByTestId('mode-select')).toHaveValue('both');
   });
 
   it('mode filter switches between plants and animals on the healthy deck', () => {
@@ -120,7 +120,14 @@ describe('CardLists page', () => {
     );
     render(<RouterProvider router={r} />);
     expect(screen.getByTestId('card-list')).toHaveTextContent('Mock Healthy Hawk');
-    fireEvent.click(screen.getByTestId('mode-animals'));
+
+    // Two-category deck: the "all" option keeps the Both wording with emojis.
+    const options = within(screen.getByTestId('mode-select')).getAllByRole('option') as HTMLOptionElement[];
+    expect(options.map((o) => o.value)).toEqual(['both', 'plants', 'animals']);
+    expect(options[0].textContent).toBe('🌿🦎 Both');
+
+    fireEvent.change(screen.getByTestId('mode-select'), { target: { value: 'animals' } });
+    expect(screen.getByTestId('mode-select')).toHaveValue('animals');
     expect(screen.getByTestId('card-list')).toHaveTextContent('Mock Healthy Hawk');
     expect(screen.getByTestId('card-list')).not.toHaveTextContent('Coast Live Oak');
   });

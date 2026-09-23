@@ -66,11 +66,30 @@ export function modesForDeck(deck: DeckDefLike): DeckMode[] {
 
 export function modeLabelFor(deck: DeckDefLike, mode: DeckMode): string {
   if (mode === BOTH_MODE) {
-    // Order-independent: emoji sorted by code point gives the stable '🌿🐦 Both'.
-    const emoji = [...new Set(deck.categories.map((c) => c.label.split(" ")[0]))].sort().join("");
-    return `${emoji} Both`;
+    return `${allEmojiFor(deck)} Both`.trim();
   }
   return deck.categories.find((c) => c.id === mode)?.label ?? mode;
+}
+
+/** Deduplicated emoji prefixes of a deck's category labels, sorted by code
+ *  point so the combined badge is stable regardless of manifest order
+ *  ('🌿🐦', '🌿🦎', …). Labels whose first word is not an emoji (e.g. plain
+ *  "Rocks") contribute nothing. */
+function allEmojiFor(deck: DeckDefLike): string {
+  return [...new Set(
+    deck.categories
+      .map((c) => c.label.split(" ")[0])
+      .filter((token) => /\p{Extended_Pictographic}/u.test(token)),
+  )].sort().join("");
+}
+
+/** Label for the card-lists dropdown's "everything" option. With exactly two
+ *  categories this keeps the familiar '🌿🐦 Both' wording; with any other
+ *  count it is 'All' prefixed by every category's emoji ('🌿🐦🦎 All'). */
+export function allLabelFor(deck: DeckDefLike): string {
+  if (deck.categories.length === 2) return modeLabelFor(deck, BOTH_MODE);
+  const emoji = allEmojiFor(deck);
+  return emoji ? `${emoji} All` : "All";
 }
 
 export function deckLabel(deck: DeckDefLike): string {

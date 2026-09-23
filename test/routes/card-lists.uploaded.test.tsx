@@ -118,7 +118,7 @@ describe('CardLists with an uploaded deck', () => {
       expect(screen.getByTestId('card-list')).toHaveTextContent('Curated Sage');
     });
 
-    fireEvent.click(screen.getByTestId('mode-birds'));
+    fireEvent.change(screen.getByTestId('mode-select'), { target: { value: 'birds' } });
     expect(screen.getByTestId('card-list')).toHaveTextContent('Curated Wrentit');
     expect(screen.getByTestId('card-list')).not.toHaveTextContent('Curated Sage');
   });

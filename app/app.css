@@ -84,8 +84,44 @@ main {
   height: auto;
 }
 
+/* The card list page is top-anchored, not centered: the controls sit at the
+   top of the viewport and the list starts right below them no matter how many
+   cards a category has (centering made the whole page jump on every filter
+   change). The page itself grows and scrolls with the content. */
 .card-list-main {
   align-items: stretch;
+  justify-content: flex-start;
+  height: auto;
+  min-height: 100svh;
+}
+
+/* Both controls in one compact bar glued to the top: deck, category and
+   search inline; the card list scrolls under it. */
+.controls-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background-color: #9e4829; /* body background: cards must not show through */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  padding: 0.5rem 1rem;
+  font-size: 14px;
+}
+
+/* Inside the sticky bar the control rows are tight: no vertical margins. */
+.controls-bar .controls-container {
+  margin-top: 0;
+  margin-bottom: 0;
+  gap: 0.5rem;
+}
+
+.controls-bar .menu-button,
+.controls-bar .search-input {
+  font-size: 14px;
+  padding: 6px 12px;
+}
+
+.controls-bar .menu-button.deck-select {
+  padding-right: 1.7em;
 }
 
 .hamburger-menu {
@@ -116,10 +152,6 @@ main {
 
 .menu-button:hover {
   background-color: #8fa88a;
-}
-
-.menu-button.active {
-  border: 2px solid #a1b69a;
 }
 
 /* Deck dropdown (hamburger menu + card lists page): keep the menu-button
@@ -184,6 +216,15 @@ main {
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 8px;
+  /* Explicit text color: dark-mode color-scheme makes unstyled input text
+     white, which vanished against this light background. Matches the
+     menu-button text. */
+  color: #333;
+}
+
+.search-input::placeholder {
+  color: #666;
+  opacity: 1; /* keep the hint readable instead of the browser's faded gray */
 }
 
 .card-area {
@@ -273,39 +314,18 @@ main {
 /* Card List Styles */
 .card-list-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 140px);
+  grid-template-columns: repeat(auto-fill, 170px);
   gap: 1rem;
-  padding: 0;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding: 1rem;
   margin: 0;
   margin-bottom: 2rem;
   overflow: auto;
   justify-content: center;
 }
 
-@media (min-width: 1024px) {
-  .card-list-container {
-    grid-template-columns: repeat(auto-fill, 140px);
-  }
-}
-
-.filter-button {
-  padding: 0.5rem 1rem;
-  margin: 0.5rem;
-  background-color: #a1b69a;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  transition: background-color 0.3s;
-}
-
-.filter-button:hover {
-  background-color: #8fa88a;
-}
-
+/* List item: flex column so the thumbnail centers horizontally (same look as
+   the study page) with the item's padding as a guaranteed gap on all sides.
+   Fixed height keeps every cell uniform regardless of name length. */
 .card-list-item {
   background-color: #ffffff;
   border: 1px solid #ddd;
@@ -313,16 +333,19 @@ main {
   padding: 0.5rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  position: relative;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  height: 250px;
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  overflow: hidden;
 }
 
 .card-list-item.invasive {
   border: 3px solid red;
   border-radius: 10px;
-  overflow: hidden;
 }
 
 .card-list-item:hover {
@@ -337,35 +360,36 @@ main {
   background-color: #f5f5f5;
 }
 
-.card-list-item:focus .card-name {
-}
-
+/* Thumbnail fills the space above the name, scaled down to fit inside the
+   item's padding (no absolute positioning: flex centers it and the padding
+   keeps it clear of the border). */
 .card-thumbnail {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  height: 200px;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 220px;
   object-fit: contain;
   border-radius: 4px;
-  padding: 0 0.5rem;
+  flex: 0 1 auto;
+  min-height: 0;
 }
 
-/* Data-deck list thumbnails: render the actual card front in a fixed-height
-   box with the card's aspect, so uploaded decks look like the pre-rendered
-   image decks. container-type lets .data-card size itself in cqw/cqh. */
+/* Data-deck list thumbnails: render the actual card front in a box with the
+   card's aspect, so uploaded decks look like the pre-rendered image decks and
+   center exactly the same way. The size must be definite — container-type:
+   size ignores the contents, so auto width + auto height collapses to 0×0
+   (aspect-ratio turns the definite width into a definite height).
+   container-type lets .data-card size itself in cqw/cqh. */
 .data-thumb {
   display: block;
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  height: 200px;
+  width: 100%;
+  max-width: 100%;
+  max-height: 220px;
   aspect-ratio: 750 / 1050;
   overflow: hidden;
   container-type: size;
   border-radius: 4px;
+  flex: 0 0 auto;
 }
 
 /* Photos must fill their slots wherever DataCard renders — the flip-card
@@ -380,12 +404,9 @@ main {
 }
 
 .card-name {
-  position: absolute;
-  top: 200px;
-  left: 0;
-  right: 0;
-  height: 50px;
-  display: flex;
+  flex: 0 0 auto;
+  width: 100%;
+  display: -webkit-box;
   align-items: flex-start;
   justify-content: center;
   font-size: 14px;
@@ -396,9 +417,6 @@ main {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-.card-list-item.invasive .card-name {
-  margin-top: -5px;
 }
 /* ---- Photo credits page ---- */
 .credits-location {

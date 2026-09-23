@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fc from 'fast-check';
 import {
-  make_deck, modesForDeck, modeLabelFor, deckFromLocationOrStorage, BOTH_MODE,
+  make_deck, modesForDeck, modeLabelFor, allLabelFor, deckFromLocationOrStorage, BOTH_MODE,
   type DeckCategoryLike,
 } from '../../app/utils/deckUtils';
 import { DECK_DEFS } from '../../app/data/decks';
@@ -26,6 +26,20 @@ describe('deck modes (data-driven categories)', () => {
     expect(modeLabelFor(canyonlands, 'plants')).toBe('🌿 Plants');
     expect(modeLabelFor(canyonlands, BOTH_MODE)).toBe('🌿🐦 Both');
     expect(modeLabelFor(healthy, BOTH_MODE)).toBe('🌿🦎 Both');
+  });
+
+  it('allLabelFor keeps "Both" for two categories and uses "All" otherwise', () => {
+    // Two categories (the shape of both built-in decks): the familiar
+    // '🌿🐦 Both' wording with each category's emoji.
+    expect(allLabelFor({ id: 'd', label: 'D', categories: [plants, birds] })).toBe('🌿🐦 Both');
+    // Three or more: 'All' with every category emoji (deduplicated, order-
+    // independent — sorted by code point).
+    expect(allLabelFor({ id: 'd', label: 'D', categories: [plants, birds, animals] })).toBe('🌿🐦🦎 All');
+    expect(allLabelFor({ id: 'd', label: 'D', categories: [plants, birds, birds] })).toBe('🌿🐦 All');
+    // A single category is still "All", with its emoji.
+    expect(allLabelFor({ id: 'd', label: 'D', categories: [plants] })).toBe('🌿 All');
+    // Labels without an emoji degrade to a plain word.
+    expect(allLabelFor({ id: 'd', label: 'D', categories: [{ id: 'a', label: 'Rocks', cards: [] }] })).toBe('All');
   });
 
   it('the registry contains both decks with canyonlands first (the default)', () => {
