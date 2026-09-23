@@ -27,6 +27,13 @@ export const BOTH_MODE = 'both';
 
 export type DeckId = string;
 
+/**
+ * Sentinel option value for the "Manage decks…" entry appended to the deck
+ * dropdowns (study page + card lists): picking it opens the manage decks
+ * page instead of switching decks.
+ */
+export const MANAGE_DECKS_OPTION = '__manage__';
+
 export interface DeckCategoryLike {
   id: string;
   label: string;

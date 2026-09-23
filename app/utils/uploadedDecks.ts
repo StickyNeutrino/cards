@@ -39,6 +39,9 @@ export interface UploadedDeckRecord {
   /** The validated manifest as imported (photo `file`s still archive paths). */
   manifest: DeckDef;
   importedAt: string;
+  /** Total stored size in bytes (manifest JSON + photo files), measured at
+   *  import time. Absent on records written before this was tracked. */
+  bytes?: number;
 }
 
 export interface UploadedDeckSummary {
@@ -390,6 +393,8 @@ export async function importDeckZip(file: File): Promise<{ id: string; label: st
       await requestAsPromise(store.put(blob, `${id}/${declared}`));
     }
   });
+  const manifestJsonBytes = new TextEncoder().encode(JSON.stringify(manifest)).length;
+  const photoFileBytes = photoEntries.reduce((sum, { path }) => sum + files[path].length, 0);
   const record: UploadedDeckRecord = {
     id,
     label: manifest.label,
@@ -397,6 +402,7 @@ export async function importDeckZip(file: File): Promise<{ id: string; label: st
     cardFormat: 'data',
     manifest,
     importedAt: new Date().toISOString(),
+    bytes: manifestJsonBytes + photoFileBytes,
   };
   await withStore(DECK_STORE, 'readwrite', (store) => requestAsPromise(store.put(record)));
   return { id, label: record.label };
@@ -409,6 +415,47 @@ export async function importDeckZip(file: File): Promise<{ id: string; label: st
 export async function listUploadedDecks(): Promise<UploadedDeckSummary[]> {
   const records = await withStore(DECK_STORE, 'readonly', (store) => requestAsPromise(store.getAll() as IDBRequest<UploadedDeckRecord[]>));
   return records.map(({ id, label, description, cardFormat, importedAt }) => ({ id, label, description, cardFormat, importedAt }));
+}
+
+/**
+ * Size of a stored deck in this browser (IndexedDB): the manifest record
+ * plus its stored photo files. Decks imported by the current app version
+ * had this measured at import time; older records are measured on demand
+ * by reading their photo Blob handles (sizes only — bytes are never copied
+ * into memory). Returns null when the id has no stored record.
+ */
+export async function uploadedDeckBytes(id: string): Promise<number | null> {
+  const record = await getUploadedDeckRecord(id);
+  if (!record) return null;
+  if (typeof record.bytes === 'number') return record.bytes;
+  // Legacy record (imported before sizes were tracked): measure the
+  // manifest JSON plus every stored photo Blob.
+  const manifestBytes = new TextEncoder().encode(JSON.stringify(record.manifest)).length;
+  let photoBytes = 0;
+  await withStore(PHOTO_STORE, 'readonly', async (store) => {
+    const keys = await requestAsPromise(store.getAllKeys());
+    const own = keys.filter((key): key is string => typeof key === 'string' && key.startsWith(`${id}/`));
+    for (const key of own) {
+      const blob = await requestAsPromise(store.get(key) as IDBRequest<Blob | undefined>);
+      photoBytes += blob?.size ?? 0;
+    }
+  });
+  return manifestBytes + photoBytes;
+}
+
+/** Human-readable byte size, e.g. "482 B", "12.4 KB", "1.8 MB". */
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${roundedSize(kb)} KB`;
+  const mb = kb / 1024;
+  if (mb < 1024) return `${roundedSize(mb)} MB`;
+  return `${roundedSize(mb / 1024)} GB`;
+}
+
+/** One decimal below 100, integer from 100 up ("1.5 KB", "48 KB"). */
+function roundedSize(value: number): number {
+  return value >= 100 ? Math.round(value) : Math.round(value * 10) / 10;
 }
 
 /** Stored deck record or null when the id is unknown. */

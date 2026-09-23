@@ -3,7 +3,7 @@ import { render, screen, waitFor, within, fireEvent } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import Home from '../../app/routes/home';
-import { DeckImportError } from '../../app/utils/uploadedDecks';
+import { MANAGE_DECKS_OPTION } from '../../app/utils/deckUtils';
 
 vi.mock('../../app/data/decks', () => {
   const canyonlands = {
@@ -29,7 +29,7 @@ vi.mock('../../app/data/decks', () => {
 vi.mock('../../app/viewtrack', () => ({ trackCardView: vi.fn() }));
 
 // The uploaded-decks storage is mocked wholesale: these tests exercise the
-// route behavior around it (dropdown, rendering, upload, delete), not
+// route behavior around it (dropdown, rendering, manage navigation), not
 // IndexedDB itself (covered in test/utils/uploadedDecks.test.ts).
 vi.mock('../../app/utils/uploadedDecks', () => {
   const uploadedDef = {
@@ -71,27 +71,10 @@ vi.mock('../../app/utils/uploadedDecks', () => {
       if (!def) throw new Error(`Uploaded deck "${id}" was not found.`);
       return def;
     }),
-    importDeckZip: vi.fn(async () => {
-      byId['imported-deck'] = {
-        ...uploadedDef,
-        id: 'imported-deck', label: '✨ Imported Deck',
-        categories: [{
-          id: 'plants', label: '🌿 Plants',
-          cards: [{
-            name: 'Imported Nettle', layout: 'photo-trio', invasive: false,
-            photos: [{ file: 'blob:imported-main', role: 'main', credit: { observer: 'x', license: 'cc0' } }],
-          }],
-        }],
-      };
-      return { id: 'imported-deck', label: '✨ Imported Deck' };
-    }),
-    deleteUploadedDeck: vi.fn(async () => {}),
   };
 });
 
-import {
-  listUploadedDecks, loadUploadedDeck, importDeckZip, deleteUploadedDeck,
-} from '../../app/utils/uploadedDecks';
+import { listUploadedDecks, loadUploadedDeck } from '../../app/utils/uploadedDecks';
 
 const mockLocation = { search: '', href: 'http://localhost:3000/' };
 Object.defineProperty(window, 'location', { value: mockLocation, writable: true });
@@ -108,21 +91,41 @@ describe('Home with uploaded decks', () => {
   });
 
   const renderHome = () =>
-    render(<RouterProvider router={createMemoryRouter([{ path: '/', element: <Home /> }])} />);
+    render(
+      <RouterProvider
+        router={createMemoryRouter([
+          { path: '/', element: <Home /> },
+          { path: '/decks', element: <div data-testid="manage-decks-stub" /> },
+        ])}
+      />,
+    );
 
   it('lists uploaded decks in the dropdown alongside the built-ins, with a marker', async () => {
     renderHome();
 
     const select = await waitFor(() => {
       const select = screen.getByTestId('deck-select');
-      expect(within(select).getAllByRole('option')).toHaveLength(3);
+      expect(within(select).getAllByRole('option')).toHaveLength(4);
       return select;
     });
     const options = within(select).getAllByRole('option') as HTMLOptionElement[];
-    expect(options.map((o) => o.value)).toEqual(['canyonlands', 'healthy-canyons', 'curated-canyon']);
+    expect(options.map((o) => o.value)).toEqual(['canyonlands', 'healthy-canyons', 'curated-canyon', MANAGE_DECKS_OPTION]);
     expect(options[2].textContent).toContain('My Curated Deck');
     expect(options[2].textContent).toContain('(uploaded)');
+    expect(options[3].textContent).toContain('Manage decks');
     expect(listUploadedDecks).toHaveBeenCalled();
+  });
+
+  it('opens the manage decks page from the dropdown entry', async () => {
+    const user = userEvent.setup();
+    renderHome();
+    await screen.findByTestId('deck-select');
+
+    await user.selectOptions(screen.getByTestId('deck-select'), MANAGE_DECKS_OPTION);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('manage-decks-stub')).toBeInTheDocument();
+    });
   });
 
   it('opens an uploaded deck from the URL, renders its data card, and flips it', async () => {
@@ -170,65 +173,6 @@ describe('Home with uploaded decks', () => {
       expect(screen.getByTestId('card')).toHaveAttribute('data-card', 'Curated Arundo');
     });
     expect(screen.getByTestId('card')).toHaveAttribute('data-invasive', 'true');
-  });
-
-  it('uploads a zip via the menu, shows feedback, and switches to the new deck', async () => {
-    const user = userEvent.setup();
-    renderHome();
-
-    const input = await screen.findByTestId('upload-deck-input');
-    await user.upload(input, new File(['PK…'], 'my-deck.zip', { type: 'application/zip' }));
-
-    await waitFor(() => {
-      expect(importDeckZip).toHaveBeenCalledWith(expect.any(File));
-    });
-    const status = await screen.findByTestId('upload-status');
-    expect(status).toHaveTextContent('Imported “✨ Imported Deck”');
-
-    // The new deck becomes active and its card renders.
-    await waitFor(() => {
-      expect(screen.getByTestId('card').getAttribute('data-card')).toBe('Imported Nettle');
-    });
-    expect(screen.getByTestId('deck-select')).toHaveValue('imported-deck');
-  });
-
-  it('shows an inline error when the import fails', async () => {
-    vi.mocked(importDeckZip).mockRejectedValueOnce(
-      new DeckImportError('Invalid deck archive: manifest.json is missing. Upload the .zip exported by Deck Curator.'),
-    );
-    const user = userEvent.setup();
-    renderHome();
-
-    const input = await screen.findByTestId('upload-deck-input');
-    await user.upload(input, new File(['junk'], 'bad.zip', { type: 'application/zip' }));
-
-    const status = await screen.findByTestId('upload-status');
-    expect(status).toHaveTextContent('manifest.json is missing');
-    expect(status).toHaveClass('error');
-    // Still on the default deck.
-    expect(screen.getByTestId('deck-select')).toHaveValue('canyonlands');
-  });
-
-  it('deletes the active uploaded deck after an inline confirm and falls back to the default deck', async () => {
-    const user = userEvent.setup();
-    renderHome();
-    await screen.findByTestId('upload-deck-input');
-
-    await user.selectOptions(screen.getByTestId('deck-select'), 'curated-canyon');
-    await waitFor(() => {
-      expect(['Curated Sage', 'Curated Arundo']).toContain(screen.getByTestId('card').getAttribute('data-card'));
-    });
-
-    await user.click(screen.getByTestId('delete-deck-button'));
-    await user.click(screen.getByTestId('delete-deck-confirm'));
-
-    expect(deleteUploadedDeck).toHaveBeenCalledWith('curated-canyon');
-    await waitFor(() => {
-      expect(screen.getByTestId('deck-select')).toHaveValue('canyonlands');
-    });
-    await waitFor(() => {
-      expect(screen.getByTestId('card').getAttribute('data-card')).toBe('Mock Plant 1');
-    });
   });
 
   it('hides the offline-preload affordance for data decks (photos come from IndexedDB)', async () => {

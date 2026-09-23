@@ -4,6 +4,7 @@ import { zipSync, strToU8 } from 'fflate';
 import {
   importDeckZip, listUploadedDecks, loadUploadedDeck, deleteUploadedDeck,
   getUploadedDeckRecord, storedDeckIdFor, DeckImportError,
+  uploadedDeckBytes, formatBytes,
 } from '../../app/utils/uploadedDecks';
 
 // jsdom has no IndexedDB (fake-indexeddb/auto provides it) and no object URL
@@ -125,6 +126,28 @@ function uniqueId(): string {
 function manifestWithId(id: string, overrides: Record<string, unknown> = {}) {
   const base = manifest(overrides);
   return { ...base, id };
+}
+
+/** Open the deck database directly for tests that must poke at raw storage. */
+function withRawDb<T>(run: (db: IDBDatabase) => Promise<T>): Promise<T> {
+  return new Promise<IDBDatabase>((resolve, reject) => {
+    const open = indexedDB.open('uploaded-decks', 1);
+    open.onsuccess = () => resolve(open.result);
+    open.onerror = () => reject(open.error);
+  }).then(async (db) => {
+    try {
+      return await run(db);
+    } finally {
+      db.close();
+    }
+  });
+}
+
+function rawRequest<T>(request: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
 }
 
 beforeEach(() => {
@@ -350,5 +373,70 @@ describe('re-import and deletion', () => {
     expect(await getUploadedDeckRecord(id)).toBeNull();
     expect((await listUploadedDecks()).find((s) => s.id === id)).toBeUndefined();
     await expect(loadUploadedDeck(id)).rejects.toThrow(/was not found/);
+  });
+});
+
+describe('uploadedDeckBytes', () => {
+  it('reports the size measured at import time: manifest JSON plus every photo file', async () => {
+    const id = uniqueId();
+    await importDeckZip(zipOf(manifestWithId(id)));
+
+    // The fixture zip stores 5 photos of JPEG.length bytes each; the
+    // manifest contribution is recomputed here from the stored record.
+    const manifest = (await getUploadedDeckRecord(id))!.manifest;
+    const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest)).length;
+    expect(await uploadedDeckBytes(id)).toBe(manifestBytes + 5 * JPEG.length);
+  });
+
+  it('measures legacy records without a stored size from their photo blobs', async () => {
+    const id = uniqueId();
+    await importDeckZip(zipOf(manifestWithId(id)));
+
+    // Simulate a record written before sizes were tracked: drop `bytes`,
+    // and swap the real photos for plain objects carrying sizes (jsdom
+    // Blobs can't survive fake-indexeddb's structured clone with a size,
+    // but the read-and-sum measurement logic is what's under test here).
+    await withRawDb(async (db) => {
+      const decks = db.transaction('decks', 'readwrite').objectStore('decks');
+      const record = (await rawRequest(decks.get(id))) as Record<string, unknown>;
+      delete record.bytes;
+      await rawRequest(decks.put(record));
+      const photos = db.transaction('photos', 'readwrite').objectStore('photos');
+      await rawRequest(photos.put({ size: 10 }, `${id}/photos/dwarf-nettle-main.jpg`));
+      await rawRequest(photos.put({ size: 20 }, `${id}/photos/dwarf-nettle-sec-1.jpg`));
+      await rawRequest(photos.put({ size: 30 }, `${id}/photos/dwarf-nettle-sec-2.jpg`));
+    });
+
+    const manifest = (await getUploadedDeckRecord(id))!.manifest;
+    const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest)).length;
+    // 10 + 20 + 30 from the readable photos; the two untouched jsdom Blobs
+    // read back sizeless under fake-indexeddb and contribute 0.
+    expect(await uploadedDeckBytes(id)).toBe(manifestBytes + 60);
+  });
+
+  it('returns null for an unknown id and after the deck is deleted', async () => {
+    expect(await uploadedDeckBytes('never-imported')).toBeNull();
+
+    const id = uniqueId();
+    await importDeckZip(zipOf(manifestWithId(id)));
+    await deleteUploadedDeck(id);
+    expect(await uploadedDeckBytes(id)).toBeNull();
+  });
+});
+
+describe('formatBytes', () => {
+  it('formats bytes and kilobytes with one decimal below 100', () => {
+    expect(formatBytes(0)).toBe('0 B');
+    expect(formatBytes(999)).toBe('999 B');
+    expect(formatBytes(1024)).toBe('1 KB');
+    expect(formatBytes(1536)).toBe('1.5 KB');
+    expect(formatBytes(51200)).toBe('50 KB');
+    expect(formatBytes(102400)).toBe('100 KB');
+  });
+
+  it('formats megabytes and gigabytes', () => {
+    expect(formatBytes(1.5 * 1024 * 1024)).toBe('1.5 MB');
+    expect(formatBytes(48 * 1024 * 1024)).toBe('48 MB');
+    expect(formatBytes(2 * 1024 * 1024 * 1024)).toBe('2 GB');
   });
 });

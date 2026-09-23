@@ -7,13 +7,11 @@ import { trackCardView } from "~/viewtrack";
 import {
   deckFromLocationOrStorage, make_deck, modesForDeck, defaultCategoryFor, BOTH_MODE, type DeckId, type DeckMode,
 } from "~/utils/deckUtils";
-import {
-  importDeckZip, deleteUploadedDeck, listUploadedDecks, loadUploadedDeck,
-} from "~/utils/uploadedDecks";
-import { ALL_CATEGORY_IDS, DECK_DEFS, DEFAULT_DECK_ID, type DeckCard, type DeckDef } from "~/data/decks";
+import { listUploadedDecks, loadUploadedDeck } from "~/utils/uploadedDecks";
+import { ALL_CATEGORY_IDS, DECK_DEFS, type DeckCard, type DeckDef } from "~/data/decks";
 import { Settings } from "~/components/Settings";
 import { PreloadProgress } from "~/components/PreloadProgress";
-import { HamburgerMenu, type DeckUploadState } from "~/components/HamburgerMenu";
+import { HamburgerMenu } from "~/components/HamburgerMenu";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -117,8 +115,8 @@ export default function Home() {
         setUploadedDecks(defs);
         // Uploaded deck ids are only known now — honor a saved or linked one
         // (the switch below runs exactly once, right after this initial load;
-        // later import/delete updates must not re-resolve and undo the user's
-        // choice, e.g. the automatic switch to a freshly imported deck).
+        // this effect must not re-run later or it would re-resolve and undo
+        // the user's deck choice).
         const knownIds = [...DECK_DEFS.map((d) => d.id), ...defs.map((d) => d.id)];
         const resolved = deckFromLocationOrStorage(initialSearchRef.current, knownIds);
         if (resolved !== deckRef.current) {
@@ -407,7 +405,7 @@ export default function Home() {
     setIndex(0); // Reset to first card when switching
   };
 
-  const switchDeck = (next: DeckId, defOverride?: DeckDef) => {
+  const switchDeck = (next: DeckId) => {
     if (next === deck) return;
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
@@ -415,54 +413,10 @@ export default function Home() {
       window.history.replaceState({}, "", url.toString());
     }
     setDeck(next);
-    // defOverride: the caller may have the def at hand (e.g. straight after
-    // import, before the registry state — and thus defFor — includes it).
-    setMode(defaultCategoryFor(defOverride ?? defFor(next) ?? DECK_DEFS[0]));
+    setMode(defaultCategoryFor(defFor(next) ?? DECK_DEFS[0]));
     setSelectedCard(null);
     setFlipped(false);
     setIndex(0);
-  };
-
-  // ---- Uploaded decks: import, feedback, and deletion ----
-
-  const [uploadState, setUploadState] = useState<DeckUploadState>({ status: 'idle' });
-  const uploadNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => () => {
-    if (uploadNoticeTimer.current) clearTimeout(uploadNoticeTimer.current);
-  }, []);
-
-  const handleUploadDeck = async (file: File) => {
-    setUploadState({ status: 'importing' });
-    try {
-      const { id, label } = await importDeckZip(file);
-      const def = await loadUploadedDeck(id);
-      setUploadedDecks((prev) => [...prev.filter((d) => d.id !== id), def]);
-      setUploadState({ status: 'success', message: `Imported “${label}”` });
-      switchDeck(id, def);
-      if (uploadNoticeTimer.current) clearTimeout(uploadNoticeTimer.current);
-      // Success notices self-dismiss; errors stay until the next attempt.
-      uploadNoticeTimer.current = setTimeout(() => setUploadState({ status: 'idle' }), 5000);
-    } catch (error) {
-      setUploadState({
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Import failed.',
-      });
-    }
-  };
-
-  const handleDeleteDeck = async (id: DeckId) => {
-    try {
-      await deleteUploadedDeck(id);
-    } catch (error) {
-      setUploadState({
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Delete failed.',
-      });
-      return;
-    }
-    setUploadedDecks((prev) => prev.filter((d) => d.id !== id));
-    if (deck === id) switchDeck(DEFAULT_DECK_ID);
   };
 
   const changeModeClicked = (e: React.MouseEvent) => {
@@ -483,6 +437,10 @@ export default function Home() {
   const creditsButtonClicked = (e: React.MouseEvent) => {
     e.stopPropagation()
     navigate('/credits')
+  }
+
+  const manageDecksClicked = () => {
+    navigate('/decks')
   }
 
   const isDataDeck = defFor(deck)?.cardFormat === 'data';
@@ -553,9 +511,7 @@ export default function Home() {
       decks={allDefs}
       changeModeClicked={changeModeClicked}
       changeDeckClicked={switchDeck}
-      uploadDeckClicked={handleUploadDeck}
-      uploadState={uploadState}
-      deleteDeckClicked={handleDeleteDeck}
+      manageDecksClicked={manageDecksClicked}
       settingsClicked={settingsButtonClicked}
       cardListsClicked={cardListsButtonClicked}
       creditsClicked={creditsButtonClicked}

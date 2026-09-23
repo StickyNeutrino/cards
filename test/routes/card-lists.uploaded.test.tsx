@@ -4,6 +4,7 @@ import CardLists, { cardsForDef } from '../../app/routes/card-lists';
 import { getDeckDef } from '../../app/data/decks';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { DeckDef } from '../../app/data/decks';
+import { MANAGE_DECKS_OPTION } from '../../app/utils/deckUtils';
 
 vi.mock('../../app/data/decks', () => {
   const canyonlands = {
@@ -78,12 +79,13 @@ describe('CardLists with an uploaded deck', () => {
     render(<RouterProvider router={router()} />);
     const select = await waitFor(() => {
       const select = screen.getByTestId('deck-select');
-      expect(within(select).getAllByRole('option')).toHaveLength(2);
+      expect(within(select).getAllByRole('option')).toHaveLength(3);
       return select;
     });
     const options = within(select).getAllByRole('option') as HTMLOptionElement[];
-    expect(options.map((o) => o.value)).toEqual(['canyonlands', 'curated-canyon']);
+    expect(options.map((o) => o.value)).toEqual(['canyonlands', 'curated-canyon', MANAGE_DECKS_OPTION]);
     expect(options[1].textContent).toContain('(uploaded)');
+    expect(options[2].textContent).toContain('Manage decks');
   });
 
   it('shows uploaded cards as rendered card thumbnails', async () => {

@@ -652,7 +652,7 @@ main {
   margin: 0;
 }
 
-/* ---- Deck upload (hamburger menu) ---- */
+/* ---- Deck upload/import (manage decks page) ---- */
 .upload-input {
   position: absolute;
   width: 1px;
@@ -684,4 +684,90 @@ main {
 }
 .menu-button.danger:hover {
   background-color: #b04733;
+}
+
+/* ---- Manage decks page ---- */
+.decks-main {
+  display: block;
+  height: auto;
+  min-height: 100vh;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+.decks-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  padding: 20px 22px 28px;
+  color: #222;
+}
+.decks-main h1 {
+  font-size: 1.6rem;
+  margin: 8px 0 12px;
+}
+.decks-back {
+  font-size: 0.85rem;
+  color: #666;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+.decks-back:hover {
+  color: #222;
+}
+.decks-intro {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.decks-upload {
+  display: inline-block;
+}
+.decks-list {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+}
+.decks-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e3e1db;
+}
+.decks-item:last-child {
+  border-bottom: none;
+}
+.decks-item-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.decks-item-label {
+  font-weight: 600;
+}
+.decks-item-desc {
+  font-size: 0.85rem;
+  color: #6b6b66;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.decks-item-count {
+  margin-left: auto;
+  color: #6b6b66;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+/* The floating status chip is positioned for the hamburger menu; inline here. */
+.decks-main .upload-status {
+  position: static;
+  display: inline-block;
+  margin-top: 16px;
+  max-width: none;
 }

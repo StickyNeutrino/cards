@@ -1,9 +1,10 @@
 import type { Route } from "./+types/card-lists";
 import { useState, useMemo, useRef, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { DECK_DEFS, getDeckDef, type DeckDef } from "~/data/decks";
 import {
   deckFromLocationOrStorage, modesForDeck, modeLabelFor,
-  BOTH_MODE, type DeckId, type DeckMode,
+  BOTH_MODE, MANAGE_DECKS_OPTION, type DeckId, type DeckMode,
 } from "~/utils/deckUtils";
 import { useUploadedDecks } from "~/utils/useUploadedDecks";
 import { DataCard, type DataCardModel } from "~/card/dataCard";
@@ -61,6 +62,7 @@ export function cardsForDeck(deck: DeckId, mode: DeckMode): CardItem[] {
 }
 
 export default function CardLists() {
+  const navigate = useNavigate();
   const { decks: uploadedDecks } = useUploadedDecks();
   const allDecks = useMemo(() => [...DECK_DEFS, ...uploadedDecks], [uploadedDecks]);
   const [deck, setDeck] = useState<DeckId>(() =>
@@ -104,6 +106,17 @@ export default function CardLists() {
     setFilter(BOTH_MODE);
   };
 
+  const changeDeckFromSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const next = e.target.value;
+    if (next === MANAGE_DECKS_OPTION) {
+      // Not a deck: snap the dropdown back and open the manage decks page.
+      e.target.value = deck;
+      navigate('/decks');
+      return;
+    }
+    changeDeck(next as DeckId);
+  };
+
   return (
     <main className="card-list-main">
       <div className="controls-container">
@@ -112,13 +125,14 @@ export default function CardLists() {
           data-testid="deck-select"
           aria-label="Select deck"
           value={deck}
-          onChange={(e) => changeDeck(e.target.value as DeckId)}
+          onChange={changeDeckFromSelect}
         >
           {allDecks.map((d) => (
             <option key={d.id} value={d.id}>
               {d.label}{d.uploaded ? ' (uploaded)' : ''}
             </option>
           ))}
+          <option value={MANAGE_DECKS_OPTION}>⚙️ Manage decks…</option>
         </select>
       </div>
       <div className="controls-container">
