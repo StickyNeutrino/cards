@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import { zipSync, strToU8 } from 'fflate';
 import {
   importDeckZip, listUploadedDecks, loadUploadedDeck, deleteUploadedDeck,
@@ -115,6 +115,99 @@ function zipOf(manifestObject: unknown, extraFiles: Record<string, Uint8Array> =
     ...extraFiles,
   };
   return new File([zipSync(contents)], 'curated-test-deck.zip', { type: 'application/zip' });
+}
+
+// ---------------------------------------------------------------------------
+// Light decks (.deck.lite)
+// ---------------------------------------------------------------------------
+
+// The import pipeline checks fetched bytes' size and content type but never
+// decodes them, so a 600-byte "JPEG" (real SOI…EOI header, zero filler) works
+// as a stand-in for a real photo — comfortably above the 100-byte floor.
+const BIG_JPEG = (() => {
+  const bytes = new Uint8Array(600);
+  bytes.set(JPEG, 0);
+  return bytes;
+})();
+
+/** The remote photo sources a light manifest references (original size). */
+const photoUrl = (id: number) => `https://inaturalist-open-data.s3.amazonaws.com/photos/${id}/original.jpg`;
+const URL_MAIN = photoUrl(101);
+const URL_SEC_1 = photoUrl(102);
+const URL_SEC_2 = photoUrl(103);
+const URL_WRENTIT = photoUrl(105);
+
+function liteManifest(overrides: Record<string, unknown> = {}) {
+  return {
+    ...manifest(),
+    format: 'lite',
+    categories: [
+      {
+        id: 'plants',
+        label: '🌿 Plants',
+        cards: [
+          {
+            name: 'Dwarf Nettle',
+            layout: 'photo-trio',
+            photos: [
+              { url: URL_MAIN, role: 'main', alt: 'Flowering stalk', credit },
+              { url: URL_SEC_1, role: 'secondary', credit },
+              { url: URL_SEC_2, role: 'secondary', credit: { observer: 'susanbar', license: 'cc0' } },
+            ],
+            sciName: 'Urtica urens',
+            commonName: 'Dwarf Nettle',
+            native: 'non-native',
+            invasive: true,
+            rarity: null,
+            taxonId: 53315,
+            credits: [credit],
+          },
+          {
+            // Shares Dwarf Nettle's main photo URL — fetched and cached once.
+            name: 'Chamise',
+            layout: 'photo-single',
+            photos: [{ url: URL_MAIN, role: 'main', credit: { observer: 'alice', license: 'all-rights-reserved' } }],
+            sciName: 'Adenostoma fasciculatum',
+            native: 'native',
+          },
+        ],
+      },
+      {
+        id: 'birds',
+        label: '🐦 Birds',
+        cards: [
+          {
+            name: 'Wrentit',
+            layout: 'photo-single',
+            photos: [{ url: URL_WRENTIT, role: 'main', credit: { observer: 'bob', license: 'cc-by' } }],
+          },
+        ],
+      },
+    ],
+    ...overrides,
+  };
+}
+
+/** A light deck zip: manifest only, no photos/ directory. */
+function liteZipOf(manifestObject: unknown): File {
+  return new File([zipSync({ 'manifest.json': strToU8(JSON.stringify(manifestObject)) })], 'curated-test-deck.deck.lite', {
+    type: 'application/zip',
+  });
+}
+
+/** Serve photo bytes from an in-memory map, with per-URL overrides for
+ *  failure shapes: an HTTP status number, an Error (network failure), or
+ *  { status, type, bytes } for odd responses. */
+function servePhotos(responses: Record<string, Uint8Array | number | Error | { status: number; type?: string; bytes?: Uint8Array }>) {
+  return vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    const value = responses[url];
+    if (value === undefined) return new Response('not found', { status: 404 });
+    if (typeof value === 'number') return new Response(null, { status: value });
+    if (value instanceof Error) throw value;
+    if (value instanceof Uint8Array) return new Response(value as unknown as BodyInit, { status: 200, headers: { 'content-type': 'image/jpeg' } });
+    return new Response((value.bytes ?? null) as unknown as BodyInit, { status: value.status, headers: { 'content-type': value.type ?? 'image/jpeg' } });
+  });
 }
 
 /** Unique manifest id per test so the shared fake database stays isolated. */
@@ -438,5 +531,191 @@ describe('formatBytes', () => {
     expect(formatBytes(1.5 * 1024 * 1024)).toBe('1.5 MB');
     expect(formatBytes(48 * 1024 * 1024)).toBe('48 MB');
     expect(formatBytes(2 * 1024 * 1024 * 1024)).toBe('2 GB');
+  });
+});
+
+describe('light deck import', () => {
+  // Four unique URLs across five photo references (Chamise shares Dwarf
+  // Nettle's main photo) — each fetched exactly once.
+  const uniqueUrls = [URL_MAIN, URL_SEC_1, URL_SEC_2, URL_WRENTIT];
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', servePhotos(Object.fromEntries(uniqueUrls.map((url) => [url, BIG_JPEG]))));
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('fetches every referenced photo once, caches it, and loads the deck', async () => {
+    const id = uniqueId();
+    const { id: storedId, label } = await importDeckZip(liteZipOf(liteManifest({ id })));
+
+    expect(storedId).toBe(id);
+    expect(label).toBe('🌿 Curated Test Deck');
+    const fetch = vi.mocked(globalThis.fetch);
+    expect(fetch).toHaveBeenCalledTimes(uniqueUrls.length);
+    for (const url of uniqueUrls) expect(fetch).toHaveBeenCalledWith(url, expect.objectContaining({ signal: expect.anything() }));
+
+    // The stored manifest keeps the remote references (no files were shipped).
+    const record = await getUploadedDeckRecord(id);
+    const storedPhotos = record?.manifest.categories[0].cards[0].photos ?? [];
+    expect(storedPhotos.map((p) => p.url)).toEqual([URL_MAIN, URL_SEC_1, URL_SEC_2]);
+    expect(storedPhotos[0]).not.toHaveProperty('file');
+
+    // Loading resolves the cached bytes to blob: URLs and keeps the source.
+    const def = await loadUploadedDeck(id);
+    expect(def).toMatchObject({ id, label, cardFormat: 'data', uploaded: true });
+    const photos = def.categories[0].cards[0].photos ?? [];
+    expect(photos.map((p) => p.file)).toEqual(['blob:mock-1', 'blob:mock-2', 'blob:mock-3']);
+    expect(photos.map((p) => p.url)).toEqual([URL_MAIN, URL_SEC_1, URL_SEC_2]);
+    expect(photos[0].credit).toMatchObject({ observer: 'joodles', license: 'cc-by-nc' });
+    // The shared URL resolves for Chamise too.
+    expect(def.categories[0].cards[1].photos?.[0].file).toBe('blob:mock-1');
+  });
+
+  it('measures the stored size as the manifest plus the fetched photos', async () => {
+    const id = uniqueId();
+    await importDeckZip(liteZipOf(liteManifest({ id })));
+    const manifest = (await getUploadedDeckRecord(id))!.manifest;
+    const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest)).length;
+    // Four unique photos fetched (the shared URL is stored once).
+    expect(await uploadedDeckBytes(id)).toBe(manifestBytes + 4 * BIG_JPEG.length);
+  });
+
+  it('reports fetch progress as (fetched, total unique photos)', async () => {
+    const id = uniqueId();
+    const onProgress = vi.fn();
+    await importDeckZip(liteZipOf(liteManifest({ id })), { onProgress });
+
+    expect(onProgress).toHaveBeenCalledTimes(uniqueUrls.length);
+    const calls = onProgress.mock.calls as Array<[number, number]>;
+    expect(calls[calls.length - 1]).toEqual([uniqueUrls.length, uniqueUrls.length]);
+    for (const [done, total] of calls) {
+      expect(total).toBe(uniqueUrls.length);
+      expect(done).toBeGreaterThan(0);
+      expect(done).toBeLessThanOrEqual(total);
+    }
+  });
+
+  it('falls back to smaller size variants when the referenced size is gone', async () => {
+    const id = uniqueId();
+    const largeUrl = URL_SEC_1.replace('/original.', '/large.');
+    vi.stubGlobal('fetch', servePhotos({
+      [URL_SEC_1]: 404, // the referenced original no longer exists…
+      [largeUrl]: BIG_JPEG, // …but the same photo's large variant does.
+      [URL_MAIN]: BIG_JPEG,
+      [URL_SEC_2]: BIG_JPEG,
+      [URL_WRENTIT]: BIG_JPEG,
+    }));
+    await importDeckZip(liteZipOf(liteManifest({ id })));
+
+    // The variant was fetched, and its bytes are cached under the manifest's
+    // original URL — the deck loads normally.
+    expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledWith(largeUrl, expect.anything());
+    const def = await loadUploadedDeck(id);
+    expect(def.categories[0].cards[0].photos?.[1].file).toBe('blob:mock-2');
+  });
+
+  it('retries a photo when the first attempt fails transiently', async () => {
+    const id = uniqueId();
+    // Wrap the stubbed fetch: the first attempt at this photo's URL fails
+    // with a network error, the retry succeeds.
+    const fetchMock = vi.mocked(globalThis.fetch);
+    const realImpl = fetchMock.getMockImplementation()!;
+    let sec1Attempts = 0;
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      if (String(input) === URL_SEC_1 && sec1Attempts++ === 0) throw new Error('network down');
+      return realImpl(input);
+    });
+    await importDeckZip(liteZipOf(liteManifest({ id })));
+
+    expect(fetchMock).toHaveBeenCalledWith(URL_SEC_1, expect.anything());
+    expect(fetchMock.mock.calls.filter(([u]) => String(u) === URL_SEC_1)).toHaveLength(2);
+    expect((await listUploadedDecks()).find((s) => s.id === id)).toBeDefined();
+  });
+
+  it('fails the import naming the photo when nothing can be fetched', async () => {
+    const id = uniqueId();
+    // Every size variant of this photo is gone (404), the rest fetch fine.
+    vi.stubGlobal('fetch', servePhotos({
+      [URL_MAIN]: BIG_JPEG,
+      [URL_SEC_1]: BIG_JPEG,
+      [URL_WRENTIT]: BIG_JPEG,
+    }));
+    await expect(importDeckZip(liteZipOf(liteManifest({ id })))).rejects.toThrow(
+      /Could not fetch the secondary photo of card "Dwarf Nettle" from https:\/\/inaturalist-open-data\.s3\.amazonaws\.com\/photos\/103\/original\.jpg/,
+    );
+    // Nothing was stored for the failed import.
+    expect((await listUploadedDecks()).find((s) => s.id === id)).toBeUndefined();
+  });
+
+  it('leaves the previous import untouched when a re-import fails to fetch', async () => {
+    const id = uniqueId();
+    await importDeckZip(zipOf(manifestWithId(id))); // a bundled copy exists…
+    expect((await listUploadedDecks()).find((s) => s.id === id)).toBeDefined();
+
+    // …and the failed light re-import must not wipe it.
+    vi.stubGlobal('fetch', servePhotos({
+      [URL_MAIN]: BIG_JPEG,
+      [URL_SEC_1]: BIG_JPEG,
+      [URL_SEC_2]: BIG_JPEG,
+      // Wrentit's photo can't be fetched in any size variant.
+    }));
+    await expect(importDeckZip(liteZipOf(liteManifest({ id })))).rejects.toThrow(DeckImportError);
+    const record = await getUploadedDeckRecord(id);
+    expect(record).not.toBeNull();
+    expect(record?.manifest.categories[0].cards[0].photos?.[0].file).toBe('photos/dwarf-nettle-main.jpg');
+  });
+});
+
+describe('light deck validation', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function liteWithPhoto(photo: Record<string, unknown>, overrides: Record<string, unknown> = {}): File {
+    const m = liteManifest({ ...overrides });
+    (m.categories[0].cards[0].photos as unknown[])[0] = photo;
+    return liteZipOf(m);
+  }
+
+  it('rejects a light photo that carries a bundled file reference', async () => {
+    const file = liteWithPhoto({ file: 'photos/x.jpg', role: 'main', credit });
+    await expect(importDeckZip(file)).rejects.toThrow(/photo 1 carries a "file" reference/);
+  });
+
+  it('rejects a light photo with animated media', async () => {
+    const file = liteWithPhoto({
+      url: URL_MAIN, role: 'main', credit,
+      animation: { file: 'photos/x.mp4', kind: 'video' },
+    });
+    await expect(importDeckZip(file)).rejects.toThrow(/animated media/);
+  });
+
+  it('rejects a light photo whose url is not absolute', async () => {
+    const file = liteWithPhoto({ url: 'photos/nettle.jpg', role: 'main', credit });
+    await expect(importDeckZip(file)).rejects.toThrow(/is not an absolute URL/);
+  });
+
+  it('rejects a light photo whose url is not https', async () => {
+    const file = liteWithPhoto({ url: 'http://inaturalist-open-data.s3.amazonaws.com/photos/1/original.jpg', role: 'main', credit });
+    await expect(importDeckZip(file)).rejects.toThrow(/must be an https URL/);
+  });
+
+  it('rejects a light photo without a url', async () => {
+    const file = liteWithPhoto({ role: 'main', credit });
+    await expect(importDeckZip(file)).rejects.toThrow(/photo 1 url is required/);
+  });
+
+  it('rejects an unknown format marker', async () => {
+    await expect(importDeckZip(liteZipOf(liteManifest({ format: 'lite2' })))).rejects.toThrow(/unsupported deck format "lite2"/);
+  });
+
+  it('rejects a url reference in a bundled (non-light) deck', async () => {
+    const m = manifestWithId(uniqueId());
+    (m.categories[0].cards[0].photos as Array<Record<string, unknown>>)[0] = {
+      url: URL_MAIN, role: 'main', credit,
+    };
+    await expect(importDeckZip(zipOf(m))).rejects.toThrow(/only light decks \(format "lite"\) reference remote photos/);
   });
 });

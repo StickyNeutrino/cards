@@ -20,6 +20,22 @@
  * - Only `cardFormat: "data"` archives are accepted; image-format archives
  *   (pre-rendered front/back JPGs, no cardFormat) are rejected. The upload
  *   flow exists for Deck Curator output, which is always data-format.
+ *
+ * Light decks (DECK_FORMAT.md "Light decks", a `.deck.lite` zip with
+ * `format: "lite"` and no photos/ directory) carry `url`s instead of `file`s:
+ *
+ * - Every photo must reference an absolute https URL; `file` references and
+ *   animated media are rejected (a light deck has no local bytes to point at).
+ * - The photo bytes are FETCHED during import and cached in this module's
+ *   photo store under the photo's URL, so an imported light deck behaves
+ *   exactly like a bundled one afterwards — it studies offline, shows its
+ *   stored size, and deletes cleanly. Progress is reported through
+ *   `onProgress` because a few-hundred-photo deck takes a while to fetch.
+ * - The same "no broken cards" policy applies: if a photo cannot be fetched
+ *   (after trying the smaller iNat size variants of the same image, and
+ *   retrying transient failures), the whole import fails and names the URL.
+ *   Fetching happens BEFORE the previous import is deleted, so a failed
+ *   re-import never wipes the copy already in the browser.
  */
 import { unzip, strFromU8 } from 'fflate';
 import { DECK_DEFS, type DeckDef } from '~/data/decks';
@@ -152,6 +168,25 @@ function optionalString(value: unknown, what: string): string | undefined {
   return value;
 }
 
+/**
+ * A light deck's photo URL: an absolute https address the app can fetch the
+ * image from. https only — the app runs on https, and browsers block
+ * mixed-content fetches of http URLs from a secure page.
+ */
+function validatePhotoUrl(value: unknown, what: string): string {
+  const url = requireString(value, `${what} url`);
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new DeckImportError(`Invalid deck archive: ${what} url "${url}" is not an absolute URL.`);
+  }
+  if (parsed.protocol !== 'https:') {
+    throw new DeckImportError(`Invalid deck archive: ${what} url "${url}" must be an https URL.`);
+  }
+  return url;
+}
+
 function validateCredit(credit: unknown, where: string): void {
   if (typeof credit !== 'object' || credit === null) {
     throw new DeckImportError(`Invalid deck archive: ${where} is missing its photo credit.`);
@@ -179,7 +214,7 @@ function validateCredit(credit: unknown, where: string): void {
   }
 }
 
-function validateCard(card: unknown, where: string): void {
+function validateCard(card: unknown, where: string, lite: boolean): void {
   if (typeof card !== 'object' || card === null) {
     throw new DeckImportError(`Invalid deck archive: ${where} is not a card object.`);
   }
@@ -200,7 +235,28 @@ function validateCard(card: unknown, where: string): void {
       throw new DeckImportError(`Invalid deck archive: ${photoWhere} is not a photo object.`);
     }
     const p = photo as RawRecord;
-    requireString(p.file, `${photoWhere} file`);
+    // Light decks reference their photos by remote URL; bundled decks by
+    // archive path. The two reference styles never mix.
+    if (lite) {
+      if (p.file !== undefined) {
+        throw new DeckImportError(
+          `Invalid deck archive: ${photoWhere} carries a "file" reference — light decks carry "url" instead.`,
+        );
+      }
+      validatePhotoUrl(p.url, photoWhere);
+      if (p.animation !== undefined) {
+        throw new DeckImportError(
+          `Invalid deck archive: ${photoWhere} has animated media — light decks can't carry animation clips.`,
+        );
+      }
+    } else {
+      if (p.url !== undefined) {
+        throw new DeckImportError(
+          `Invalid deck archive: ${photoWhere} carries a "url" — only light decks (format "lite") reference remote photos.`,
+        );
+      }
+      requireString(p.file, `${photoWhere} file`);
+    }
     if (p.role !== 'main' && p.role !== 'secondary') {
       throw new DeckImportError(`Invalid deck archive: ${photoWhere} has role ${JSON.stringify(p.role)} — expected "main" or "secondary".`);
     }
@@ -248,7 +304,8 @@ function validateCard(card: unknown, where: string): void {
 /**
  * Structural validation of a parsed manifest.json. Throws DeckImportError
  * with a user-facing message on the first problem found. Photo file
- * existence is checked separately against the archive contents.
+ * existence is checked separately against the archive contents (bundled
+ * decks) or fetched over the network (light decks).
  */
 export function validateManifest(parsed: unknown): DeckDef {
   if (typeof parsed !== 'object' || parsed === null) {
@@ -267,6 +324,15 @@ export function validateManifest(parsed: unknown): DeckDef {
       'Only data-format decks from Deck Curator can be uploaded (manifest.json must set "cardFormat": "data").',
     );
   }
+  // "format": "lite" marks a manifest-only deck whose photos are fetched at
+  // import (docs/DECK_FORMAT.md "Light decks"). Any other value is a format
+  // this app doesn't know about.
+  if (raw.format !== undefined && raw.format !== 'lite') {
+    throw new DeckImportError(
+      `Invalid deck archive: unsupported deck format ${JSON.stringify(raw.format)} — expected "lite" or no format field.`,
+    );
+  }
+  const lite = raw.format === 'lite';
   if (!Array.isArray(raw.categories) || raw.categories.length === 0) {
     throw new DeckImportError('Invalid deck archive: manifest has no categories.');
   }
@@ -283,7 +349,7 @@ export function validateManifest(parsed: unknown): DeckDef {
       throw new DeckImportError(`Invalid deck archive: ${catWhere} ("${catLabel}") has no cards list.`);
     }
     const cards = c.cards.map((card, cardIndex) => {
-      validateCard(card, `${catWhere} card ${cardIndex + 1}`);
+      validateCard(card, `${catWhere} card ${cardIndex + 1}`, lite);
       const name = (card as RawRecord).name as string;
       if (seenNames.has(name)) {
         throw new DeckImportError(`Invalid deck archive: card name "${name}" appears more than once (names must be unique across the deck).`);
@@ -343,11 +409,172 @@ function photoArchivePath(root: string, file: string, files: Record<string, Uint
 }
 
 // ---------------------------------------------------------------------------
+// Light-deck photo fetching
+// ---------------------------------------------------------------------------
+
+/**
+ * iNat photo URLs differ only in the size segment
+ * (`/photos/<id>/<size>.jpg`). A light deck references the original; if
+ * those exact bytes can't be fetched (a photo was replaced or rotated away
+ * since curation), the smaller variants of the SAME image are tried before
+ * giving up — the same ladder the curator climbs when it downloads a pick.
+ * The cached bytes are stored under the manifest's URL either way, so the
+ * manifest never has to change. URLs that don't match the iNat shape are
+ * fetched literally, with nothing to fall back to.
+ */
+const SIZE_SEGMENT = /^(https:\/\/[^/]+\/photos\/\d+\/)(square|thumb|small|medium|large|original)(\.\w+)$/;
+const VARIANT_SIZES = ['original', 'large', 'medium'] as const;
+
+function photoVariantUrls(url: string): string[] {
+  const match = SIZE_SEGMENT.exec(url);
+  if (!match) return [url];
+  const [, base, , ext] = match;
+  return VARIANT_SIZES.map((size) => `${base}${size}${ext}`);
+}
+
+/** Fetches are capped so a few-hundred-photo import doesn't hammer the host
+ *  from one browser tab; each URL gets a couple of tries on transient
+ *  failures (network errors, 5xx, rate limiting) before the next variant. */
+const FETCH_CONCURRENCY = 5;
+const FETCH_ATTEMPTS = 2;
+/** Below this a "successful" response is an error page or empty body, not a
+ *  photo. Deliberately tiny: legitimate small variants exist. */
+const MIN_IMAGE_BYTES = 100;
+
+async function fetchPhotoBlob(url: string, signal: AbortSignal): Promise<Blob> {
+  let lastError: unknown;
+  for (const candidate of photoVariantUrls(url)) {
+    for (let attempt = 0; attempt < FETCH_ATTEMPTS; attempt++) {
+      try {
+        const res = await fetch(candidate, { signal });
+        if (!res.ok) {
+          // 4xx: this variant doesn't exist — try the next size. 5xx and
+          // 429 are transient (or throttling): retry the same URL.
+          lastError = new Error(`HTTP ${res.status}`);
+          if (res.status >= 500 || res.status === 429) continue;
+          break;
+        }
+        const type = res.headers.get('content-type')?.split(';')[0]?.trim() || 'image/jpeg';
+        const buffer = await res.arrayBuffer();
+        if (!type.startsWith('image/') || buffer.byteLength < MIN_IMAGE_BYTES) {
+          // A non-image or truncated body won't render — the next size
+          // might, but this one never will.
+          lastError = new Error(`not an image (${type || 'unknown type'}, ${buffer.byteLength} bytes)`);
+          break;
+        }
+        return new Blob([buffer], { type });
+      } catch (err) {
+        if (signal.aborted) throw err;
+        lastError = err;
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('fetch failed');
+}
+
+export interface FetchPhotosOptions {
+  /** Progress after each photo lands: (fetched, total unique URLs). */
+  onProgress?: (done: number, total: number) => void;
+}
+
+/**
+ * Fetch every photo a light deck references, once per unique URL. The
+ * returned map is keyed by the manifest's URL (the same string the photos
+ * store is keyed by). On the first photo that can't be fetched anywhere the
+ * remaining fetches are aborted and the error names the photo — the caller
+ * turns it into a DeckImportError.
+ */
+async function fetchPhotoBlobs(
+  entries: Array<{ url: string; describe: string }>,
+  opts: FetchPhotosOptions = {},
+): Promise<Map<string, Blob>> {
+  const total = entries.length;
+  const blobs = new Map<string, Blob>();
+  if (total === 0) return blobs;
+
+  const controller = new AbortController();
+  let next = 0;
+  let failure: Error | null = null;
+  const worker = async (): Promise<void> => {
+    while (next < total && !failure) {
+      const { url, describe } = entries[next++];
+      try {
+        blobs.set(url, await fetchPhotoBlob(url, controller.signal));
+        opts.onProgress?.(blobs.size, total);
+      } catch (err) {
+        if (!failure) {
+          const reason = err instanceof Error && err.message ? err.message : 'fetch failed';
+          failure = new Error(`Could not fetch ${describe} from ${url} (${reason}). Check your connection and try again.`);
+          controller.abort(); // Stop the sibling fetches — the import is over.
+        }
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(FETCH_CONCURRENCY, total) }, worker));
+  if (failure) throw failure;
+  return blobs;
+}
+
+/** The unique remote photos a light manifest references, in manifest order,
+ *  each described for error messages ("the main photo of card "Dwarf
+ *  Nettle""). Two cards may share one URL — it is fetched and cached once. */
+function lightPhotoEntries(manifest: DeckDef): Array<{ url: string; describe: string }> {
+  const entries = new Map<string, string>();
+  for (const category of manifest.categories) {
+    for (const card of category.cards) {
+      for (const photo of card.photos ?? []) {
+        // Validation guarantees every light photo carries an https url.
+        if (photo.url && !entries.has(photo.url)) {
+          entries.set(photo.url, `the ${photo.role} photo of card "${card.name}"`);
+        }
+      }
+    }
+  }
+  return [...entries].map(([url, describe]) => ({ url, describe }));
+}
+
+// ---------------------------------------------------------------------------
 // Import
 // ---------------------------------------------------------------------------
 
-/** Unzip `file`, validate its manifest, and store deck + photos in IndexedDB. */
-export async function importDeckZip(file: File): Promise<{ id: string; label: string }> {
+/** Options for importDeckZip. */
+export interface DeckImportOptions {
+  /** Light-deck imports fetch every photo over the network first; progress
+   *  reports (fetched, total unique photos) as they land. Imports of decks
+   *  with bundled photos never call it — their bytes are already local. */
+  onProgress?: (done: number, total: number) => void;
+}
+
+/** Store a validated deck: wipe any previous import of the same id, write
+ *  the photo blobs (keyed `id/<reference>`), then the deck record. */
+async function storeDeck(id: string, manifest: DeckDef, photos: Array<{ key: string; blob: Blob }>): Promise<void> {
+  await deleteUploadedDeck(id).catch(() => {
+    // A failed cleanup (e.g. first import, no prior record) must not block us.
+  });
+  await withStore(PHOTO_STORE, 'readwrite', async (store) => {
+    for (const { key, blob } of photos) {
+      await requestAsPromise(store.put(blob, key));
+    }
+  });
+  const manifestJsonBytes = new TextEncoder().encode(JSON.stringify(manifest)).length;
+  const photoFileBytes = photos.reduce((sum, { blob }) => sum + blob.size, 0);
+  const record: UploadedDeckRecord = {
+    id,
+    label: manifest.label,
+    description: manifest.description ?? '',
+    cardFormat: 'data',
+    manifest,
+    importedAt: new Date().toISOString(),
+    bytes: manifestJsonBytes + photoFileBytes,
+  };
+  await withStore(DECK_STORE, 'readwrite', (store) => requestAsPromise(store.put(record)));
+}
+
+/** Unzip `file`, validate its manifest, and store deck + photos in IndexedDB.
+ *  Accepts every Deck Curator export: the project file (.zip) and deck file
+ *  (.deck), which bundle their photos, and the light deck (.deck.lite),
+ *  whose photos are fetched from their remote sources first. */
+export async function importDeckZip(file: File, options: DeckImportOptions = {}): Promise<{ id: string; label: string }> {
   let files: Record<string, Uint8Array>;
   try {
     files = await unzipAsync(new Uint8Array(await file.arrayBuffer()));
@@ -363,6 +590,24 @@ export async function importDeckZip(file: File): Promise<{ id: string; label: st
     throw new DeckImportError('Invalid deck archive: manifest.json is not valid JSON.');
   }
   const manifest = validateManifest(parsed);
+
+  // A light deck ships no photos: every referenced image is fetched from its
+  // remote source and cached locally before anything is stored.
+  if ((parsed as RawRecord).format === 'lite') {
+    const id = storedDeckIdFor(manifest.id);
+    let blobs: Map<string, Blob>;
+    try {
+      blobs = await fetchPhotoBlobs(lightPhotoEntries(manifest), { onProgress: options.onProgress });
+    } catch (err) {
+      throw new DeckImportError(err instanceof Error ? err.message : 'Could not fetch the deck\u2019s photos.');
+    }
+    await storeDeck(
+      id,
+      manifest,
+      [...blobs].map(([url, blob]) => ({ key: `${id}/${url}`, blob })),
+    );
+    return { id, label: manifest.label };
+  }
 
   // Every photo must exist in the archive — fail the whole import otherwise.
   const photoEntries: Array<{ declared: string; path: string }> = [];
@@ -381,31 +626,16 @@ export async function importDeckZip(file: File): Promise<{ id: string; label: st
   }
 
   const id = storedDeckIdFor(manifest.id);
-  // Replace any previous import of this deck: wipe its photos first so
-  // removed files don't linger, then write the fresh set.
-  await deleteUploadedDeck(id).catch(() => {
-    // A failed cleanup (e.g. first import, no prior record) must not block us.
-  });
-  await withStore(PHOTO_STORE, 'readwrite', async (store) => {
-    for (const { declared, path } of photoEntries) {
-      // slice() yields a plain ArrayBuffer-backed copy, which Blob accepts.
-      const blob = new Blob([files[path].slice()], { type: 'image/jpeg' });
-      await requestAsPromise(store.put(blob, `${id}/${declared}`));
-    }
-  });
-  const manifestJsonBytes = new TextEncoder().encode(JSON.stringify(manifest)).length;
-  const photoFileBytes = photoEntries.reduce((sum, { path }) => sum + files[path].length, 0);
-  const record: UploadedDeckRecord = {
+  await storeDeck(
     id,
-    label: manifest.label,
-    description: manifest.description ?? '',
-    cardFormat: 'data',
     manifest,
-    importedAt: new Date().toISOString(),
-    bytes: manifestJsonBytes + photoFileBytes,
-  };
-  await withStore(DECK_STORE, 'readwrite', (store) => requestAsPromise(store.put(record)));
-  return { id, label: record.label };
+    photoEntries.map(({ declared, path }) => ({
+      key: `${id}/${declared}`,
+      // slice() yields a plain ArrayBuffer-backed copy, which Blob accepts.
+      blob: new Blob([files[path].slice()], { type: 'image/jpeg' }),
+    })),
+  );
+  return { id, label: manifest.label };
 }
 
 // ---------------------------------------------------------------------------
@@ -468,6 +698,9 @@ export async function getUploadedDeckRecord(id: string): Promise<UploadedDeckRec
  * Load a stored deck as a DeckDef, resolving every photo `file` into a
  * blob: object URL ready for <img src>. Object URLs live for the document's
  * lifetime (they are not revoked — decks are small and pages are short-lived).
+ * Light decks store their photos under the photo's remote `url`; their
+ * loaded photos resolve `file` to the cached bytes and keep `url` as
+ * provenance.
  */
 export async function loadUploadedDeck(id: string): Promise<DeckDef> {
   const record = await getUploadedDeckRecord(id);
@@ -477,9 +710,11 @@ export async function loadUploadedDeck(id: string): Promise<DeckDef> {
     for (const category of record.manifest.categories) {
       for (const card of category.cards) {
         for (const photo of card.photos ?? []) {
-          const key = `${record.id}/${photo.file}`;
+          const key = `${record.id}/${photo.file ?? photo.url}`;
           const blob = await requestAsPromise(store.get(key) as IDBRequest<Blob | undefined>);
-          if (blob) urls.set(key, URL.createObjectURL(blob));
+          // One object URL per distinct stored photo — two cards may share
+          // one file (or one light-deck URL), and they share its blob URL.
+          if (blob && !urls.has(key)) urls.set(key, URL.createObjectURL(blob));
         }
       }
     }
@@ -492,7 +727,7 @@ export async function loadUploadedDeck(id: string): Promise<DeckDef> {
       invasive: card.invasive ?? false,
       photos: (card.photos ?? []).map((photo) => ({
         ...photo,
-        file: urls.get(`${record.id}/${photo.file}`) ?? '',
+        file: urls.get(`${record.id}/${photo.file ?? photo.url}`) ?? '',
       })),
     })),
   }));

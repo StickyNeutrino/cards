@@ -33,8 +33,14 @@ export interface PhotoCredit {
 
 export interface DeckCardPhoto {
   /** Archive-relative path for imported decks; resolved to a blob: URL by loadUploadedDeck.
-   *  For moving media this is the still frame the curator picked. */
+   *  For moving media this is the still frame the curator picked. Light decks
+   *  (format "lite") have no bundled files — they carry `url` instead, and
+   *  the app fetches those bytes once at import and caches them under the
+   *  same key space. */
   file: string;
+  /** Remote source of the photo (light decks only). Present in the imported
+   *  manifest; loadUploadedDeck resolves the cached bytes into `file`. */
+  url?: string;
   role: "main" | "secondary";
   alt?: string;
   credit: PhotoCredit;
