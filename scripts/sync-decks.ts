@@ -74,23 +74,43 @@ function main() {
       continue;
     }
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    const isData = manifest.cardFormat === "data";
+    // Image decks ship pre-rendered card faces in cards/; data decks (Deck
+    // Curator format) ship their referenced photos in photos/.
+    const trees: Array<[string, string]> = []; // [srcDir, publicDir]
     const cardsDir = path.join(deckDir, "cards");
-    if (fs.existsSync(cardsDir)) {
-      totalCopied += copyTree(cardsDir, path.join(publicDecksRoot, id, "cards"));
-    } else {
-      console.warn(`Deck "${id}" has no cards/ directory — manifest only.`);
+    if (fs.existsSync(cardsDir)) trees.push([cardsDir, path.join(publicDecksRoot, id, "cards")]);
+    const photosDir = path.join(deckDir, "photos");
+    if (fs.existsSync(photosDir)) trees.push([photosDir, path.join(publicDecksRoot, id, "photos")]);
+    // Remove public copies of directories the deck no longer has (e.g. a
+    // deck converted from the image format to the data format leaves its
+    // rendered cards behind otherwise).
+    for (const subdir of ["cards", "photos"]) {
+      if (!trees.some(([, dest]) => dest.endsWith(`/${subdir}`))) {
+        fs.rmSync(path.join(publicDecksRoot, id, subdir), { recursive: true, force: true });
+      }
     }
+    for (const [src, dest] of trees) totalCopied += copyTree(src, dest);
 
-    const resolveUrl = (file: string) => `/decks/${id}/cards/${file.split("/").map(encodeURIComponent).join("/")}`;
+    const resolveUrl = (file: string) =>
+      `/decks/${id}/${file.split("/").map(encodeURIComponent).join("/")}`;
     const deckOut = {
       id: manifest.id ?? id,
       label: manifest.label ?? id,
       description: manifest.description ?? "",
+      ...(manifest.location ? { location: manifest.location } : {}),
+      ...(isData ? { cardFormat: "data" as const } : {}),
       categories: (manifest.categories ?? []).map((cat: any) => ({
         id: cat.id,
         label: cat.label,
         cards: cat.cards.map((c: any) => {
           const { canyons: _surveyData, ...card } = c;
+          if (isData) {
+            return {
+              ...card,
+              photos: (c.photos ?? []).map((p: any) => ({ ...p, file: resolveUrl(p.file) })),
+            };
+          }
           return {
             ...card,
             front: resolveUrl(c.front),

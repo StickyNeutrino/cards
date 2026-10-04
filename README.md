@@ -132,14 +132,15 @@ says.
 | Deck repo | Contents |
 | --- | --- |
 | `decks/canyonlands/` | The scanned 154-card physical deck (images + `manifest.json`). |
-| `decks/healthy-canyons/` | The generated survey deck: images, `manifest.json`, the source spreadsheets, and the full generation pipeline (`npm run generate`). |
+| `decks/healthy-canyons/` | The generated survey deck (1,203 cards) in the Deck Curator data format: `manifest.json` + `photos/`, the source spreadsheets, and the full generation pipeline (`npm run generate`). |
 
 `scripts/sync-decks.ts` (run automatically before `dev` and `build`) copies each
-deck's images to `public/decks/<id>/cards/` and writes each deck's manifest to
-`app/data/decks/<id>.json` (with survey-specific data stripped — it stays only
-in the private deck repository). The manifests drive deck switching,
-categories, invasive flags, and the credits page. Adding a deck = adding a repo
-under `decks/` with a `manifest.json` plus a one-line import in
+deck's images (`cards/`) or curated photos (`photos/`, for data-format decks) to
+`public/decks/<id>/` and writes each deck's manifest to `app/data/decks/<id>.json`
+(with survey-specific data stripped — it stays only in the private deck
+repository). The manifests drive deck switching, categories, invasive flags, and
+the credits page. Adding a deck = adding a repo under `decks/` with a
+`manifest.json` plus a one-line import in
 `app/data/decks.ts`.
 
 To push the deck repos to GitHub, run `git init`/`git remote add origin …`
