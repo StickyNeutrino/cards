@@ -13,7 +13,6 @@ describe('HamburgerMenu deck picker', () => {
     changeDeckClicked: vi.fn(),
     settingsClicked: vi.fn(),
     cardListsClicked: vi.fn(),
-    creditsClicked: vi.fn(),
   };
 
   it('renders a deck dropdown with both decks and the active deck selected', () => {
@@ -50,14 +49,6 @@ describe('HamburgerMenu deck picker', () => {
 
     rerender(<HamburgerMenu {...defaultProps} deck="healthy-canyons" mode="both" />);
     expect(screen.getByTestId('mode-button').textContent).toBe('🌿🦎 Both');
-  });
-
-  it('renders a credits button that calls creditsClicked', () => {
-    const creditsClicked = vi.fn();
-    render(<HamburgerMenu {...defaultProps} creditsClicked={creditsClicked} />);
-
-    fireEvent.click(screen.getByTestId('credits-button'));
-    expect(creditsClicked).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the mode button working alongside the deck buttons', () => {

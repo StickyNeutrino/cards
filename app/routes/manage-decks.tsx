@@ -165,6 +165,15 @@ export default function ManageDecks() {
                 >
                   {count} card{count === 1 ? '' : 's'}{sizeLabel ? ` · ${sizeLabel}` : ''}
                 </span>
+                <button
+                  type="button"
+                  className="menu-button"
+                  data-testid={`deck-credits-button-${def.id}`}
+                  title={`Photo credits for ${def.label}`}
+                  onClick={() => navigate(`/credits?deck=${encodeURIComponent(def.id)}`)}
+                >
+                  🖼️
+                </button>
                 {def.uploaded && (
                   confirmingDelete === def.id ? (
                     <>

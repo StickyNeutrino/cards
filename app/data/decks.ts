@@ -97,7 +97,7 @@ export interface DeckDef {
   id: string;
   label: string;
   description: string;
-  /** Where the deck is relevant (optional; shown on the credits page). */
+  /** Where the deck is relevant (optional; shown with the deck's credits). */
   location?: DeckLocation;
   categories: DeckCategory[];
   /** "data" decks are rendered as HTML (see DECK_FORMAT.md); image decks

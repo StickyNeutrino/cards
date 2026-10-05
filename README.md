@@ -121,7 +121,8 @@ How it works:
 
 Every stage is idempotent and cached (API responses in `data/healthy/api-cache/`), so you can
 re-run the pipeline after tweaking a spreadsheet without re-downloading everything. Photo
-attribution is shown on each card back and on the in-app credits page (`/credits`).
+attribution is shown on each card back and on the credits page (`/credits`), which opens
+scoped to one deck (from the manage decks page) or one card list (from the card lists page).
 
 ## Deck repositories
 

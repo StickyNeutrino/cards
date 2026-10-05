@@ -96,12 +96,22 @@ export default function CardLists() {
     items[next]?.focus();
   };
 
+  // Cards in the active deck + category — the card list itself (before the
+  // search box narrows it). The credits page is opened for exactly these
+  // cards so it always matches the list being viewed.
+  const modeCards = useMemo(() => cardsForDef(activeDef, activeMode), [activeDef, activeMode]);
+
   const allCards = useMemo(() => {
     const q = search.toLowerCase();
-    return cardsForDef(activeDef, activeMode).filter(card =>
+    return modeCards.filter(card =>
       card.name.toLowerCase().includes(q) ||
       (card.altNames ?? []).some(alt => alt.toLowerCase().includes(q)));
-  }, [activeDef, activeMode, search]);
+  }, [modeCards, search]);
+
+  const creditsButtonClicked = () => {
+    // The credits page opens scoped to this card list (deck + category).
+    navigate(`/credits?deck=${encodeURIComponent(deck)}&category=${encodeURIComponent(activeMode)}`);
+  };
 
   const changeDeck = (next: DeckId) => {
     setDeck(next);
@@ -168,6 +178,15 @@ export default function CardLists() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <button
+            type="button"
+            className="menu-button"
+            data-testid="credits-button"
+            title="Photo credits for this card list"
+            onClick={creditsButtonClicked}
+          >
+            🖼️ Credits
+          </button>
         </div>
       </div>
       <div

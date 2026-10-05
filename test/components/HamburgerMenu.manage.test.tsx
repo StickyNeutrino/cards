@@ -21,7 +21,6 @@ const defaultProps = {
   changeDeckClicked: vi.fn(),
   settingsClicked: vi.fn(),
   cardListsClicked: vi.fn(),
-  creditsClicked: vi.fn(),
 };
 
 describe('HamburgerMenu manage decks affordance', () => {

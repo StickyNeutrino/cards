@@ -419,15 +419,9 @@ main {
   overflow: hidden;
 }
 /* ---- Photo credits page ---- */
-.credits-location {
-  margin: -0.5rem 0 1rem;
-  font-size: 0.9rem;
-  color: #555;
-}
-
-/* Overrides the global centered-viewport-height `main` styles: this page is a
-   long scrolling document, and content overflowing a 100vh flex container is
-   unreachable (browser find-in-page can't scroll to it). */
+/* Same long-document override as the manage decks page: this page is one
+   deck's attributions and the page itself scrolls (content overflowing a
+   100vh flex container would be unreachable). */
 .credits-main {
   display: block;
   height: auto;
@@ -460,13 +454,17 @@ main {
   line-height: 1.5;
   margin-bottom: 16px;
 }
-.credits-main .search-input {
-  width: 100%;
+/* Deck + card-list pickers re-scope the page in place. */
+.credits-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-bottom: 16px;
 }
-.credits-deck h2 {
-  font-size: 1.1rem;
-  margin: 20px 0 10px;
+.credits-location {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: #555;
 }
 .credits-table {
   width: 100%;
@@ -525,7 +523,7 @@ main {
   color: #1a5276;
 }
 .credits-empty {
-  margin-top: 16px;
+  margin: 8px 0 0;
   font-style: italic;
   color: #666;
 }

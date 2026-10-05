@@ -78,8 +78,8 @@ describe('HamburgerMenu', () => {
     render(<HamburgerMenu {...defaultProps} />);
 
     const buttons = screen.getAllByRole('button');
-    // deck dropdown (not a button) + mode + card list + credits + settings
-    expect(buttons).toHaveLength(4);
+    // deck dropdown (not a button) + mode + card list + settings
+    expect(buttons).toHaveLength(3);
     expect(screen.getByTestId('deck-select').tagName).toBe('SELECT');
   });
 

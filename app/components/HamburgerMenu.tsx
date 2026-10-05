@@ -14,7 +14,6 @@ interface HamburgerMenuProps {
   manageDecksClicked?: () => void;
   settingsClicked: React.MouseEventHandler<HTMLButtonElement>;
   cardListsClicked: React.MouseEventHandler<HTMLButtonElement>;
-  creditsClicked?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
 export const HamburgerMenu = forwardRef<HTMLDivElement, HamburgerMenuProps>(({
@@ -26,7 +25,6 @@ export const HamburgerMenu = forwardRef<HTMLDivElement, HamburgerMenuProps>(({
   manageDecksClicked,
   settingsClicked,
   cardListsClicked,
-  creditsClicked,
 }, ref) => {
   const deckList = decks ?? DECK_DEFS;
   const activeDef = deckList.find((d) => d.id === deck) ?? deckList[0];
@@ -72,14 +70,6 @@ export const HamburgerMenu = forwardRef<HTMLDivElement, HamburgerMenuProps>(({
         title="Card Lists"
       >
         📋 Card List
-      </button>
-      <button
-        onClick={creditsClicked}
-        className="menu-button ml-2"
-        title="Photo Credits"
-        data-testid="credits-button"
-      >
-        🖼️ Credits
       </button>
       <button
         onClick={settingsClicked}

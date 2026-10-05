@@ -434,11 +434,6 @@ export default function Home() {
     navigate('/card-lists')
   }
 
-  const creditsButtonClicked = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    navigate('/credits')
-  }
-
   const manageDecksClicked = () => {
     navigate('/decks')
   }
@@ -514,7 +509,6 @@ export default function Home() {
       manageDecksClicked={manageDecksClicked}
       settingsClicked={settingsButtonClicked}
       cardListsClicked={cardListsButtonClicked}
-      creditsClicked={creditsButtonClicked}
     />
 
     <Settings
