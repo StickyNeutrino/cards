@@ -16,9 +16,6 @@ export function meta({}: Route.MetaArgs) {
 type DeckUploadState = {
   status: 'idle' | 'importing' | 'success' | 'error';
   message?: string;
-  /** Light decks (.deck.lite) fetch their photos over the network during
-   *  import; this tracks (fetched, total unique photos). */
-  progress?: { done: number; total: number };
 };
 
 const cardCountFor = (def: DeckDef): number =>
@@ -61,9 +58,7 @@ export default function ManageDecks() {
   const handleUploadDeck = async (file: File) => {
     setUploadState({ status: 'importing' });
     try {
-      const { id, label } = await importDeckZip(file, {
-        onProgress: (done, total) => setUploadState({ status: 'importing', progress: { done, total } }),
-      });
+      const { id, label } = await importDeckZip(file);
       reload();
       setUploadState({ status: 'success', message: `Imported “${label}”` });
       if (uploadNoticeTimer.current) clearTimeout(uploadNoticeTimer.current);
@@ -117,20 +112,17 @@ export default function ManageDecks() {
           Add decks exported by Deck Curator, or remove uploaded decks you no
           longer need. Built-in decks are part of the app and cannot be deleted;
           uploaded decks and their photos are stored only in this browser.
-          Light decks (.deck.lite) are tiny manifest-only files — their photos
-          are fetched from iNaturalist once during import and stored here, so
-          they keep studying offline.
+          Light decks (.deck.lite) are tiny manifest-only files — they import
+          instantly, and their photos stream in from iNaturalist as you browse
+          them. To study one offline, open it and use “Download for Offline”
+          in the study page’s settings.
         </p>
         <label
           className={`menu-button decks-upload${importing ? ' importing' : ''}`}
           data-testid="upload-deck-button"
           title="Upload a deck .zip, .deck, or .deck.lite exported by Deck Curator"
         >
-          {importing
-            ? uploadState.progress
-              ? `⏳ Fetching photos ${uploadState.progress.done}/${uploadState.progress.total}…`
-              : '⏳ Importing…'
-            : '⬆️ Upload deck (.zip / .deck / .deck.lite)…'}
+          {importing ? '⏳ Importing…' : '⬆️ Upload deck (.zip / .deck / .deck.lite)…'}
           <input
             type="file"
             accept=".zip,.deck,.deck.lite,application/zip,application/x-zip-compressed"

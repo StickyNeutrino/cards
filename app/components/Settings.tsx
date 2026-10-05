@@ -6,8 +6,11 @@ interface SettingsProps {
    setFlipSpeed: (speed: string) => void;
    isPreloaded: boolean;
    isPreloading: boolean;
+   /** Set when a download attempt could not fetch every photo; offers a retry. */
+   preloadError?: string | null;
    handlePreloadCards: () => void;
-   /** Data-driven decks keep their photos in IndexedDB — nothing to download, so the affordance is hidden. */
+   /** Data decks keep their photos in IndexedDB — nothing to download, so the affordance is hidden.
+    *  Light decks (remote photos cached on demand) do offer it. */
    canPreload?: boolean;
 }
 
@@ -17,6 +20,7 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
   setFlipSpeed,
   isPreloaded,
   isPreloading,
+  preloadError,
   handlePreloadCards,
   canPreload = true,
 }, ref) => {
@@ -82,6 +86,12 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
         {isPreloaded && (
           <p className="text-xs text-gray-600 text-center">
             All cards are cached for offline use
+          </p>
+        )}
+
+        {preloadError && (
+          <p className="text-xs text-red-600 text-center" data-testid="preload-error">
+            {preloadError}
           </p>
         )}
       </div>

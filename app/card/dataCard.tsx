@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { PhotoCredit } from '~/data/decks';
 
 /**
@@ -126,12 +126,30 @@ function cropStyle(crop: { x: number; y: number; w: number; h: number }): React.
 /** The <img> for a photo with whatever crop treatment it declares. The CSS
  *  gives imgs width/height 100% + object-fit cover (the default cover crop);
  *  an explicit crop overrides via inline styles (they win over the CSS), and
- *  a legacy focal point just shifts the cover position. */
+ *  a legacy focal point just shifts the cover position. A photo whose bytes
+ *  can't be loaded (offline with a light deck's photo not yet cached, or a
+ *  dead remote URL) renders as a quiet placeholder instead of a broken image. */
 function Photo({ photo, alt }: { photo: DataCardPhoto; alt: string }) {
-  if (photo.crop) {
-    return <img src={photo.src} alt={alt} style={cropStyle(photo.crop)} />;
+  const [failed, setFailed] = useState(false);
+  // A new src (e.g. the photo was just cached locally and the deck swapped
+  // to its blob: URL) deserves a fresh try.
+  const [lastSrc, setLastSrc] = useState(photo.src);
+  if (lastSrc !== photo.src) {
+    setLastSrc(photo.src);
+    setFailed(false);
   }
-  return <img src={photo.src} alt={alt} style={focusStyle(photo.focus)} />;
+  if (failed) {
+    return (
+      <div className="data-photo-missing" data-testid="photo-missing" role="img" aria-label={alt}>
+        Photo unavailable
+      </div>
+    );
+  }
+  const onError = () => setFailed(true);
+  if (photo.crop) {
+    return <img src={photo.src} alt={alt} style={cropStyle(photo.crop)} onError={onError} />;
+  }
+  return <img src={photo.src} alt={alt} style={focusStyle(photo.focus)} onError={onError} />;
 }
 
 /** Front: the photo grid. One photo = main only; two = main + first

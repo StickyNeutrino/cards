@@ -7,6 +7,9 @@ import {
   BOTH_MODE, MANAGE_DECKS_OPTION, type DeckId, type DeckMode,
 } from "~/utils/deckUtils";
 import { useUploadedDecks } from "~/utils/useUploadedDecks";
+import {
+  areLightPhotosCached, ensureLightPhotos, isLightDeck, lightPhotoUrls, lightPreloadKey,
+} from "~/utils/lightPhotos";
 import { DataCard, type DataCardModel } from "~/card/dataCard";
 
 export function meta({}: Route.MetaArgs) {
@@ -42,7 +45,9 @@ export function cardsForDef(def: DeckDef, mode: DeckMode): CardItem[] {
             commonName: card.commonName,
             layout: card.layout,
             photos: (card.photos ?? []).map((p) => ({
-              src: p.file,
+              // Light decks: photos not cached yet render from their remote
+              // url until the background cache fill swaps in a blob: URL.
+              src: p.file || p.url || '',
               role: p.role,
               alt: p.alt,
               credit: p.credit,
@@ -63,7 +68,7 @@ export function cardsForDeck(deck: DeckId, mode: DeckMode): CardItem[] {
 
 export default function CardLists() {
   const navigate = useNavigate();
-  const { decks: uploadedDecks } = useUploadedDecks();
+  const { decks: uploadedDecks, applyPhotos } = useUploadedDecks();
   const allDecks = useMemo(() => [...DECK_DEFS, ...uploadedDecks], [uploadedDecks]);
   const [deck, setDeck] = useState<DeckId>(() =>
     deckFromLocationOrStorage(typeof window !== "undefined" ? window.location.search : "", DECK_DEFS.map((d) => d.id)));
@@ -75,6 +80,35 @@ export default function CardLists() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedDecks]);
   const activeDef = allDecks.find((d) => d.id === deck) ?? DECK_DEFS[0];
+
+  // Browsing the full list is the one moment every photo of a light deck is
+  // wanted at once, so this page fetches the whole deck into the cache
+  // (thumbnails render from their remote URLs meanwhile and swap to the
+  // local blob: URLs as they land). Best-effort: failures stay silent, the
+  // images still showed, and the next visit fills any gaps. When everything
+  // is cached the deck is marked downloaded for offline use.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !activeDef || !isLightDeck(activeDef)) return;
+    let cancelled = false;
+    ensureLightPhotos(activeDef.id, lightPhotoUrls(activeDef))
+      .then(async ({ cached }) => {
+        if (cancelled || cached.size === 0) return;
+        // Checked before the patch below, which re-runs this effect and
+        // would cancel the answer.
+        const fullyCached = await areLightPhotosCached(activeDef.id, lightPhotoUrls(activeDef));
+        applyPhotos(activeDef.id, cached);
+        if (fullyCached) {
+          localStorage.setItem(lightPreloadKey(activeDef.id), 'true');
+        }
+      })
+      .catch(() => {
+        // Offline or no IndexedDB: the thumbnails already rendered.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeDef, applyPhotos]);
+
   const modes = modesForDeck(activeDef);
   const [filter, setFilter] = useState<DeckMode>(BOTH_MODE);
   // The dropdown can only offer modes this deck actually has; if the saved

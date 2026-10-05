@@ -26,19 +26,19 @@
  *
  * - Every photo must reference an absolute https URL; `file` references and
  *   animated media are rejected (a light deck has no local bytes to point at).
- * - The photo bytes are FETCHED during import and cached in this module's
- *   photo store under the photo's URL, so an imported light deck behaves
- *   exactly like a bundled one afterwards — it studies offline, shows its
- *   stored size, and deletes cleanly. Progress is reported through
- *   `onProgress` because a few-hundred-photo deck takes a while to fetch.
- * - The same "no broken cards" policy applies: if a photo cannot be fetched
- *   (after trying the smaller iNat size variants of the same image, and
- *   retrying transient failures), the whole import fails and names the URL.
- *   Fetching happens BEFORE the previous import is deleted, so a failed
- *   re-import never wipes the copy already in the browser.
+ * - Nothing is fetched during import: the manifest is stored as-is and the
+ *   deck is usable immediately. Its photos are fetched and cached on demand
+ *   by app/utils/lightPhotos.ts — a few cards ahead while studying, all of
+ *   them on the card lists page, or all of them up front via the explicit
+ *   "Download for Offline" action — under the photo's URL in the photo
+ *   store, so a fully cached light deck studies offline like a bundled one.
+ * - Because cached photos accumulate after import, light-deck records
+ *   intentionally carry no `bytes` measurement; the stored size is measured
+ *   on demand.
  */
 import { unzip, strFromU8 } from 'fflate';
 import { DECK_DEFS, type DeckDef } from '~/data/decks';
+import { DECK_STORE, PHOTO_STORE, requestAsPromise, storedPhotoKeys, withStore } from './deckStore';
 
 /** fflate's async unzip; wrapped because its types only expose the callback form. */
 function unzipAsync(data: Uint8Array): Promise<Record<string, Uint8Array>> {
@@ -76,63 +76,11 @@ export class DeckImportError extends Error {
   }
 }
 
-const DB_NAME = 'uploaded-decks';
-const DB_VERSION = 1;
-const DECK_STORE = 'decks';
-const PHOTO_STORE = 'photos';
-
 const MANIFEST_NAME = 'manifest.json';
 /** Manifest ids must be URL-safe slugs; they end up in ?deck= params. */
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const NATIVE_VALUES = ['native', 'non-native', 'unknown'] as const;
 const LICENSE_PATTERN = /^(cc0|cc-by(-sa|-nc(-sa|-nd)?|-nd)?|all-rights-reserved)$/;
-
-function openDb(): Promise<IDBDatabase> {
-  if (typeof indexedDB === 'undefined') {
-    // No IndexedDB (SSR, unit tests without fake-indexeddb, private mode):
-    // uploaded decks are simply unavailable.
-    return Promise.reject(new Error('IndexedDB is not available in this browser.'));
-  }
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(DECK_STORE)) db.createObjectStore(DECK_STORE, { keyPath: 'id' });
-      // Photos are stored under out-of-line keys `${deckId}/${declaredPath}`.
-      if (!db.objectStoreNames.contains(PHOTO_STORE)) db.createObjectStore(PHOTO_STORE);
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error('Could not open the deck database.'));
-  });
-}
-
-function requestAsPromise<T>(request: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error('IndexedDB request failed.'));
-  });
-}
-
-function transactionDone(tx: IDBTransaction): Promise<void> {
-  return new Promise((resolve, reject) => {
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error ?? new Error('IndexedDB transaction failed.'));
-    tx.onabort = () => reject(tx.error ?? new Error('IndexedDB transaction aborted.'));
-  });
-}
-
-/** Run an async callback against one store in its own transaction. */
-async function withStore<T>(storeName: string, mode: IDBTransactionMode, run: (store: IDBObjectStore) => Promise<T>): Promise<T> {
-  const db = await openDb();
-  try {
-    const tx = db.transaction(storeName, mode);
-    const result = await run(tx.objectStore(storeName));
-    await transactionDone(tx);
-    return result;
-  } finally {
-    db.close();
-  }
-}
 
 function isBuiltInDeckId(id: string): boolean {
   return DECK_DEFS.some((d) => d.id === id);
@@ -364,6 +312,9 @@ export function validateManifest(parsed: unknown): DeckDef {
     label,
     description: optionalString(raw.description, 'manifest description') ?? '',
     cardFormat: 'data',
+    // Keep the light marker so the app can offer the on-demand photo flows
+    // (look-ahead warming, Download for Offline) for this deck.
+    ...(lite ? { format: 'lite' as const } : {}),
     categories: categories as DeckDef['categories'],
   };
 }
@@ -409,144 +360,12 @@ function photoArchivePath(root: string, file: string, files: Record<string, Uint
 }
 
 // ---------------------------------------------------------------------------
-// Light-deck photo fetching
-// ---------------------------------------------------------------------------
-
-/**
- * iNat photo URLs differ only in the size segment
- * (`/photos/<id>/<size>.jpg`). A light deck references the original; if
- * those exact bytes can't be fetched (a photo was replaced or rotated away
- * since curation), the smaller variants of the SAME image are tried before
- * giving up — the same ladder the curator climbs when it downloads a pick.
- * The cached bytes are stored under the manifest's URL either way, so the
- * manifest never has to change. URLs that don't match the iNat shape are
- * fetched literally, with nothing to fall back to.
- */
-const SIZE_SEGMENT = /^(https:\/\/[^/]+\/photos\/\d+\/)(square|thumb|small|medium|large|original)(\.\w+)$/;
-const VARIANT_SIZES = ['original', 'large', 'medium'] as const;
-
-function photoVariantUrls(url: string): string[] {
-  const match = SIZE_SEGMENT.exec(url);
-  if (!match) return [url];
-  const [, base, , ext] = match;
-  return VARIANT_SIZES.map((size) => `${base}${size}${ext}`);
-}
-
-/** Fetches are capped so a few-hundred-photo import doesn't hammer the host
- *  from one browser tab; each URL gets a couple of tries on transient
- *  failures (network errors, 5xx, rate limiting) before the next variant. */
-const FETCH_CONCURRENCY = 5;
-const FETCH_ATTEMPTS = 2;
-/** Below this a "successful" response is an error page or empty body, not a
- *  photo. Deliberately tiny: legitimate small variants exist. */
-const MIN_IMAGE_BYTES = 100;
-
-async function fetchPhotoBlob(url: string, signal: AbortSignal): Promise<Blob> {
-  let lastError: unknown;
-  for (const candidate of photoVariantUrls(url)) {
-    for (let attempt = 0; attempt < FETCH_ATTEMPTS; attempt++) {
-      try {
-        const res = await fetch(candidate, { signal });
-        if (!res.ok) {
-          // 4xx: this variant doesn't exist — try the next size. 5xx and
-          // 429 are transient (or throttling): retry the same URL.
-          lastError = new Error(`HTTP ${res.status}`);
-          if (res.status >= 500 || res.status === 429) continue;
-          break;
-        }
-        const type = res.headers.get('content-type')?.split(';')[0]?.trim() || 'image/jpeg';
-        const buffer = await res.arrayBuffer();
-        if (!type.startsWith('image/') || buffer.byteLength < MIN_IMAGE_BYTES) {
-          // A non-image or truncated body won't render — the next size
-          // might, but this one never will.
-          lastError = new Error(`not an image (${type || 'unknown type'}, ${buffer.byteLength} bytes)`);
-          break;
-        }
-        return new Blob([buffer], { type });
-      } catch (err) {
-        if (signal.aborted) throw err;
-        lastError = err;
-      }
-    }
-  }
-  throw lastError instanceof Error ? lastError : new Error('fetch failed');
-}
-
-export interface FetchPhotosOptions {
-  /** Progress after each photo lands: (fetched, total unique URLs). */
-  onProgress?: (done: number, total: number) => void;
-}
-
-/**
- * Fetch every photo a light deck references, once per unique URL. The
- * returned map is keyed by the manifest's URL (the same string the photos
- * store is keyed by). On the first photo that can't be fetched anywhere the
- * remaining fetches are aborted and the error names the photo — the caller
- * turns it into a DeckImportError.
- */
-async function fetchPhotoBlobs(
-  entries: Array<{ url: string; describe: string }>,
-  opts: FetchPhotosOptions = {},
-): Promise<Map<string, Blob>> {
-  const total = entries.length;
-  const blobs = new Map<string, Blob>();
-  if (total === 0) return blobs;
-
-  const controller = new AbortController();
-  let next = 0;
-  let failure: Error | null = null;
-  const worker = async (): Promise<void> => {
-    while (next < total && !failure) {
-      const { url, describe } = entries[next++];
-      try {
-        blobs.set(url, await fetchPhotoBlob(url, controller.signal));
-        opts.onProgress?.(blobs.size, total);
-      } catch (err) {
-        if (!failure) {
-          const reason = err instanceof Error && err.message ? err.message : 'fetch failed';
-          failure = new Error(`Could not fetch ${describe} from ${url} (${reason}). Check your connection and try again.`);
-          controller.abort(); // Stop the sibling fetches — the import is over.
-        }
-      }
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(FETCH_CONCURRENCY, total) }, worker));
-  if (failure) throw failure;
-  return blobs;
-}
-
-/** The unique remote photos a light manifest references, in manifest order,
- *  each described for error messages ("the main photo of card "Dwarf
- *  Nettle""). Two cards may share one URL — it is fetched and cached once. */
-function lightPhotoEntries(manifest: DeckDef): Array<{ url: string; describe: string }> {
-  const entries = new Map<string, string>();
-  for (const category of manifest.categories) {
-    for (const card of category.cards) {
-      for (const photo of card.photos ?? []) {
-        // Validation guarantees every light photo carries an https url.
-        if (photo.url && !entries.has(photo.url)) {
-          entries.set(photo.url, `the ${photo.role} photo of card "${card.name}"`);
-        }
-      }
-    }
-  }
-  return [...entries].map(([url, describe]) => ({ url, describe }));
-}
-
-// ---------------------------------------------------------------------------
 // Import
 // ---------------------------------------------------------------------------
 
-/** Options for importDeckZip. */
-export interface DeckImportOptions {
-  /** Light-deck imports fetch every photo over the network first; progress
-   *  reports (fetched, total unique photos) as they land. Imports of decks
-   *  with bundled photos never call it — their bytes are already local. */
-  onProgress?: (done: number, total: number) => void;
-}
-
-/** Store a validated deck: wipe any previous import of the same id, write
- *  the photo blobs (keyed `id/<reference>`), then the deck record. */
+/** Store a validated deck with bundled photos: wipe any previous import of
+ *  the same id (record and photos), write the photo blobs (keyed
+ *  `id/<reference>`), then the deck record. */
 async function storeDeck(id: string, manifest: DeckDef, photos: Array<{ key: string; blob: Blob }>): Promise<void> {
   await deleteUploadedDeck(id).catch(() => {
     // A failed cleanup (e.g. first import, no prior record) must not block us.
@@ -570,11 +389,59 @@ async function storeDeck(id: string, manifest: DeckDef, photos: Array<{ key: str
   await withStore(DECK_STORE, 'readwrite', (store) => requestAsPromise(store.put(record)));
 }
 
+/**
+ * Store a light deck's manifest WITHOUT touching its cached photos: the
+ * bytes are fetched lazily (app/utils/lightPhotos.ts) under the same
+ * `${id}/${url}` keys, so re-importing keeps everything already downloaded
+ * and only prunes photos the new manifest no longer references. No `bytes`
+ * measurement is stored — the size grows as photos are cached and is
+ * measured on demand.
+ */
+async function storeLightDeckRecord(id: string, manifest: DeckDef): Promise<void> {
+  const previous = await getUploadedDeckRecord(id).catch(() => null);
+  const keep = new Set<string>();
+  for (const category of manifest.categories) {
+    for (const card of category.cards) {
+      for (const photo of card.photos ?? []) {
+        if (photo.url) keep.add(photo.url);
+      }
+    }
+  }
+  const stale: string[] = [];
+  if (previous) {
+    for (const category of previous.manifest.categories) {
+      for (const card of category.cards) {
+        for (const photo of card.photos ?? []) {
+          const reference = photo.file ?? photo.url;
+          if (reference && !keep.has(reference)) stale.push(reference);
+        }
+      }
+    }
+  }
+  if (stale.length > 0) {
+    await withStore(PHOTO_STORE, 'readwrite', async (store) => {
+      for (const reference of stale) {
+        await requestAsPromise(store.delete(`${id}/${reference}`) as IDBRequest<undefined>);
+      }
+    });
+  }
+  const record: UploadedDeckRecord = {
+    id,
+    label: manifest.label,
+    description: manifest.description ?? '',
+    cardFormat: 'data',
+    manifest,
+    importedAt: new Date().toISOString(),
+  };
+  await withStore(DECK_STORE, 'readwrite', (store) => requestAsPromise(store.put(record)));
+}
+
 /** Unzip `file`, validate its manifest, and store deck + photos in IndexedDB.
  *  Accepts every Deck Curator export: the project file (.zip) and deck file
  *  (.deck), which bundle their photos, and the light deck (.deck.lite),
- *  whose photos are fetched from their remote sources first. */
-export async function importDeckZip(file: File, options: DeckImportOptions = {}): Promise<{ id: string; label: string }> {
+ *  whose manifest is stored as-is — its photos are fetched on demand
+ *  afterwards (app/utils/lightPhotos.ts). */
+export async function importDeckZip(file: File): Promise<{ id: string; label: string }> {
   let files: Record<string, Uint8Array>;
   try {
     files = await unzipAsync(new Uint8Array(await file.arrayBuffer()));
@@ -591,21 +458,12 @@ export async function importDeckZip(file: File, options: DeckImportOptions = {})
   }
   const manifest = validateManifest(parsed);
 
-  // A light deck ships no photos: every referenced image is fetched from its
-  // remote source and cached locally before anything is stored.
+  // A light deck ships no photos: store the manifest only — the deck is
+  // usable immediately and its photos stream in on demand. Cached bytes
+  // from an earlier import of the same id survive the re-import.
   if ((parsed as RawRecord).format === 'lite') {
     const id = storedDeckIdFor(manifest.id);
-    let blobs: Map<string, Blob>;
-    try {
-      blobs = await fetchPhotoBlobs(lightPhotoEntries(manifest), { onProgress: options.onProgress });
-    } catch (err) {
-      throw new DeckImportError(err instanceof Error ? err.message : 'Could not fetch the deck\u2019s photos.');
-    }
-    await storeDeck(
-      id,
-      manifest,
-      [...blobs].map(([url, blob]) => ({ key: `${id}/${url}`, blob })),
-    );
+    await storeLightDeckRecord(id, manifest);
     return { id, label: manifest.label };
   }
 
@@ -649,8 +507,9 @@ export async function listUploadedDecks(): Promise<UploadedDeckSummary[]> {
 
 /**
  * Size of a stored deck in this browser (IndexedDB): the manifest record
- * plus its stored photo files. Decks imported by the current app version
- * had this measured at import time; older records are measured on demand
+ * plus its stored photo files. Bundled decks imported by the current app
+ * version had this measured at import time; light-deck imports (whose
+ * photos accumulate afterwards) and older records are measured on demand
  * by reading their photo Blob handles (sizes only — bytes are never copied
  * into memory). Returns null when the id has no stored record.
  */
@@ -695,21 +554,24 @@ export async function getUploadedDeckRecord(id: string): Promise<UploadedDeckRec
 }
 
 /**
- * Load a stored deck as a DeckDef, resolving every photo `file` into a
- * blob: object URL ready for <img src>. Object URLs live for the document's
- * lifetime (they are not revoked — decks are small and pages are short-lived).
- * Light decks store their photos under the photo's remote `url`; their
- * loaded photos resolve `file` to the cached bytes and keep `url` as
- * provenance.
+ * Load a stored deck as a DeckDef, resolving every cached photo `file` into
+ * a blob: object URL ready for <img src>. Object URLs live for the
+ * document's lifetime (they are not revoked — decks are small and pages are
+ * short-lived). Light decks store their photos under the photo's remote
+ * `url`; cached ones resolve `file` to the bytes and keep `url` as
+ * provenance, while photos not cached yet keep `file` empty so the UI can
+ * render the remote URL and fetch on demand (app/utils/lightPhotos.ts).
  */
 export async function loadUploadedDeck(id: string): Promise<DeckDef> {
   const record = await getUploadedDeckRecord(id);
   if (!record) throw new Error(`Uploaded deck "${id}" was not found.`);
   const urls = new Map<string, string>();
+  let light = record.manifest.format === 'lite';
   await withStore(PHOTO_STORE, 'readonly', async (store) => {
     for (const category of record.manifest.categories) {
       for (const card of category.cards) {
         for (const photo of card.photos ?? []) {
+          if (photo.url) light = true;
           const key = `${record.id}/${photo.file ?? photo.url}`;
           const blob = await requestAsPromise(store.get(key) as IDBRequest<Blob | undefined>);
           // One object URL per distinct stored photo — two cards may share
@@ -736,6 +598,7 @@ export async function loadUploadedDeck(id: string): Promise<DeckDef> {
     label: record.label,
     description: record.description,
     cardFormat: 'data',
+    ...(light ? { format: 'lite' as const } : {}),
     uploaded: true,
     categories,
   };
@@ -743,12 +606,11 @@ export async function loadUploadedDeck(id: string): Promise<DeckDef> {
 
 export async function deleteUploadedDeck(id: string): Promise<void> {
   await withStore(DECK_STORE, 'readwrite', (store) => requestAsPromise(store.delete(id) as IDBRequest<undefined>));
-  const keys = await withStore(PHOTO_STORE, 'readonly', (store) => requestAsPromise(store.getAllKeys()));
-  const own = keys.filter((key) => typeof key === 'string' && key.startsWith(`${id}/`));
-  if (own.length === 0) return;
+  const own = await storedPhotoKeys(id);
+  if (own.size === 0) return;
   await withStore(PHOTO_STORE, 'readwrite', async (store) => {
-    for (const key of own) {
-      await requestAsPromise(store.delete(key) as IDBRequest<undefined>);
+    for (const reference of own) {
+      await requestAsPromise(store.delete(`${id}/${reference}`) as IDBRequest<undefined>);
     }
   });
 }

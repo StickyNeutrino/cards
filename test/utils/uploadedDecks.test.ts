@@ -6,6 +6,7 @@ import {
   getUploadedDeckRecord, storedDeckIdFor, DeckImportError,
   uploadedDeckBytes, formatBytes,
 } from '../../app/utils/uploadedDecks';
+import { putStoredPhoto } from '../../app/utils/deckStore';
 
 // jsdom has no IndexedDB (fake-indexeddb/auto provides it) and no object URL
 // factory; stub the latter so loadUploadedDeck can hand out photo URLs.
@@ -195,21 +196,6 @@ function liteZipOf(manifestObject: unknown): File {
   });
 }
 
-/** Serve photo bytes from an in-memory map, with per-URL overrides for
- *  failure shapes: an HTTP status number, an Error (network failure), or
- *  { status, type, bytes } for odd responses. */
-function servePhotos(responses: Record<string, Uint8Array | number | Error | { status: number; type?: string; bytes?: Uint8Array }>) {
-  return vi.fn(async (input: RequestInfo | URL) => {
-    const url = String(input);
-    const value = responses[url];
-    if (value === undefined) return new Response('not found', { status: 404 });
-    if (typeof value === 'number') return new Response(null, { status: value });
-    if (value instanceof Error) throw value;
-    if (value instanceof Uint8Array) return new Response(value as unknown as BodyInit, { status: 200, headers: { 'content-type': 'image/jpeg' } });
-    return new Response((value.bytes ?? null) as unknown as BodyInit, { status: value.status, headers: { 'content-type': value.type ?? 'image/jpeg' } });
-  });
-}
-
 /** Unique manifest id per test so the shared fake database stays isolated. */
 let testCounter = 0;
 function uniqueId(): string {
@@ -240,6 +226,14 @@ function rawRequest<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
+  });
+}
+
+/** All photo-store keys, raw (`${deckId}/${reference}`). */
+async function rawPhotoKeys(): Promise<string[]> {
+  return withRawDb(async (db) => {
+    const keys = await rawRequest(db.transaction('photos').objectStore('photos').getAllKeys());
+    return keys.filter((key): key is string => typeof key === 'string');
   });
 }
 
@@ -535,136 +529,81 @@ describe('formatBytes', () => {
 });
 
 describe('light deck import', () => {
-  // Four unique URLs across five photo references (Chamise shares Dwarf
-  // Nettle's main photo) — each fetched exactly once.
-  const uniqueUrls = [URL_MAIN, URL_SEC_1, URL_SEC_2, URL_WRENTIT];
-
-  beforeEach(() => {
-    vi.stubGlobal('fetch', servePhotos(Object.fromEntries(uniqueUrls.map((url) => [url, BIG_JPEG]))));
-  });
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('fetches every referenced photo once, caches it, and loads the deck', async () => {
+  // Import no longer fetches anything: the manifest is stored as-is and the
+  // deck is usable immediately; photos are cached on demand by
+  // app/utils/lightPhotos.ts (covered in test/utils/lightPhotos.test.ts).
+  it('stores the manifest without fetching photos, and loads unresolved', async () => {
     const id = uniqueId();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
     const { id: storedId, label } = await importDeckZip(liteZipOf(liteManifest({ id })));
 
     expect(storedId).toBe(id);
     expect(label).toBe('🌿 Curated Test Deck');
-    const fetch = vi.mocked(globalThis.fetch);
-    expect(fetch).toHaveBeenCalledTimes(uniqueUrls.length);
-    for (const url of uniqueUrls) expect(fetch).toHaveBeenCalledWith(url, expect.objectContaining({ signal: expect.anything() }));
+    // The import made no network requests at all.
+    expect(fetchMock).not.toHaveBeenCalled();
 
-    // The stored manifest keeps the remote references (no files were shipped).
+    // The stored manifest keeps the remote references (no files were shipped)
+    // and carries the light marker; no size was measured at import time.
     const record = await getUploadedDeckRecord(id);
+    expect(record?.manifest.format).toBe('lite');
+    expect(record?.bytes).toBeUndefined();
     const storedPhotos = record?.manifest.categories[0].cards[0].photos ?? [];
     expect(storedPhotos.map((p) => p.url)).toEqual([URL_MAIN, URL_SEC_1, URL_SEC_2]);
     expect(storedPhotos[0]).not.toHaveProperty('file');
 
-    // Loading resolves the cached bytes to blob: URLs and keeps the source.
+    // Loading leaves photos that have no cached bytes unresolved: an empty
+    // `file` the UI replaces with the remote `url`.
     const def = await loadUploadedDeck(id);
-    expect(def).toMatchObject({ id, label, cardFormat: 'data', uploaded: true });
+    expect(def).toMatchObject({ id, label, cardFormat: 'data', uploaded: true, format: 'lite' });
     const photos = def.categories[0].cards[0].photos ?? [];
-    expect(photos.map((p) => p.file)).toEqual(['blob:mock-1', 'blob:mock-2', 'blob:mock-3']);
+    expect(photos.map((p) => p.file)).toEqual(['', '', '']);
     expect(photos.map((p) => p.url)).toEqual([URL_MAIN, URL_SEC_1, URL_SEC_2]);
     expect(photos[0].credit).toMatchObject({ observer: 'joodles', license: 'cc-by-nc' });
-    // The shared URL resolves for Chamise too.
-    expect(def.categories[0].cards[1].photos?.[0].file).toBe('blob:mock-1');
+    vi.unstubAllGlobals();
   });
 
-  it('measures the stored size as the manifest plus the fetched photos', async () => {
+  it('measures the stored size on demand (manifest only until photos are cached)', async () => {
     const id = uniqueId();
     await importDeckZip(liteZipOf(liteManifest({ id })));
     const manifest = (await getUploadedDeckRecord(id))!.manifest;
     const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest)).length;
-    // Four unique photos fetched (the shared URL is stored once).
-    expect(await uploadedDeckBytes(id)).toBe(manifestBytes + 4 * BIG_JPEG.length);
+    expect(await uploadedDeckBytes(id)).toBe(manifestBytes);
   });
 
-  it('reports fetch progress as (fetched, total unique photos)', async () => {
+  it('keeps cached photos across a re-import and prunes ones the new manifest dropped', async () => {
     const id = uniqueId();
-    const onProgress = vi.fn();
-    await importDeckZip(liteZipOf(liteManifest({ id })), { onProgress });
-
-    expect(onProgress).toHaveBeenCalledTimes(uniqueUrls.length);
-    const calls = onProgress.mock.calls as Array<[number, number]>;
-    expect(calls[calls.length - 1]).toEqual([uniqueUrls.length, uniqueUrls.length]);
-    for (const [done, total] of calls) {
-      expect(total).toBe(uniqueUrls.length);
-      expect(done).toBeGreaterThan(0);
-      expect(done).toBeLessThanOrEqual(total);
-    }
-  });
-
-  it('falls back to smaller size variants when the referenced size is gone', async () => {
-    const id = uniqueId();
-    const largeUrl = URL_SEC_1.replace('/original.', '/large.');
-    vi.stubGlobal('fetch', servePhotos({
-      [URL_SEC_1]: 404, // the referenced original no longer exists…
-      [largeUrl]: BIG_JPEG, // …but the same photo's large variant does.
-      [URL_MAIN]: BIG_JPEG,
-      [URL_SEC_2]: BIG_JPEG,
-      [URL_WRENTIT]: BIG_JPEG,
-    }));
     await importDeckZip(liteZipOf(liteManifest({ id })));
+    // Cache one photo directly (as the on-demand fetch would).
+    await putStoredPhoto(id, URL_MAIN, new Blob([BIG_JPEG], { type: 'image/jpeg' }));
+    // Re-import a manifest that swaps Dwarf Nettle's first secondary photo
+    // for a different URL.
+    const updated = liteManifest({ id });
+    (updated.categories[0].cards[0].photos as Array<Record<string, unknown>>)[1] = {
+      url: photoUrl(999), role: 'secondary', credit,
+    };
+    await importDeckZip(liteZipOf(updated));
 
-    // The variant was fetched, and its bytes are cached under the manifest's
-    // original URL — the deck loads normally.
-    expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledWith(largeUrl, expect.anything());
-    const def = await loadUploadedDeck(id);
-    expect(def.categories[0].cards[0].photos?.[1].file).toBe('blob:mock-2');
-  });
-
-  it('retries a photo when the first attempt fails transiently', async () => {
-    const id = uniqueId();
-    // Wrap the stubbed fetch: the first attempt at this photo's URL fails
-    // with a network error, the retry succeeds.
-    const fetchMock = vi.mocked(globalThis.fetch);
-    const realImpl = fetchMock.getMockImplementation()!;
-    let sec1Attempts = 0;
-    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-      if (String(input) === URL_SEC_1 && sec1Attempts++ === 0) throw new Error('network down');
-      return realImpl(input);
-    });
-    await importDeckZip(liteZipOf(liteManifest({ id })));
-
-    expect(fetchMock).toHaveBeenCalledWith(URL_SEC_1, expect.anything());
-    expect(fetchMock.mock.calls.filter(([u]) => String(u) === URL_SEC_1)).toHaveLength(2);
-    expect((await listUploadedDecks()).find((s) => s.id === id)).toBeDefined();
-  });
-
-  it('fails the import naming the photo when nothing can be fetched', async () => {
-    const id = uniqueId();
-    // Every size variant of this photo is gone (404), the rest fetch fine.
-    vi.stubGlobal('fetch', servePhotos({
-      [URL_MAIN]: BIG_JPEG,
-      [URL_SEC_1]: BIG_JPEG,
-      [URL_WRENTIT]: BIG_JPEG,
-    }));
-    await expect(importDeckZip(liteZipOf(liteManifest({ id })))).rejects.toThrow(
-      /Could not fetch the secondary photo of card "Dwarf Nettle" from https:\/\/inaturalist-open-data\.s3\.amazonaws\.com\/photos\/103\/original\.jpg/,
-    );
-    // Nothing was stored for the failed import.
-    expect((await listUploadedDecks()).find((s) => s.id === id)).toBeUndefined();
-  });
-
-  it('leaves the previous import untouched when a re-import fails to fetch', async () => {
-    const id = uniqueId();
-    await importDeckZip(zipOf(manifestWithId(id))); // a bundled copy exists…
-    expect((await listUploadedDecks()).find((s) => s.id === id)).toBeDefined();
-
-    // …and the failed light re-import must not wipe it.
-    vi.stubGlobal('fetch', servePhotos({
-      [URL_MAIN]: BIG_JPEG,
-      [URL_SEC_1]: BIG_JPEG,
-      [URL_SEC_2]: BIG_JPEG,
-      // Wrentit's photo can't be fetched in any size variant.
-    }));
-    await expect(importDeckZip(liteZipOf(liteManifest({ id })))).rejects.toThrow(DeckImportError);
+    const keys = (await rawPhotoKeys()).filter((key) => key.startsWith(`${id}/`));
+    // Exactly the cached photo survives: the dropped URL is pruned, and
+    // nothing else was ever cached.
+    expect(keys).toEqual([`${id}/${URL_MAIN}`]);
+    // The stored manifest is the new one.
     const record = await getUploadedDeckRecord(id);
-    expect(record).not.toBeNull();
-    expect(record?.manifest.categories[0].cards[0].photos?.[0].file).toBe('photos/dwarf-nettle-main.jpg');
+    expect(record?.manifest.categories[0].cards[0].photos?.[1].url).toBe(photoUrl(999));
+  });
+
+  it('drops cached photos of a previous bundled import when a light manifest takes over', async () => {
+    const id = uniqueId();
+    await importDeckZip(zipOf(manifestWithId(id))); // bundled copy with file-keyed photos
+    expect((await rawPhotoKeys()).some((key) => key.startsWith(`${id}/photos/`))).toBe(true);
+
+    await importDeckZip(liteZipOf(liteManifest({ id })));
+    // The bundled photos are gone; the light deck references only URLs.
+    const keys = await rawPhotoKeys();
+    expect(keys.some((key) => key.startsWith(`${id}/photos/`))).toBe(false);
+    const record = await getUploadedDeckRecord(id);
+    expect(record?.manifest.format).toBe('lite');
   });
 });
 

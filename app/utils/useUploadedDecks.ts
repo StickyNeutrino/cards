@@ -1,15 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { listUploadedDecks, loadUploadedDeck } from './uploadedDecks';
+import { withCachedPhotos } from './lightPhotos';
 import type { DeckDef } from '~/data/decks';
 
 /**
  * Upload decks live in IndexedDB, so they can only be listed after mount.
  * Returns the (initially empty) list of uploaded decks as ready-to-render
  * DeckDefs with blob: photo URLs, plus a manual reload for after
- * import/delete. Failures (no IndexedDB, private mode) degrade to an empty
- * list — the built-in decks keep working.
+ * import/delete and an applyPhotos patcher for when a light deck's remote
+ * photos land in the cache (the affected cards swap to their local blob:
+ * URLs without reloading the decks). Failures (no IndexedDB, private mode)
+ * degrade to an empty list — the built-in decks keep working.
  */
-export function useUploadedDecks(): { decks: DeckDef[]; reload: () => void } {
+export function useUploadedDecks(): {
+  decks: DeckDef[];
+  reload: () => void;
+  /** Swap freshly cached photos (remote url -> blob: URL) into one deck. */
+  applyPhotos: (id: string, photos: Map<string, string>) => void;
+} {
   const [decks, setDecks] = useState<DeckDef[]>([]);
   const [reloadTick, setReloadTick] = useState(0);
 
@@ -29,5 +37,9 @@ export function useUploadedDecks(): { decks: DeckDef[]; reload: () => void } {
     };
   }, [reloadTick]);
 
-  return { decks, reload: () => setReloadTick((tick) => tick + 1) };
+  const applyPhotos = useCallback((id: string, photos: Map<string, string>) => {
+    setDecks((prev) => prev.map((def) => (def.id === id ? withCachedPhotos(def, photos) : def)));
+  }, []);
+
+  return { decks, reload: () => setReloadTick((tick) => tick + 1), applyPhotos };
 }

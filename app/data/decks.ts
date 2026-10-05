@@ -35,8 +35,8 @@ export interface DeckCardPhoto {
   /** Archive-relative path for imported decks; resolved to a blob: URL by loadUploadedDeck.
    *  For moving media this is the still frame the curator picked. Light decks
    *  (format "lite") have no bundled files — they carry `url` instead, and
-   *  the app fetches those bytes once at import and caches them under the
-   *  same key space. */
+   *  the app fetches those bytes on demand and caches them under the
+   *  same key space; photos not yet cached keep `file` empty. */
   file: string;
   /** Remote source of the photo (light decks only). Present in the imported
    *  manifest; loadUploadedDeck resolves the cached bytes into `file`. */
@@ -103,6 +103,10 @@ export interface DeckDef {
   /** "data" decks are rendered as HTML (see DECK_FORMAT.md); image decks
    *  (absent cardFormat) use pre-rendered front/back JPGs. */
   cardFormat?: "data";
+  /** "lite" marks a light deck: a manifest-only deck whose photos are
+   *  referenced by remote `url` and fetched on demand (see
+   *  app/utils/lightPhotos.ts). Absent for bundled decks. */
+  format?: "lite";
   /** True for decks loaded from IndexedDB. Never present in manifests — the
    *  app sets it so the UI can show the "uploaded" marker and delete affordance. */
   uploaded?: boolean;

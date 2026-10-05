@@ -8,6 +8,9 @@ import {
   deckFromLocationOrStorage, make_deck, modesForDeck, defaultCategoryFor, BOTH_MODE, type DeckId, type DeckMode,
 } from "~/utils/deckUtils";
 import { listUploadedDecks, loadUploadedDeck } from "~/utils/uploadedDecks";
+import {
+  areLightPhotosCached, ensureLightPhotos, isLightDeck, lightPhotoUrls, lightPreloadKey, withCachedPhotos,
+} from "~/utils/lightPhotos";
 import { ALL_CATEGORY_IDS, DECK_DEFS, type DeckCard, type DeckDef } from "~/data/decks";
 import { Settings } from "~/components/Settings";
 import { PreloadProgress } from "~/components/PreloadProgress";
@@ -51,7 +54,10 @@ function refsFromDef(def: DeckDef): DeckRefs {
             commonName: c.commonName,
             layout: c.layout,
             photos: (c.photos ?? []).map((p) => ({
-              src: p.file,
+              // Light decks fetch photos on demand: a photo that isn't
+              // cached yet has no local bytes (empty file) and renders from
+              // its remote URL until the cache fill swaps in a blob: URL.
+              src: p.file || p.url || '',
               role: p.role,
               alt: p.alt,
               credit: p.credit,
@@ -75,6 +81,21 @@ function refsFromDef(def: DeckDef): DeckRefs {
 }
 
 let max_index = 0;
+
+/** How many cards ahead of the current one to keep cached. Light decks
+ *  stream their photos from the network; the upcoming ones are fetched in
+ *  the background so advancing never waits on it. */
+const PHOTO_LOOKAHEAD = 4;
+
+/** Card names the given mode covers, in manifest order — the membership the
+ *  study cycle is built from. */
+function modeCardNames(def: DeckDef | undefined, mode: DeckMode): string[] {
+  const categories = def?.categories ?? [];
+  const cards = mode === BOTH_MODE
+    ? categories.flatMap((c) => c.cards)
+    : (categories.find((c) => c.id === mode)?.cards ?? []);
+  return cards.map((c) => c.name);
+}
 
 export default function Home() {
   const navigate = useNavigate();
@@ -162,17 +183,12 @@ export default function Home() {
   }, [allDefs]);
   const activeDeck = cardRefs.get(deck) ?? cardRefs.get(DECK_DEFS[0]?.id ?? '')!;
 
-  const makeDeck = useCallback((d: DeckId, m: DeckMode) => {
-    return make_deck(defFor(d)?.categories ?? [], m);
-  }, [defFor]);
-
-  const [deckNames, setDeckNames] = useState<string[]>(() => makeDeck(deck, mode));
+  const [deckNames, setDeckNames] = useState<string[]>(() => make_deck(defFor(deck)?.categories ?? [], mode));
   const [preloadProgress, setPreloadProgress] = useState<{ current: number; total: number; isVisible: boolean }>({
     current: 0,
     total: 0,
     isVisible: false
   });
-  const preloadKey = deck === 'healthy-canyons' ? 'pwa-cards-preloaded-healthy' : 'pwa-cards-preloaded';
   const [isPreloaded, setIsPreloaded] = useState(() => {
     if (typeof window !== 'undefined') {
         return localStorage.getItem(preloadKeyFor(deck)) === 'true';
@@ -186,6 +202,7 @@ export default function Home() {
     }
   }, [deck]);
   const [isPreloading, setIsPreloading] = useState(false);
+  const [preloadError, setPreloadError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
   const hamburgerRef = useRef<HTMLDivElement>(null);
@@ -235,12 +252,96 @@ export default function Home() {
   const currentCard = currentCardName ? activeDeck.byName.get(currentCardName) : undefined;
   const nextCard = nextCardName ? activeDeck.byName.get(nextCardName) : undefined;
 
-  const makeDeckCallback = useCallback(() => {
-    setDeckNames(makeDeck(deck, mode));
-    max_index = 0;
-  }, [deck, mode, makeDeck]);
+  // The study order is rebuilt (and reshuffled) only when the deck or its
+  // card membership changes. Photo bytes streaming into a light deck's cache
+  // swap photo URLs on the loaded deck without ever changing card names —
+  // the membership key below is identical across those patches, so the order
+  // stays put while photos load in (previously every patch reshuffled the
+  // deck, visibly changing the card under the user).
+  const modeCardKey = useMemo(
+    () => modeCardNames(defFor(deck), mode).join('\n'),
+    [defFor, deck, mode],
+  );
 
-  useEffect(makeDeckCallback, [makeDeckCallback]);
+  useEffect(() => {
+    setDeckNames(make_deck(defFor(deck)?.categories ?? [], mode));
+    max_index = 0;
+    // defFor is deliberately omitted: it changes identity on every photo
+    // patch, but the membership key above captures every change that should
+    // rebuild the order.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deck, mode, modeCardKey]);
+
+  // Light-deck photos that failed to cache this session: skipped by later
+  // look-ahead runs so a dead photo can't be re-fetched on every flip (the
+  // card still renders it from its remote URL when online). Cleared when
+  // the deck changes.
+  const failedLightUrlsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    failedLightUrlsRef.current = new Set();
+  }, [deck]);
+
+  // Light decks load like the bundled ones but fetch their photos on
+  // demand: warm the cache for the next few cards while studying, and swap
+  // the freshly cached bytes into the loaded deck as they land (the cards
+  // then render from local blob: URLs). Best-effort — failures are silent
+  // because the card shows the remote image regardless.
+  useEffect(() => {
+    const def = defFor(deck);
+    if (typeof window === 'undefined' || !def || !isLightDeck(def) || deckNames.length === 0) return;
+    const skipped = failedLightUrlsRef.current;
+    const urls = new Set<string>();
+    for (let i = 0; i <= PHOTO_LOOKAHEAD; i++) {
+      const name = deckNames[(cardIndex + i) % deckNames.length];
+      for (const category of def.categories) {
+        const card = category.cards.find((c) => c.name === name);
+        if (!card) continue;
+        // Uncached light photo: no local bytes yet (file is empty).
+        for (const photo of card.photos ?? []) {
+          if (photo.url && !photo.file && !skipped.has(photo.url)) urls.add(photo.url);
+        }
+        break;
+      }
+    }
+    if (urls.size === 0) return;
+    let cancelled = false;
+    ensureLightPhotos(deck, [...urls])
+      .then(async ({ cached, failed }) => {
+        for (const url of failed) skipped.add(url);
+        if (cancelled || cached.size === 0) return;
+        // Did that complete the deck's cache? Then it studies offline —
+        // remember it so the settings affordance shows it without offering
+        // a redundant download. (Checked before the patch below, which
+        // re-runs this effect and would cancel the answer.)
+        const allUrls = lightPhotoUrls(def);
+        const fullyCached = await areLightPhotosCached(deck, allUrls);
+        setUploadedDecks((prev) => {
+          let changed = false;
+          const next = prev.map((d) => {
+            if (d.id !== deck) return d;
+            const patched = withCachedPhotos(d, cached);
+            if (patched !== d) changed = true;
+            return patched;
+          });
+          // Nothing actually swapped in (raced with another patch): keep
+          // the old state rather than churning every deck's identity.
+          return changed ? next : prev;
+        });
+        if (fullyCached) {
+          localStorage.setItem(lightPreloadKey(deck), 'true');
+          setIsPreloaded(true);
+        }
+      })
+      .catch(() => {
+        // Offline or no IndexedDB: the cards still render from their URLs.
+        // Mark the batch skipped so the look-ahead doesn't retry it on
+        // every flip.
+        for (const url of urls) skipped.add(url);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [cardIndex, deckNames, deck, defFor]);
 
   // If the saved mode does not exist in this deck, fall back to its first category.
   useEffect(() => {
@@ -417,6 +518,7 @@ export default function Home() {
     setSelectedCard(null);
     setFlipped(false);
     setIndex(0);
+    setPreloadError(null);
   };
 
   const changeModeClicked = (e: React.MouseEvent) => {
@@ -439,14 +541,56 @@ export default function Home() {
   }
 
   const isDataDeck = defFor(deck)?.cardFormat === 'data';
+  const preloadDef = defFor(deck);
+  const activeIsLight = preloadDef ? isLightDeck(preloadDef) : false;
+  // Light decks offer the offline download too; other data decks keep their
+  // photos in IndexedDB — nothing to download.
+  const canPreload = !isDataDeck || activeIsLight;
 
   const handlePreloadCards = () => {
-    // Data decks keep their photos in IndexedDB — nothing to download.
-    if (isDataDeck || isPreloaded || isPreloading) return;
+    if (isPreloaded || isPreloading) return;
+
+    if (activeIsLight) {
+      // Fetch every photo of the light deck into the IndexedDB cache up
+      // front, with the same progress affordance as the image decks' preload.
+      const urls = lightPhotoUrls(preloadDef!);
+      setIsPreloading(true);
+      setPreloadError(null);
+      setPreloadProgress({ current: 0, total: urls.length, isVisible: true });
+      ensureLightPhotos(deck, urls, {
+        onProgress: (current, total) => setPreloadProgress({ current, total, isVisible: true }),
+      })
+        .then(({ failed }) => {
+          if (failed.length > 0) {
+            // Some photos never arrived in any size variant: report it and
+            // leave the button enabled for a retry.
+            setPreloadError(
+              `Could not fetch ${failed.length} photo${failed.length === 1 ? '' : 's'} — check your connection and try again.`,
+            );
+            return;
+          }
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(preloadKeyFor(deck), 'true');
+          }
+          setIsPreloaded(true);
+        })
+        .catch(() => {
+          setPreloadError('Could not download the deck\u2019s photos — check your connection and try again.');
+        })
+        .finally(() => {
+          setIsPreloading(false);
+          setTimeout(() => {
+            setPreloadProgress(prev => ({ ...prev, isVisible: false }));
+          }, 2000);
+        });
+      return;
+    }
+
+    if (isDataDeck) return;
 
     setIsPreloading(true);
     if (typeof window !== 'undefined') {
-      localStorage.setItem(preloadKey, 'true');
+      localStorage.setItem(preloadKeyFor(deck), 'true');
     }
 
     const imageUrls: string[] = [];
@@ -468,7 +612,7 @@ export default function Home() {
         setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
         if (loadedCount === imageUrls.length) {
           if (typeof window !== 'undefined') {
-            localStorage.setItem(preloadKey, 'true');
+            localStorage.setItem(preloadKeyFor(deck), 'true');
             localStorage.setItem('pwa-cards-version', '3');
           }
           setIsPreloaded(true);
@@ -483,7 +627,7 @@ export default function Home() {
         setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
         if (loadedCount === imageUrls.length) {
           if (typeof window !== 'undefined') {
-            localStorage.setItem(preloadKey, 'true');
+            localStorage.setItem(preloadKeyFor(deck), 'true');
             localStorage.setItem('pwa-cards-version', '3');
           }
           setIsPreloaded(true);
@@ -518,8 +662,9 @@ export default function Home() {
       setFlipSpeed={setFlipSpeed}
       isPreloaded={isPreloaded}
       isPreloading={isPreloading}
+      preloadError={preloadError}
       handlePreloadCards={handlePreloadCards}
-      canPreload={!isDataDeck}
+      canPreload={canPreload}
     />
 
     <PreloadProgress
@@ -560,5 +705,8 @@ export default function Home() {
 }
 
 function preloadKeyFor(deck: DeckId): string {
-  return deck === 'healthy-canyons' ? 'pwa-cards-preloaded-healthy' : 'pwa-cards-preloaded';
+  // Legacy keys for the built-in decks; every other deck gets its own.
+  if (deck === 'canyonlands') return 'pwa-cards-preloaded';
+  if (deck === 'healthy-canyons') return 'pwa-cards-preloaded-healthy';
+  return lightPreloadKey(deck);
 }

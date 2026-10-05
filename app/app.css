@@ -595,6 +595,21 @@ main {
   display: block;
   border-radius: 1.8667cqw; /* 14px on the 750px design canvas */
 }
+/* Placeholder for a photo whose bytes couldn't load (a light deck's photo
+   not cached while offline, or a dead remote URL). */
+.data-photo-missing {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1em;
+  background: #d8d6d0;
+  color: #6b6b66;
+  font-size: 1.2em;
+  border-radius: 1.8667cqw; /* 14px on the 750px design canvas */
+}
 .data-credit {
   position: absolute;
   top: calc(100% + 0.75em);
