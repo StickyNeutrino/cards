@@ -92,6 +92,44 @@ function main() {
     }
     for (const [src, dest] of trees) totalCopied += copyTree(src, dest);
 
+    // Every file a card references must exist in the deck repo, so the served
+    // URLs point at real images. A manifest that drifted from the deck's files
+    // (e.g. the legacy render stage overwriting the curated manifest, or bare
+    // filenames without their cards/ prefix) would otherwise ship a deck of
+    // broken images — fail the build loudly instead.
+    const deckBroken: string[] = [];
+    const requireDeckFile = (declared: unknown, what: string): void => {
+      if (typeof declared !== "string" || declared === "") {
+        deckBroken.push(`${what}: expected a deck-root-relative file path, got ${JSON.stringify(declared ?? null)}`);
+        return;
+      }
+      const onDisk = path.join(publicDecksRoot, id, ...declared.split("/"));
+      if (!fs.existsSync(onDisk)) {
+        deckBroken.push(`${what}: "${declared}" — no such file (expected ${onDisk})`);
+      }
+    };
+    for (const cat of manifest.categories ?? []) {
+      for (const c of cat.cards ?? []) {
+        if (isData) {
+          (c.photos ?? []).forEach((p: any, i: number) => {
+            if (typeof p.file === "string") requireDeckFile(p.file, `${c.name} photo ${i + 1}`);
+            else if (!p.url) deckBroken.push(`${c.name} photo ${i + 1}: neither a file path nor a remote url`);
+            if (typeof p.animation?.file === "string") requireDeckFile(p.animation.file, `${c.name} animation`);
+          });
+        } else {
+          requireDeckFile(c.front, `${c.name} front`);
+          requireDeckFile(c.back, `${c.name} back`);
+        }
+      }
+    }
+    if (deckBroken.length) {
+      const shown = deckBroken.slice(0, 10);
+      console.error(`Deck "${id}" has ${deckBroken.length} unresolvable card file(s):`);
+      console.error(shown.map((line) => `  - ${line}`).join("\n"));
+      if (deckBroken.length > shown.length) console.error(`  … and ${deckBroken.length - shown.length} more`);
+      process.exit(1);
+    }
+
     const resolveUrl = (file: string) =>
       `/decks/${id}/${file.split("/").map(encodeURIComponent).join("/")}`;
     const deckOut = {
