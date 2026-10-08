@@ -55,7 +55,7 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
           step="0.1"
           value={flipSpeed}
           onInput={(e) => setFlipSpeed(parseFloat((e.target as HTMLInputElement).value).toFixed(1))}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          className="flip-speed-slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
         />
       </div>
 
@@ -104,6 +104,7 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
           <input
             id="analytics-checkbox"
             type="checkbox"
+            className="checkbox-input"
             checked={analyticsConsent}
             onChange={(e) => {
               const checked = e.target.checked;
@@ -119,6 +120,7 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
           <input
             id="crash-checkbox"
             type="checkbox"
+            className="checkbox-input"
             checked={crashReportingConsent}
             onChange={(e) => {
               const checked = e.target.checked;

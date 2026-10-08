@@ -104,4 +104,81 @@ describe('app.css', () => {
     expect(buttonGap).toBeGreaterThan(0);
     expect(marginTop).toBeGreaterThanOrEqual(buttonGap / 2);
   });
+
+  it('pins a light color scheme so native widgets match the light palette in every browser', () => {
+    // The palette is fixed light, so a dark color-scheme has nothing to
+    // coordinate with — it only makes Chromium paint native widgets dark:
+    // the deck dropdown's option list went dark with the control's dark ink
+    // on it, unreadable in Chrome while Firefox looked fine.
+    const htmlRule = rules.find((r) => r.selector === 'html');
+    expect(htmlRule).toBeDefined();
+    expect(htmlRule!.declarations).toContain('color-scheme: light');
+    // A @media-wrapped declaration would be invisible to this parser's
+    // declarations string (the original bug's shape), so the rule must sit
+    // at the top level carrying the declaration directly.
+    expect(htmlRule!.mediaConditions).toHaveLength(0);
+    expect(css).not.toContain('color-scheme: dark');
+    // Single accent source for checkboxes/radios (was each engine's own
+    // native blue).
+    expect(htmlRule!.declarations).toContain('accent-color: #1b5e20');
+  });
+
+  it('paints the deck dropdown option list white with the control ink in every browser', () => {
+    // Firefox fills the opened option rows with the select's green while
+    // Chromium themes them off the used color-scheme; the explicit rows keep
+    // both engines (and webkit) showing white with the same dark text.
+    const optionRule = rules.find((r) => r.selector === '.deck-select option');
+    expect(optionRule).toBeDefined();
+    expect(optionRule!.declarations).toContain('background-color: #fff');
+    expect(optionRule!.declarations).toContain('color: #333');
+  });
+
+  it('gives the search input an explicit focus ring instead of each engine outline:auto rendering', () => {
+    const rule = rules.find((r) => r.selector === '.search-input:focus');
+    expect(rule).toBeDefined();
+    expect(rule!.declarations).toContain('outline: 2px solid black');
+    // outline:auto renders 1px near-black in Chrome, 3px gray in Firefox and
+    // 5px blue in WebKit — no engine-default keyword allowed.
+    expect(rule!.declarations).not.toContain('auto');
+  });
+
+  it('gives the menu buttons and deck dropdowns the same explicit focus ring', () => {
+    const rule = rules.find((r) => r.selector === '.menu-button:focus');
+    expect(rule).toBeDefined();
+    expect(rule!.declarations).toContain('outline: 2px solid black');
+    expect(rule!.declarations).not.toContain('auto');
+  });
+
+  it('hides the Chromium/WebKit native search clear button (absent in Firefox)', () => {
+    const rule = rules.find(
+      (r) => r.selector === '.search-input::-webkit-search-cancel-button'
+    );
+    expect(rule).toBeDefined();
+    expect(rule!.declarations).toContain('appearance: none');
+    expect(rule!.declarations).toContain('display: none');
+  });
+
+  it('styles the flip-speed slider thumb identically for both engines pseudo-elements', () => {
+    for (const selector of [
+      '.flip-speed-slider::-webkit-slider-thumb',
+      '.flip-speed-slider::-moz-range-thumb',
+    ]) {
+      const rule = rules.find((r) => r.selector === selector);
+      expect(rule, selector).toBeDefined();
+      expect(rule!.declarations).toContain('width: 16px');
+      expect(rule!.declarations).toContain('height: 16px');
+      // The sage of the menu buttons, not any engine's default (blue dot in
+      // Chrome, hollow gray ring in Firefox, white dot in WebKit).
+      expect(rule!.declarations).toContain('background: #a1b69a');
+    }
+  });
+
+  it('pins the settings checkbox size (native sizes differ per engine)', () => {
+    // Color comes from the html-level accent-color, tested above; this pins
+    // the 12px(WebKit)/13px(Chrome)/14px(Firefox) size divergence to 1em.
+    const rule = rules.find((r) => r.selector === '.checkbox-input');
+    expect(rule).toBeDefined();
+    expect(rule!.declarations).toContain('width: 1em');
+    expect(rule!.declarations).toContain('height: 1em');
+  });
 });

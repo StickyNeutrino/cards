@@ -21,10 +21,16 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
-html{
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+/* The palette is fixed light (rust body, sage controls, dark ink) — there is
+   no dark theme to coordinate with. Pin color-scheme to light so the native
+   widgets (select popups, checkboxes, inputs, autofill) render the same in
+   every browser: under a dark color-scheme Chromium draws the deck dropdown's
+   option list dark while the option text stays the control's dark ink, which
+   made the deck names unreadable in Chrome but never in Firefox. */
+html {
+  color-scheme: light;
+  /* Brand accent for checkboxes/radios instead of each engine's default blue. */
+  accent-color: #1b5e20;
 }
 
 body {
@@ -154,6 +160,15 @@ main {
   background-color: #8fa88a;
 }
 
+/* Same reasoning as .search-input:focus below: pin one focus ring for the
+   menu buttons and the deck/category dropdowns instead of each engine's
+   own outline:auto rendering (thin near-black in Chrome, 3px gray in
+   Firefox, 5px blue in WebKit). */
+.menu-button:focus {
+  outline: 2px solid black;
+  outline-offset: 0;
+}
+
 /* Deck dropdown (hamburger menu + card lists page): keep the menu-button
    look but normalize the native select widget across platforms. */
 .deck-select {
@@ -167,6 +182,20 @@ main {
   background-repeat: no-repeat;
   background-position: right 0.7em center;
   background-size: 0.75em;
+  /* Desktop engines give the native select an intrinsic ~2px frame that
+     Android Chrome does not, so on phones the dropdown came out 2px shorter
+     than the search input next to it. A transparent border pins the height
+     to padding + line-height + 2px on every engine (invisible against the
+     sage fill). */
+  border: 1px solid transparent;
+}
+
+/* The opened option list: paint white rows with the same dark ink in every
+   browser. Firefox otherwise fills the rows with the control's green while
+   Chromium themes them off the used color-scheme. */
+.deck-select option {
+  background-color: #fff;
+  color: #333;
 }
 
 /* Phones and small screens: shrink the menu buttons so the top row stays
@@ -216,15 +245,31 @@ main {
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 8px;
-  /* Explicit text color: dark-mode color-scheme makes unstyled input text
-     white, which vanished against this light background. Matches the
-     menu-button text. */
+  /* Explicit text color so the input uses the menu-button ink in every
+     browser instead of the UA's color-scheme-dependent default. */
   color: #333;
 }
 
 .search-input::placeholder {
   color: #666;
   opacity: 1; /* keep the hint readable instead of the browser's faded gray */
+}
+
+/* Every engine paints the outline:auto focus ring differently (thin
+   near-black in Chrome, 3px gray in Firefox, 5px blue in WebKit), so pin
+   the ring to the same explicit style the card-list items use. */
+.search-input:focus {
+  outline: 2px solid black;
+  outline-offset: 0;
+}
+
+/* Chromium and WebKit render a native clear button inside search fields
+   (blue in Chrome, gray in WebKit, absent in Firefox). Hide it so the
+   field looks the same everywhere; select-all + backspace clears instead. */
+.search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
 }
 
 .card-area {
@@ -715,6 +760,41 @@ main {
 }
 .menu-button.danger:hover {
   background-color: #b04733;
+}
+
+/* ---- Settings panel: slider + checkboxes ---- */
+/* The flip-speed slider paints its track on the element itself (h-2 gray
+   rounded utility classes). The thumbs, though, come from each engine's
+   defaults — a blue dot in Chrome, a hollow gray ring in Firefox, a plain
+   white dot in WebKit — so style both thumb pseudos identically in the app
+   palette (sage, like the menu buttons). */
+.flip-speed-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #a1b69a;
+  border: none;
+}
+.flip-speed-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #a1b69a;
+  border: none;
+}
+/* Gecko keeps drawing a thin native track inside the element otherwise. */
+.flip-speed-slider::-moz-range-track {
+  background: transparent;
+  border: none;
+}
+
+/* Native checkboxes come out 12px in WebKit, 13px in Chrome, 14px in
+   Firefox. Pin one size; the color comes from the html-level accent-color. */
+.checkbox-input {
+  width: 1em;
+  height: 1em;
 }
 
 /* ---- Manage decks page ---- */
