@@ -386,6 +386,11 @@ main {
   align-items: center;
   gap: 0.4rem;
   overflow: hidden;
+  /* A deck list can be 1,000+ items; skip laying out and painting the ones
+     offscreen (each runs container-query sizing on its DataCard thumbnail).
+     The fixed height keeps the scroll size stable while skipped. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 280px;
 }
 
 .card-list-item.invasive {

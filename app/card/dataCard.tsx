@@ -146,10 +146,15 @@ function Photo({ photo, alt }: { photo: DataCardPhoto; alt: string }) {
     );
   }
   const onError = () => setFailed(true);
+  // loading="lazy" keeps a page that renders many card fronts (the card
+  // lists page renders every card of a deck) from requesting and decoding
+  // thousands of full-resolution photos at once — enough to exhaust the
+  // renderer and crash the tab. Offscreen photos load when scrolled near;
+  // on the study page the card is visible, so this changes nothing there.
   if (photo.crop) {
-    return <img src={photo.src} alt={alt} style={cropStyle(photo.crop)} onError={onError} />;
+    return <img src={photo.src} alt={alt} loading="lazy" decoding="async" style={cropStyle(photo.crop)} onError={onError} />;
   }
-  return <img src={photo.src} alt={alt} style={focusStyle(photo.focus)} onError={onError} />;
+  return <img src={photo.src} alt={alt} loading="lazy" decoding="async" style={focusStyle(photo.focus)} onError={onError} />;
 }
 
 /** Front: the photo grid. One photo = main only; two = main + first

@@ -242,10 +242,14 @@ export default function CardLists() {
                 <DataCard model={card.dataModel} face="front" />
               </span>
             ) : (
+              /* Lazy: a deck can be thousands of full-resolution photos;
+                 eager loading crashes the renderer (see DataCard's Photo). */
               <img
                 src={card.front}
                 alt={`${card.name} front`}
                 className="card-thumbnail"
+                loading="lazy"
+                decoding="async"
               />
             )}
             <span className="card-name">{card.name}</span>
