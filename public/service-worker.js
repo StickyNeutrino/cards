@@ -47,7 +47,7 @@ self.addEventListener('fetch', event => {
                 console.log('Network failed, checking cache again:', event.request.url);
                 // Network failed, try cache again (might have been added by another request)
                 const old_cache = await caches.open(OLD_CACHE_NAME)
-                response = old_cache.match(normalizedRequest)
+                response = await old_cache.match(normalizedRequest)
                 if (response) {
                     console.log('Serving JPEG from old cache:', event.request.url);
                     return response;
@@ -58,7 +58,7 @@ self.addEventListener('fetch', event => {
 
             if (!network_response.ok) {
                 const old_cache = await caches.open(OLD_CACHE_NAME)
-                response = old_cache.match(normalizedRequest)
+                response = await old_cache.match(normalizedRequest)
                 if (response) {
                     console.log('Serving JPEG from old cache:', event.request.url);
                     return response;
@@ -103,9 +103,11 @@ self.addEventListener('activate', event => {
                 console.log('Available caches:', cacheNames);
                 return Promise.all(
                     cacheNames.map(cacheName => {
-                        // Only delete caches that are clearly old versions (different version numbers)
+                        // Only delete caches that are clearly old versions (different version numbers).
+                        // The previous generation (OLD_CACHE_NAME) is kept as the network-failure
+                        // fallback; every generation before that is dead weight and gets reclaimed.
                         if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE_NAME &&
-                            cacheName.startsWith('card-cache-v') && cacheName !== 'card-cache-v2') {
+                            cacheName.startsWith('card-cache-v') && cacheName !== OLD_CACHE_NAME) {
                             return caches.delete(cacheName);
                         }
                         if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE_NAME &&

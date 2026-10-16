@@ -1536,7 +1536,7 @@ describe('Home', () => {
       expect(localStorage.setItem).toHaveBeenCalledWith('pwa-cards-preloaded', 'true');
     });
 
-    it('should handle network failures gracefully', async () => {
+    it('should not mark the deck preloaded when every image fails', async () => {
       render(<RouterProvider router={router} />);
 
       // Open settings
@@ -1552,9 +1552,12 @@ describe('Home', () => {
         act(() => (global.Image as any).instances[idx].onerror?.())
       }
 
-      expect(localStorage.setItem).toHaveBeenCalledWith('pwa-cards-preloaded', 'true');
+      // A failed download must not be recorded as success: the flag stays
+      // unset so the button offers a retry, and the error is shown.
+      expect(localStorage.setItem).not.toHaveBeenCalledWith('pwa-cards-preloaded', 'true');
+      expect(screen.getByTestId('preload-error')).toBeTruthy();
 
-      // Should still complete even with failures
+      // The download attempted every image
       expect((global.Image as any).instances.length).toBe(20);
     });
 
@@ -1578,10 +1581,15 @@ describe('Home', () => {
         }
       }
 
-      expect(localStorage.setItem).toHaveBeenCalledWith('pwa-cards-preloaded', 'true');
+      // Half the card faces never arrived: the deck must not be marked as
+      // downloaded (it would break offline with no way to retry). The error
+      // names the count so the retry is an informed decision.
+      expect(localStorage.setItem).not.toHaveBeenCalledWith('pwa-cards-preloaded', 'true');
+      expect(screen.getByTestId('preload-error').textContent).toContain('10 card images');
 
-      // Should attempt all images
-      expect((global.Image as any).instances.length).toBe(20);
+      // The button is enabled again: a retry starts a fresh download.
+      await userEvent.click(preloadButton);
+      expect((global.Image as any).instances.length).toBe(40);
     });
 
     it('should attempt to preload all images', async () => {

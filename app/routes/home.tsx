@@ -7,6 +7,7 @@ import { trackCardView } from "~/viewtrack";
 import {
   deckFromLocationOrStorage, make_deck, modesForDeck, defaultCategoryFor, BOTH_MODE, type DeckId, type DeckMode,
 } from "~/utils/deckUtils";
+import { storedItem, storeItem } from "~/utils/safeStorage";
 import { listUploadedDecks, loadUploadedDeck } from "~/utils/uploadedDecks";
 import {
   areLightPhotosCached, ensureLightPhotos, isLightDeck, lightPhotoUrls, lightPreloadKey, withCachedPhotos,
@@ -111,6 +112,11 @@ export default function Home() {
 
   // Uploaded decks live in IndexedDB, so they are only known after mount.
   const [uploadedDecks, setUploadedDecks] = useState<DeckDef[]>([]);
+  // Blob: object URLs backing the loaded decks (from loadUploadedDeck and
+  // the light-deck photo cache). They are revoked when the page unmounts —
+  // by then the DOM that could reference them is gone. The page loads its
+  // decks once per mount, so this stays a bounded, page-sized set.
+  const uploadedObjectUrlsRef = useRef<string[]>([]);
   const deckRef = useRef(deck);
   useEffect(() => {
     deckRef.current = deck;
@@ -127,9 +133,16 @@ export default function Home() {
     let cancelled = false;
     listUploadedDecks()
       .then(async (summaries) => {
-        const defs = (await Promise.all(summaries.map((s) => loadUploadedDeck(s.id).catch(() => null))))
+        const urls: string[] = [];
+        const defs = (await Promise.all(summaries.map((s) => loadUploadedDeck(s.id, (url) => urls.push(url)).catch(() => null))))
           .filter((d): d is DeckDef => d !== null);
-        if (cancelled || defs.length === 0) return;
+        if (cancelled) {
+          // Nothing ever rendered these; reclaim them right away.
+          for (const url of urls) URL.revokeObjectURL(url);
+          return;
+        }
+        uploadedObjectUrlsRef.current.push(...urls);
+        if (defs.length === 0) return;
         // Only update state when decks actually loaded: replacing an empty
         // list with another empty list would still rebuild (and reshuffle)
         // the active deck for no reason.
@@ -155,6 +168,9 @@ export default function Home() {
       });
     return () => {
       cancelled = true;
+      // The decks are gone from the DOM by the time passive cleanups run,
+      // so their blob: URLs can go with them.
+      for (const url of uploadedObjectUrlsRef.current) URL.revokeObjectURL(url);
     };
   }, []);
 
@@ -169,7 +185,7 @@ export default function Home() {
         if (params.has(m)) return m;
       }
       if (params.has(BOTH_MODE)) return BOTH_MODE;
-      const saved = localStorage.getItem('mode');
+      const saved = storedItem('mode');
       if (saved) return saved;
       return defaultMode;
     }
@@ -189,17 +205,10 @@ export default function Home() {
     total: 0,
     isVisible: false
   });
-  const [isPreloaded, setIsPreloaded] = useState(() => {
-    if (typeof window !== 'undefined') {
-        return localStorage.getItem(preloadKeyFor(deck)) === 'true';
-    }
-    return false;
-  });
+  const [isPreloaded, setIsPreloaded] = useState(() => storedItem(preloadKeyFor(deck)) === 'true');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsPreloaded(localStorage.getItem(preloadKeyFor(deck)) === 'true');
-    }
+    setIsPreloaded(storedItem(preloadKeyFor(deck)) === 'true');
   }, [deck]);
   const [isPreloading, setIsPreloading] = useState(false);
   const [preloadError, setPreloadError] = useState<string | null>(null);
@@ -216,34 +225,40 @@ export default function Home() {
   });
 
   const [flipSpeed, setFlipSpeed] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('flipSpeed');
-      if (saved !== null) {
-        const num = parseFloat(saved);
-        if (!isNaN(num) && num >= 0 && num <= 2.0) {
-          return saved;
-        }
+    const saved = storedItem('flipSpeed');
+    if (saved !== null) {
+      const num = parseFloat(saved);
+      if (!isNaN(num) && num >= 0 && num <= 2.0) {
+        return saved;
       }
     }
     return '0.8';
   });
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('flipSpeed', flipSpeed);
-    }
+    storeItem('flipSpeed', flipSpeed);
   }, [flipSpeed]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('mode', mode);
-    }
+    storeItem('mode', mode);
   }, [mode]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('deck', deck);
-    }
+    storeItem('deck', deck);
+  }, [deck]);
+
+  // Follow deck switches made in another tab. Without this, a tab still
+  // holding a deck that another tab deleted would re-write the dead id the
+  // next time its own deck state changed (Manage Decks resets the key when
+  // a deck is deleted).
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'deck' && event.newValue && event.newValue !== deck) {
+        setDeck(event.newValue as DeckId);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, [deck]);
 
   const deckIsEmpty = deckNames.length === 0;
@@ -307,6 +322,10 @@ export default function Home() {
     let cancelled = false;
     ensureLightPhotos(deck, [...urls])
       .then(async ({ cached, failed }) => {
+        // Track every blob: URL this run created so the unmount cleanup can
+        // reclaim them (the cache fills while studying, so they accumulate
+        // beyond the initial deck load).
+        for (const objectUrl of cached.values()) uploadedObjectUrlsRef.current.push(objectUrl);
         for (const url of failed) skipped.add(url);
         if (cancelled || cached.size === 0) return;
         // Did that complete the deck's cache? Then it studies offline —
@@ -328,7 +347,7 @@ export default function Home() {
           return changed ? next : prev;
         });
         if (fullyCached) {
-          localStorage.setItem(lightPreloadKey(deck), 'true');
+          storeItem(lightPreloadKey(deck), 'true');
           setIsPreloaded(true);
         }
       })
@@ -560,7 +579,8 @@ export default function Home() {
       ensureLightPhotos(deck, urls, {
         onProgress: (current, total) => setPreloadProgress({ current, total, isVisible: true }),
       })
-        .then(({ failed }) => {
+        .then(({ cached, failed }) => {
+          for (const objectUrl of cached.values()) uploadedObjectUrlsRef.current.push(objectUrl);
           if (failed.length > 0) {
             // Some photos never arrived in any size variant: report it and
             // leave the button enabled for a retry.
@@ -569,9 +589,7 @@ export default function Home() {
             );
             return;
           }
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(preloadKeyFor(deck), 'true');
-          }
+          storeItem(preloadKeyFor(deck), 'true');
           setIsPreloaded(true);
         })
         .catch(() => {
@@ -589,9 +607,7 @@ export default function Home() {
     if (isDataDeck) return;
 
     setIsPreloading(true);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(preloadKeyFor(deck), 'true');
-    }
+    setPreloadError(null);
 
     const imageUrls: string[] = [];
 
@@ -601,41 +617,46 @@ export default function Home() {
       imageUrls.push(card.back);
     });
 
+    if (imageUrls.length === 0) {
+      // Nothing to download: the deck is trivially "preloaded".
+      storeItem(preloadKeyFor(deck), 'true');
+      setIsPreloaded(true);
+      return;
+    }
+
     let loadedCount = 0;
+    let failedCount = 0;
 
     setPreloadProgress({ current: 0, total: imageUrls.length, isVisible: true });
 
+    const settle = () => {
+      loadedCount++;
+      setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
+      if (loadedCount < imageUrls.length) return;
+      setIsPreloading(false);
+      setTimeout(() => {
+        setPreloadProgress(prev => ({ ...prev, isVisible: false }));
+      }, 2000);
+      if (failedCount > 0) {
+        // Failed card faces are not in the service-worker cache: recording
+        // success would leave a deck that breaks offline with no way to
+        // retry (the flag gates the button). Report and offer a retry,
+        // like the light-deck flow does.
+        setPreloadError(
+          `Could not load ${failedCount} card image${failedCount === 1 ? '' : 's'} — check your connection and try again.`,
+        );
+        return;
+      }
+      storeItem(preloadKeyFor(deck), 'true');
+      setIsPreloaded(true);
+    };
+
     for (let i = 0; i < imageUrls.length; i++) {
       const img = new Image();
-      img.onload = () => {
-        loadedCount++;
-        setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
-        if (loadedCount === imageUrls.length) {
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(preloadKeyFor(deck), 'true');
-            localStorage.setItem('pwa-cards-version', '3');
-          }
-          setIsPreloaded(true);
-          setIsPreloading(false);
-          setTimeout(() => {
-            setPreloadProgress(prev => ({ ...prev, isVisible: false }));
-          }, 2000);
-        }
-      };
+      img.onload = settle;
       img.onerror = () => {
-        loadedCount++;
-        setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
-        if (loadedCount === imageUrls.length) {
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(preloadKeyFor(deck), 'true');
-            localStorage.setItem('pwa-cards-version', '3');
-          }
-          setIsPreloaded(true);
-          setIsPreloading(false);
-          setTimeout(() => {
-            setPreloadProgress(prev => ({ ...prev, isVisible: false }));
-          }, 2000);
-        }
+        failedCount++;
+        settle();
       };
       img.src = imageUrls[i];
     }
