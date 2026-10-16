@@ -1,4 +1,5 @@
 import { forwardRef, useState, useEffect } from "react";
+import { storedItem, storeItem } from "~/utils/safeStorage";
 
 interface SettingsProps {
    showSettings: boolean;
@@ -24,13 +25,13 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
   handlePreloadCards,
   canPreload = true,
 }, ref) => {
-  const [analyticsConsent, setAnalyticsConsent] = useState(localStorage.getItem('analyticsConsent') !== 'false');
-  const [crashReportingConsent, setCrashReportingConsent] = useState(localStorage.getItem('crashReportingConsent') !== 'false');
+  const [analyticsConsent, setAnalyticsConsent] = useState(storedItem('analyticsConsent') !== 'false');
+  const [crashReportingConsent, setCrashReportingConsent] = useState(storedItem('crashReportingConsent') !== 'false');
 
   useEffect(() => {
     const handleConsentChange = () => {
-      setAnalyticsConsent(localStorage.getItem('analyticsConsent') !== 'false');
-      setCrashReportingConsent(localStorage.getItem('crashReportingConsent') !== 'false');
+      setAnalyticsConsent(storedItem('analyticsConsent') !== 'false');
+      setCrashReportingConsent(storedItem('crashReportingConsent') !== 'false');
     };
 
     window.addEventListener('consentChanged', handleConsentChange);
@@ -109,7 +110,7 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
             onChange={(e) => {
               const checked = e.target.checked;
               setAnalyticsConsent(checked);
-              localStorage.setItem('analyticsConsent', checked.toString());
+              storeItem('analyticsConsent', checked.toString());
             }}
           />
           <label htmlFor="analytics-checkbox" className="text-sm font-medium text-gray-700">
@@ -125,7 +126,7 @@ export const Settings = forwardRef<HTMLDivElement, SettingsProps>(({
             onChange={(e) => {
               const checked = e.target.checked;
               setCrashReportingConsent(checked);
-              localStorage.setItem('crashReportingConsent', checked.toString());
+              storeItem('crashReportingConsent', checked.toString());
             }}
           />
           <label htmlFor="crash-checkbox" className="text-sm font-medium text-gray-700">

@@ -1,3 +1,5 @@
+import { storedItem } from './safeStorage';
+
 const ERROR_REPORT_URL = 'https://errors.cards.unimpossy.com/report';
 
 export interface ErrorReport {
@@ -10,7 +12,7 @@ export interface ErrorReport {
 }
 
 export async function reportError(error: ErrorReport): Promise<void> {
-  if (localStorage.getItem('crashReportingConsent') === 'false') return;
+  if (storedItem('crashReportingConsent') === 'false') return;
   try {
     await fetch(ERROR_REPORT_URL, {
       method: 'POST',

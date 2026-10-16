@@ -1,3 +1,5 @@
+import { storedItem } from './utils/safeStorage';
+
 declare global {
   interface Window {
     umami: {
@@ -17,11 +19,15 @@ function currentDeckPayload() {
   return {type: birds_enabled ? "birds" : "plants"}
 }
 
+function analyticsOptedOut(): boolean {
+  return storedItem('analyticsConsent') === 'false';
+}
+
 export default function trackView() {
-  if (localStorage.getItem('analyticsConsent') === 'false') return;
+  if (analyticsOptedOut()) return;
   const payload = currentDeckPayload();
 
-  if (localStorage.getItem('analyticsConsent') !== 'false') {
+  if (!analyticsOptedOut()) {
     possible_offline_track((props: any) => ({ ...props, data: payload }));
   }
 
@@ -38,7 +44,7 @@ export default function trackView() {
 
         if ((hidden_ms / (1000 * 60)) > 20 ) {
           // It has been long enough to count as a new page visit
-          if (localStorage.getItem('analyticsConsent') !== 'false') {
+          if (!analyticsOptedOut()) {
             possible_offline_track((props: any) => ({ ...props, data: payload }));
           }
         }
@@ -54,7 +60,7 @@ export default function trackView() {
 }
 
 export function trackCardView() {
-  if (localStorage.getItem('analyticsConsent') === 'false') return;
+  if (analyticsOptedOut()) return;
   const payload = currentDeckPayload();
 
   possible_offline_track((props: any) => ({...props, name:"viewed card", data: payload}));

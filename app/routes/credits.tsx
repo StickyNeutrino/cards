@@ -7,6 +7,7 @@ import {
   deckFromLocationOrStorage, modesForDeck, modeLabelFor, allLabelFor,
   BOTH_MODE, type DeckId, type DeckMode,
 } from "~/utils/deckUtils";
+import { storeItem } from "~/utils/safeStorage";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -55,7 +56,7 @@ export default function Credits() {
   const changeDeck = (next: DeckId) => {
     setDeck(next);
     setCategory(BOTH_MODE);
-    if (typeof window !== "undefined") localStorage.setItem("deck", next);
+    if (typeof window !== "undefined") storeItem("deck", next);
   };
 
   if (!activeDef) return null;

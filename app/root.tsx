@@ -13,6 +13,7 @@ import "./app.css";
 import React, { useEffect, useState } from "react";
 import trackView from "./viewtrack";
 import { setupGlobalErrorHandlers, reportError } from "./utils/errorReporting";
+import { storedItem, storeItem } from "./utils/safeStorage";
 import ConsentBanner from "./components/ConsentBanner";
 
 export const links: Route.LinksFunction = () => [
@@ -62,11 +63,11 @@ export default function App() {
   const [showConsentBanner, setShowConsentBanner] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem('analyticsConsent') === null) {
-      localStorage.setItem('analyticsConsent', 'true');
+    if (storedItem('analyticsConsent') === null) {
+      storeItem('analyticsConsent', 'true');
     }
-    if (localStorage.getItem('crashReportingConsent') === null) {
-      localStorage.setItem('crashReportingConsent', 'true');
+    if (storedItem('crashReportingConsent') === null) {
+      storeItem('crashReportingConsent', 'true');
     }
   }, []);
 
@@ -85,19 +86,19 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (localStorage.getItem('consentNoticeDismissed') !== 'true') {
+    if (storedItem('consentNoticeDismissed') !== 'true') {
       setShowConsentBanner(true);
     }
   }, []);
 
   const dismissConsentBanner = () => {
-    localStorage.setItem('consentNoticeDismissed', 'true');
+    storeItem('consentNoticeDismissed', 'true');
     setShowConsentBanner(false);
   };
 
   const handleOptOut = () => {
-    localStorage.setItem('analyticsConsent', 'false');
-    localStorage.setItem('crashReportingConsent', 'false');
+    storeItem('analyticsConsent', 'false');
+    storeItem('crashReportingConsent', 'false');
     window.dispatchEvent(new CustomEvent('consentChanged'));
     dismissConsentBanner();
   };

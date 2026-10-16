@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import { DECK_DEFS, DEFAULT_DECK_ID, type DeckDef } from "~/data/decks";
 import { importDeckZip, deleteUploadedDeck, uploadedDeckBytes, formatBytes } from "~/utils/uploadedDecks";
 import { useUploadedDecks } from "~/utils/useUploadedDecks";
+import { storedItem, storeItem } from "~/utils/safeStorage";
 import type { DeckId } from "~/utils/deckUtils";
 
 export function meta({}: Route.MetaArgs) {
@@ -84,8 +85,8 @@ export default function ManageDecks() {
     }
     setConfirmingDelete(null);
     // Don't leave a deleted deck saved as the active one.
-    if (typeof window !== 'undefined' && localStorage.getItem('deck') === id) {
-      localStorage.setItem('deck', DEFAULT_DECK_ID);
+    if (storedItem('deck') === id) {
+      storeItem('deck', DEFAULT_DECK_ID);
     }
     reload();
   };

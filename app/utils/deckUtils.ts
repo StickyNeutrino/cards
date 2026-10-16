@@ -1,4 +1,6 @@
 // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+import { storedItem } from './safeStorage';
+
 export function shuffle(array: any[]) {
   let currentIndex = array.length;
 
@@ -106,9 +108,7 @@ export function deckFromLocationOrStorage(search: string, knownDeckIds: string[]
   const params = new URLSearchParams(search);
   const fromUrl = params.get('deck');
   if (fromUrl && knownDeckIds.includes(fromUrl)) return fromUrl;
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('deck');
-    if (saved && knownDeckIds.includes(saved)) return saved;
-  }
+  const saved = storedItem('deck');
+  if (saved && knownDeckIds.includes(saved)) return saved;
   return knownDeckIds[0];
 }

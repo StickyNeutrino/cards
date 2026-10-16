@@ -7,6 +7,7 @@ import {
   BOTH_MODE, MANAGE_DECKS_OPTION, type DeckId, type DeckMode,
 } from "~/utils/deckUtils";
 import { useUploadedDecks } from "~/utils/useUploadedDecks";
+import { storeItem } from "~/utils/safeStorage";
 import {
   areLightPhotosCached, ensureLightPhotos, isLightDeck, lightPhotoUrls, lightPreloadKey,
 } from "~/utils/lightPhotos";
@@ -98,7 +99,7 @@ export default function CardLists() {
         const fullyCached = await areLightPhotosCached(activeDef.id, lightPhotoUrls(activeDef));
         applyPhotos(activeDef.id, cached);
         if (fullyCached) {
-          localStorage.setItem(lightPreloadKey(activeDef.id), 'true');
+          storeItem(lightPreloadKey(activeDef.id), 'true');
         }
       })
       .catch(() => {
@@ -149,7 +150,7 @@ export default function CardLists() {
 
   const changeDeck = (next: DeckId) => {
     setDeck(next);
-    if (typeof window !== "undefined") localStorage.setItem("deck", next);
+    storeItem("deck", next);
     setFilter(BOTH_MODE);
   };
 
