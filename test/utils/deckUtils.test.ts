@@ -7,7 +7,6 @@ import {
 import { DECK_DEFS } from '../../app/data/decks';
 
 const canyonlands = DECK_DEFS.find((d) => d.id === 'canyonlands')!;
-const healthy = DECK_DEFS.find((d) => d.id === 'healthy-canyons')!;
 
 const plants: DeckCategoryLike = { id: 'plants', label: '🌿 Plants', cards: [{ name: 'P1' }, { name: 'P2' }] };
 const birds: DeckCategoryLike = { id: 'birds', label: '🐦 Birds', cards: [{ name: 'B1' }] };
@@ -18,14 +17,9 @@ describe('deck modes (data-driven categories)', () => {
     expect(modesForDeck(canyonlands)).toEqual(['plants', 'birds', 'both']);
   });
 
-  it('healthy-canyons offers plants, animals, both', () => {
-    expect(modesForDeck(healthy)).toEqual(['plants', 'animals', 'both']);
-  });
-
   it('mode labels derive from category labels', () => {
     expect(modeLabelFor(canyonlands, 'plants')).toBe('🌿 Plants');
     expect(modeLabelFor(canyonlands, BOTH_MODE)).toBe('🌿🐦 Both');
-    expect(modeLabelFor(healthy, BOTH_MODE)).toBe('🌿🦎 Both');
   });
 
   it('allLabelFor keeps "Both" for two categories and uses "All" otherwise', () => {
@@ -42,8 +36,8 @@ describe('deck modes (data-driven categories)', () => {
     expect(allLabelFor({ id: 'd', label: 'D', categories: [{ id: 'a', label: 'Rocks', cards: [] }] })).toBe('All');
   });
 
-  it('the registry contains both decks with canyonlands first (the default)', () => {
-    expect(DECK_DEFS.map((d) => d.id)).toEqual(['canyonlands', 'healthy-canyons']);
+  it('the registry contains canyonlands (the only bundled deck, and the default)', () => {
+    expect(DECK_DEFS.map((d) => d.id)).toEqual(['canyonlands']);
   });
 });
 
@@ -65,7 +59,7 @@ describe('make_deck (category-driven)', () => {
     expect(deck.length).toBe((plants.cards.length + birds.cards.length + animals.cards.length) * 10);
   });
 
-  it('"both" for the healthy deck shape is plants + animals only', () => {
+  it('"both" for a two-category deck is plants + animals only', () => {
     const deck = make_deck([plants, animals], BOTH_MODE);
     expect(deck.length).toBe((plants.cards.length + animals.cards.length) * 10);
     expect(deck.every(card => [...plants.cards, ...animals.cards].some(c => c.name === card))).toBe(true);
@@ -97,7 +91,9 @@ describe('make_deck (category-driven)', () => {
 });
 
 describe('deckFromLocationOrStorage', () => {
-  const ids = DECK_DEFS.map((d) => d.id);
+  // The real registry plus a synthetic second id: the function only checks
+  // membership, and healthy-canyons is no longer bundled.
+  const ids = [...DECK_DEFS.map((d) => d.id), 'test-deck'];
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -109,14 +105,14 @@ describe('deckFromLocationOrStorage', () => {
   });
 
   it('prefers the URL param', () => {
-    expect(deckFromLocationOrStorage('?deck=healthy-canyons&card=Foo', ids)).toBe('healthy-canyons');
+    expect(deckFromLocationOrStorage('?deck=test-deck&card=Foo', ids)).toBe('test-deck');
     expect(deckFromLocationOrStorage('?deck=canyonlands', ids)).toBe('canyonlands');
   });
 
   it('falls back to the saved deck', () => {
     (localStorage.getItem as any).mockImplementation((key: string) =>
-      key === 'deck' ? 'healthy-canyons' : null);
-    expect(deckFromLocationOrStorage('', ids)).toBe('healthy-canyons');
+      key === 'deck' ? 'test-deck' : null);
+    expect(deckFromLocationOrStorage('', ids)).toBe('test-deck');
   });
 
   it('ignores unknown saved values', () => {

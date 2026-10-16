@@ -22,6 +22,12 @@ const decksRoot = path.join(appRoot, "decks");
 const publicDecksRoot = path.join(appRoot, "public", "decks");
 const outDir = path.join(appRoot, "app", "data", "decks");
 
+// The deck ids the app bundles: app/data/decks.ts imports exactly these
+// synced manifests. Other repositories under decks/ (e.g. healthy-canyons)
+// stay checked out for curation but are not copied into the app build and
+// get no synced manifest.
+const BUNDLED_DECK_IDS = ["canyonlands"];
+
 function copyTree(srcDir: string, destDir: string): number {
   let copied = 0;
   fs.mkdirSync(destDir, { recursive: true });
@@ -66,14 +72,33 @@ function main() {
   const written = new Set();
   let totalCopied = 0;
 
+  // A bundled deck with no repository is a broken build in the making (its
+  // manifest would go stale or missing), so fail loudly instead of skipping.
+  for (const id of BUNDLED_DECK_IDS) {
+    if (!fs.existsSync(path.join(decksRoot, id))) {
+      console.error(`Bundled deck "${id}" has no repository under ${decksRoot}. Clone it there first.`);
+      process.exit(1);
+    }
+  }
+
   for (const id of deckIds) {
+    if (!BUNDLED_DECK_IDS.includes(id)) {
+      console.log(`  ${id}: not bundled, skipped`);
+      continue;
+    }
     const deckDir = path.join(decksRoot, id);
     const manifestPath = path.join(deckDir, "manifest.json");
     if (!fs.existsSync(manifestPath)) {
-      console.error(`Deck "${id}" has no manifest.json — skipping. (${manifestPath})`);
-      continue;
+      console.error(`Bundled deck "${id}" has no manifest.json. (${manifestPath})`);
+      process.exit(1);
     }
-    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    let manifest: any;
+    try {
+      manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    } catch (error) {
+      console.error(`Deck "${id}": manifest.json is not valid JSON — ${(error as Error).message}`);
+      process.exit(1);
+    }
     const isData = manifest.cardFormat === "data";
     // Image decks ship pre-rendered card faces in cards/; data decks (Deck
     // Curator format) ship their referenced photos in photos/.
@@ -138,6 +163,10 @@ function main() {
       description: manifest.description ?? "",
       ...(manifest.location ? { location: manifest.location } : {}),
       ...(isData ? { cardFormat: "data" as const } : {}),
+      // "lite" marks a manifest-only deck whose photos are referenced by
+      // remote url (DECK_FORMAT.md "Light decks") — carry it through so the
+      // app offers the on-demand photo flows for such a built-in deck.
+      ...(manifest.format ? { format: manifest.format } : {}),
       categories: (manifest.categories ?? []).map((cat: any) => ({
         id: cat.id,
         label: cat.label,
@@ -146,7 +175,9 @@ function main() {
           if (isData) {
             return {
               ...card,
-              photos: (c.photos ?? []).map((p: any) => ({ ...p, file: resolveUrl(p.file) })),
+              // Light-deck photos carry a remote url and no file — pass them
+              // through untouched instead of crashing on resolveUrl(undefined).
+              photos: (c.photos ?? []).map((p: any) => (p.file ? { ...p, file: resolveUrl(p.file) } : p)),
             };
           }
           return {

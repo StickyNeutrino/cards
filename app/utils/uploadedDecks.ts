@@ -10,7 +10,7 @@
  *   stored uploaded deck REPLACES it (its photos are wiped and rewritten), so
  *   a re-exported curation updates in place instead of piling up copies.
  * - Built-in id collisions: a manifest id equal to a built-in deck id
- *   ("canyonlands", "healthy-canyons") must not shadow the built-in, so it is
+ *   ("canyonlands") must not shadow the built-in, so it is
  *   stored under the deterministic suffix "-uploaded" ("canyonlands-uploaded").
  *   The suffix is a pure function of the manifest id, so re-importing the same
  *   zip still replaces the earlier copy.

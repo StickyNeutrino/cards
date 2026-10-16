@@ -1,5 +1,4 @@
 import canyonlands from "./decks/canyonlands.json" with { type: "json" };
-import healthyCanyons from "./decks/healthy-canyons.json" with { type: "json" };
 
 /**
  * Each deck is a standalone repository under decks/<id>/ with its own
@@ -113,9 +112,8 @@ export interface DeckDef {
 }
 
 const canyonlandsDeck = canyonlands as unknown as DeckDef;
-const healthyCanyonsDeck = healthyCanyons as DeckDef;
 
-export const DECK_DEFS: DeckDef[] = [canyonlandsDeck, healthyCanyonsDeck];
+export const DECK_DEFS: DeckDef[] = [canyonlandsDeck];
 
 export const DEFAULT_DECK_ID: string = DECK_DEFS[0]?.id ?? "canyonlands";
 

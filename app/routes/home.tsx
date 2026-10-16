@@ -726,8 +726,7 @@ export default function Home() {
 }
 
 function preloadKeyFor(deck: DeckId): string {
-  // Legacy keys for the built-in decks; every other deck gets its own.
+  // canyonlands keeps its legacy key; every other deck gets its own.
   if (deck === 'canyonlands') return 'pwa-cards-preloaded';
-  if (deck === 'healthy-canyons') return 'pwa-cards-preloaded-healthy';
   return lightPreloadKey(deck);
 }

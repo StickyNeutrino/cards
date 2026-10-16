@@ -248,7 +248,6 @@ describe('storedDeckIdFor', () => {
 
   it('suffixes ids that would collide with built-in decks', () => {
     expect(storedDeckIdFor('canyonlands')).toBe('canyonlands-uploaded');
-    expect(storedDeckIdFor('healthy-canyons')).toBe('healthy-canyons-uploaded');
   });
 });
 

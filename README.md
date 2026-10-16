@@ -28,9 +28,9 @@ A digital companion to San Diego Canyonlands' physical flashcard deck — 154 sp
 Flip through the deck like real flashcards: photos on the front, names on the back. One tap downloads every card to your device, after which the app runs entirely offline.
 
 - **Study by category** — Plants, Birds, or Both, with a shuffled deck so no two sessions feel the same.
-- **Two decks: Canyonlands & Healthy Canyons** — the original 154-card physical deck, plus a generated Healthy Canyons deck built from the Healthy Canyons summary spreadsheets (~1,300 species across 15 canyons) with photos from iNaturalist observers. Switch decks from the menu; each keeps its own category cycle.
+- **One built-in deck, more via import** — The original 154-card Canyonlands physical deck ships with the app. Decks exported by Deck Curator (bundled `.zip`/`.deck` archives or tiny manifest-only `.deck.lite` files) can be imported on the Manage Decks page and are stored entirely in your browser. Switch decks from the menu; each keeps its own category cycle.
 - **Browse and search** — A filterable catalog of all species with instant search and deep links to each card.
-- **Learn to spot invaders** — Invasive plant species are flagged with a red border to build conservation awareness; the Healthy Canyons deck flags every non-native species the same way.
+- **Learn to spot invaders** — Invasive plant species are flagged with a red border to build conservation awareness.
 - **Works offline** — Installable to your home screen as a PWA; study with no network after a one-time download.
 - **Feels like a real deck** — 3D card flip with adjustable speed, tap-to-flip on touch screens, hover-to-peek on desktop, and keyboard shortcuts.
 - **Private by default** — No cookies. Optional analytics and crash reporting can be switched off anytime; see the [privacy policy](https://cards.unimpossy.com/privacy).
@@ -86,43 +86,19 @@ npm run test:coverage # Coverage report
 npx playwright test  # End-to-end tests across 5 browsers
 ```
 
-## Healthy Canyons deck generation
+## The Healthy Canyons deck
 
-The Canyonlands deck is the scanned physical flashcard deck. The **Healthy Canyons** deck is
-generated offline by scripts in `scripts/healthy-cards/` — app users never talk to the
-iNaturalist API; they just receive static card images and a bundled manifest like the
-original deck.
+The Canyonlands deck is the scanned physical flashcard deck and the one deck the
+app bundles. The **Healthy Canyons** deck (a generated survey deck,
+~1,300 species across 15 canyons, photos from iNaturalist observers) lives in
+its own repository under `decks/healthy-canyons/` together with its full
+generation pipeline (`npm run generate` inside that repo) — app users never
+talk to the iNaturalist API; a deck export is static card data and photos.
 
-```bash
-npm run generate:healthy            # full pipeline (parse → fetch → render → manifest)
-npm run generate:healthy:parse      #  1. spreadsheets → data/healthy/species.json
-npm run generate:healthy:fetch      #  2. iNaturalist photo download (slow, resumable)
-npm run generate:healthy:render     #  3. composite card images → public/cards-healthy/
-npm run generate:healthy:manifest   #  4. app manifest + data/healthy/report.md
-```
-
-How it works:
-
-1. **Parse** the two Healthy Canyons summary spreadsheets (one sheet per canyon) into a normalized
-   master species list. Rows that are genus-only, placeholders (`"Agyneta" #1`), or otherwise
-   unresolvable are excluded and counted.
-2. **Fetch** resolves every scientific name on iNaturalist (handling synonyms such as
-   *Dendroica* → *Setophaga*), then downloads the three highest-voted Creative Commons photos,
-   preferring observations in San Diego County, then California, then worldwide. Research-grade
-   observations are preferred; CC-ND and all-rights-reserved photos are never used. Downloads
-   are cached in `assets/healthy-raw/` (gitignored) and the stage is safe to re-run.
-3. **Render** composites the card fronts in the physical deck's layout (one large habitat
-   photo + two detail shots) and renders the backs — common name, scientific name, family,
-   native/invasive status, CNPS/CESA/FESA rarity, photo credits, and the Canyonlands logo —
-   with the app's Inter font, into `public/cards-healthy/`.
-4. **Manifest** writes `app/data/healthyCards.ts` (imported by the app) and a generation
-   report at `data/healthy/report.md` describing exactly how many cards were made, how many
-   lacked photos or failed to resolve, and why.
-
-Every stage is idempotent and cached (API responses in `data/healthy/api-cache/`), so you can
-re-run the pipeline after tweaking a spreadsheet without re-downloading everything. Photo
-attribution is shown on each card back and on the credits page (`/credits`), which opens
-scoped to one deck (from the manage decks page) or one card list (from the card lists page).
+It is no longer bundled with the app. To study it, export it from Deck Curator
+and import the archive on the Manage Decks page — light `.deck.lite` exports
+stream their photos from iNaturalist on demand, bundled exports store
+everything in the browser.
 
 ## Deck repositories
 
@@ -132,17 +108,18 @@ says.
 
 | Deck repo | Contents |
 | --- | --- |
-| `decks/canyonlands/` | The scanned 154-card physical deck (images + `manifest.json`). |
-| `decks/healthy-canyons/` | The generated survey deck (1,203 cards) in the Deck Curator data format: `manifest.json` + `photos/`, the source spreadsheets, and the full generation pipeline (`npm run generate`). |
+| `decks/canyonlands/` | The scanned 154-card physical deck (images + `manifest.json`). Bundled: `scripts/sync-decks.ts` copies its images and manifest into the app. |
+| `decks/healthy-canyons/` | The generated survey deck (1,203 cards) in the Deck Curator data format: `manifest.json` + `photos/`, the source spreadsheets, and the full generation pipeline (`npm run generate`). Not bundled — export it from Deck Curator and import it on the Manage Decks page. |
 
-`scripts/sync-decks.ts` (run automatically before `dev` and `build`) copies each
-deck's images (`cards/`) or curated photos (`photos/`, for data-format decks) to
-`public/decks/<id>/` and writes each deck's manifest to `app/data/decks/<id>.json`
-(with survey-specific data stripped — it stays only in the private deck
-repository). The manifests drive deck switching, categories, invasive flags, and
-the credits page. Adding a deck = adding a repo under `decks/` with a
-`manifest.json` plus a one-line import in
-`app/data/decks.ts`.
+`scripts/sync-decks.ts` (run automatically before `dev` and `build`) copies the
+bundled decks' images (`cards/`) or curated photos (`photos/`, for data-format
+decks) to `public/decks/<id>/` and writes each bundled deck's manifest to
+`app/data/decks/<id>.json` (with survey-specific data stripped — it stays only
+in the private deck repository). The bundled ids are listed in the script's
+`BUNDLED_DECK_IDS`; anything else under `decks/` is left alone. The manifests
+drive deck switching, categories, invasive flags, and the credits page.
+Adding a bundled deck = adding a repo under `decks/` with a `manifest.json`,
+its id to `BUNDLED_DECK_IDS`, plus a one-line import in `app/data/decks.ts`.
 
 To push the deck repos to GitHub, run `git init`/`git remote add origin …`
 inside each (they are already initialized if you cloned this workspace) and

@@ -5,6 +5,11 @@
     "**/.client/**/*",
     ".react-router/types/**/*"
   ],
+  "exclude": [
+    // Standalone deck repositories (gitignored) — their generation pipelines
+    // are Node scripts with their own standards, not app code to typecheck.
+    "decks"
+  ],
   "compilerOptions": {
     "lib": [
       "DOM",
