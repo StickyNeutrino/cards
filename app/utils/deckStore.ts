@@ -27,6 +27,10 @@ export function openDb(): Promise<IDBDatabase> {
       // Photos are stored under out-of-line keys `${deckId}/${declaredPath}`.
       if (!db.objectStoreNames.contains(PHOTO_STORE)) db.createObjectStore(PHOTO_STORE);
     };
+    // An older-version connection still open elsewhere (another tab) blocks
+    // the upgrade; without this the promise would never settle and every
+    // deck operation would hang.
+    request.onblocked = () => reject(new Error('The deck database is locked by another connection.'));
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error('Could not open the deck database.'));
   });
@@ -53,6 +57,25 @@ export async function withStore<T>(storeName: string, mode: IDBTransactionMode, 
   try {
     const tx = db.transaction(storeName, mode);
     const result = await run(tx.objectStore(storeName));
+    await transactionDone(tx);
+    return result;
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Run an async callback against several stores of ONE transaction — the only
+ * way to keep a write that spans `decks` and `photos` all-or-nothing (a deck
+ * record and the photo blobs it points at must never disagree). Any failure
+ * inside the callback aborts the whole transaction, leaving every store
+ * exactly as it was.
+ */
+export async function withStores<T>(storeNames: readonly string[], mode: IDBTransactionMode, run: (...stores: IDBObjectStore[]) => Promise<T>): Promise<T> {
+  const db = await openDb();
+  try {
+    const tx = db.transaction([...storeNames], mode);
+    const result = await run(...storeNames.map((name) => tx.objectStore(name)));
     await transactionDone(tx);
     return result;
   } finally {

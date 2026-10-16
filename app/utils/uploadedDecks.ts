@@ -38,7 +38,7 @@
  */
 import { unzip, strFromU8 } from 'fflate';
 import { DECK_DEFS, type DeckDef } from '~/data/decks';
-import { DECK_STORE, PHOTO_STORE, requestAsPromise, storedPhotoKeys, withStore } from './deckStore';
+import { DECK_STORE, PHOTO_STORE, requestAsPromise, withStore, withStores } from './deckStore';
 
 /** fflate's async unzip; wrapped because its types only expose the callback form. */
 function unzipAsync(data: Uint8Array): Promise<Record<string, Uint8Array>> {
@@ -363,18 +363,14 @@ function photoArchivePath(root: string, file: string, files: Record<string, Uint
 // Import
 // ---------------------------------------------------------------------------
 
-/** Store a validated deck with bundled photos: wipe any previous import of
- *  the same id (record and photos), write the photo blobs (keyed
- *  `id/<reference>`), then the deck record. */
+/** Store a validated deck with bundled photos, atomically: one transaction
+ *  spanning both stores wipes the previous import of the same id (its
+ *  photos), writes the new photo blobs (keyed `id/<reference>`), then the
+ *  deck record. A failure anywhere — quota exhaustion mid-blob is the
+ *  realistic one — aborts the whole transaction, so a failed re-import
+ *  leaves the previously stored deck exactly as it was instead of a hole
+ *  where it used to be. */
 async function storeDeck(id: string, manifest: DeckDef, photos: Array<{ key: string; blob: Blob }>): Promise<void> {
-  await deleteUploadedDeck(id).catch(() => {
-    // A failed cleanup (e.g. first import, no prior record) must not block us.
-  });
-  await withStore(PHOTO_STORE, 'readwrite', async (store) => {
-    for (const { key, blob } of photos) {
-      await requestAsPromise(store.put(blob, key));
-    }
-  });
   const manifestJsonBytes = new TextEncoder().encode(JSON.stringify(manifest)).length;
   const photoFileBytes = photos.reduce((sum, { blob }) => sum + blob.size, 0);
   const record: UploadedDeckRecord = {
@@ -386,19 +382,32 @@ async function storeDeck(id: string, manifest: DeckDef, photos: Array<{ key: str
     importedAt: new Date().toISOString(),
     bytes: manifestJsonBytes + photoFileBytes,
   };
-  await withStore(DECK_STORE, 'readwrite', (store) => requestAsPromise(store.put(record)));
+  const prefix = `${id}/`;
+  await withStores([PHOTO_STORE, DECK_STORE], 'readwrite', async (photoStore, deckStore) => {
+    const keys = await requestAsPromise(photoStore.getAllKeys());
+    for (const key of keys) {
+      if (typeof key === 'string' && key.startsWith(prefix)) {
+        await requestAsPromise(photoStore.delete(key) as IDBRequest<undefined>);
+      }
+    }
+    for (const { key, blob } of photos) {
+      await requestAsPromise(photoStore.put(blob, key));
+    }
+    await requestAsPromise(deckStore.put(record));
+  });
 }
 
 /**
- * Store a light deck's manifest WITHOUT touching its cached photos: the
- * bytes are fetched lazily (app/utils/lightPhotos.ts) under the same
- * `${id}/${url}` keys, so re-importing keeps everything already downloaded
- * and only prunes photos the new manifest no longer references. No `bytes`
- * measurement is stored — the size grows as photos are cached and is
+ * Store a light deck's manifest WITHOUT touching its cached photos beyond
+ * pruning: the bytes are fetched lazily (app/utils/lightPhotos.ts) under the
+ * same `${id}/${url}` keys, so re-importing keeps everything already
+ * downloaded and only prunes photos the new manifest no longer references.
+ * The prune and the record write share one transaction spanning both stores,
+ * so a failure leaves the previous record and its photos consistent. No
+ * `bytes` measurement is stored — the size grows as photos are cached and is
  * measured on demand.
  */
 async function storeLightDeckRecord(id: string, manifest: DeckDef): Promise<void> {
-  const previous = await getUploadedDeckRecord(id).catch(() => null);
   const keep = new Set<string>();
   for (const category of manifest.categories) {
     for (const card of category.cards) {
@@ -406,24 +415,6 @@ async function storeLightDeckRecord(id: string, manifest: DeckDef): Promise<void
         if (photo.url) keep.add(photo.url);
       }
     }
-  }
-  const stale: string[] = [];
-  if (previous) {
-    for (const category of previous.manifest.categories) {
-      for (const card of category.cards) {
-        for (const photo of card.photos ?? []) {
-          const reference = photo.file ?? photo.url;
-          if (reference && !keep.has(reference)) stale.push(reference);
-        }
-      }
-    }
-  }
-  if (stale.length > 0) {
-    await withStore(PHOTO_STORE, 'readwrite', async (store) => {
-      for (const reference of stale) {
-        await requestAsPromise(store.delete(`${id}/${reference}`) as IDBRequest<undefined>);
-      }
-    });
   }
   const record: UploadedDeckRecord = {
     id,
@@ -433,7 +424,24 @@ async function storeLightDeckRecord(id: string, manifest: DeckDef): Promise<void
     manifest,
     importedAt: new Date().toISOString(),
   };
-  await withStore(DECK_STORE, 'readwrite', (store) => requestAsPromise(store.put(record)));
+  await withStores([DECK_STORE, PHOTO_STORE], 'readwrite', async (deckStore, photoStore) => {
+    const previous = await requestAsPromise(deckStore.get(id) as IDBRequest<UploadedDeckRecord | undefined>);
+    const stale: string[] = [];
+    if (previous) {
+      for (const category of previous.manifest.categories) {
+        for (const card of category.cards) {
+          for (const photo of card.photos ?? []) {
+            const reference = photo.file ?? photo.url;
+            if (reference && !keep.has(reference)) stale.push(reference);
+          }
+        }
+      }
+    }
+    for (const reference of stale) {
+      await requestAsPromise(photoStore.delete(`${id}/${reference}`) as IDBRequest<undefined>);
+    }
+    await requestAsPromise(deckStore.put(record));
+  });
 }
 
 /** Unzip `file`, validate its manifest, and store deck + photos in IndexedDB.
@@ -556,13 +564,15 @@ export async function getUploadedDeckRecord(id: string): Promise<UploadedDeckRec
 /**
  * Load a stored deck as a DeckDef, resolving every cached photo `file` into
  * a blob: object URL ready for <img src>. Object URLs live for the
- * document's lifetime (they are not revoked — decks are small and pages are
- * short-lived). Light decks store their photos under the photo's remote
- * `url`; cached ones resolve `file` to the bytes and keep `url` as
- * provenance, while photos not cached yet keep `file` empty so the UI can
- * render the remote URL and fetch on demand (app/utils/lightPhotos.ts).
+ * document's lifetime (they are not revoked here — decks are small and
+ * pages are short-lived, and callers that reload repeatedly can track the
+ * URLs via `onObjectUrl` to reclaim old generations). Light decks store
+ * their photos under the photo's remote `url`; cached ones resolve `file`
+ * to the bytes and keep `url` as provenance, while photos not cached yet
+ * keep `file` empty so the UI can render the remote URL and fetch on
+ * demand (app/utils/lightPhotos.ts).
  */
-export async function loadUploadedDeck(id: string): Promise<DeckDef> {
+export async function loadUploadedDeck(id: string, onObjectUrl?: (url: string) => void): Promise<DeckDef> {
   const record = await getUploadedDeckRecord(id);
   if (!record) throw new Error(`Uploaded deck "${id}" was not found.`);
   const urls = new Map<string, string>();
@@ -576,7 +586,11 @@ export async function loadUploadedDeck(id: string): Promise<DeckDef> {
           const blob = await requestAsPromise(store.get(key) as IDBRequest<Blob | undefined>);
           // One object URL per distinct stored photo — two cards may share
           // one file (or one light-deck URL), and they share its blob URL.
-          if (blob && !urls.has(key)) urls.set(key, URL.createObjectURL(blob));
+          if (blob && !urls.has(key)) {
+            const objectUrl = URL.createObjectURL(blob);
+            urls.set(key, objectUrl);
+            onObjectUrl?.(objectUrl);
+          }
         }
       }
     }
@@ -605,12 +619,18 @@ export async function loadUploadedDeck(id: string): Promise<DeckDef> {
 }
 
 export async function deleteUploadedDeck(id: string): Promise<void> {
-  await withStore(DECK_STORE, 'readwrite', (store) => requestAsPromise(store.delete(id) as IDBRequest<undefined>));
-  const own = await storedPhotoKeys(id);
-  if (own.size === 0) return;
-  await withStore(PHOTO_STORE, 'readwrite', async (store) => {
-    for (const reference of own) {
-      await requestAsPromise(store.delete(`${id}/${reference}`) as IDBRequest<undefined>);
+  // One transaction spanning both stores: the record and every photo under
+  // its `id/` prefix disappear together. Deleting them separately could
+  // leave orphaned photo blobs behind forever if the second step failed —
+  // nothing sweeps the photo store for keys without a deck record.
+  await withStores([DECK_STORE, PHOTO_STORE], 'readwrite', async (deckStore, photoStore) => {
+    await requestAsPromise(deckStore.delete(id) as IDBRequest<undefined>);
+    const keys = await requestAsPromise(photoStore.getAllKeys());
+    const prefix = `${id}/`;
+    for (const key of keys) {
+      if (typeof key === 'string' && key.startsWith(prefix)) {
+        await requestAsPromise(photoStore.delete(key) as IDBRequest<undefined>);
+      }
     }
   });
 }
