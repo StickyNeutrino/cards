@@ -17,19 +17,19 @@
     "sync:decks": "node scripts/sync-decks.ts"
   },
   "dependencies": {
-    "@react-router/node": "^7.9.2",
-    "@react-router/serve": "^7.9.2",
+    "@react-router/node": "^7.18.4",
+    "@react-router/serve": "^7.18.4",
     "fflate": "^0.8.3",
     "isbot": "^5.1.31",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-router": "^7.9.2",
+    "react-router": "^7.18.4",
     "serve": "^14.2.5"
   },
   "devDependencies": {
     "@fontsource/inter": "^5.3.0",
     "@playwright/test": "^1.57.0",
-    "@react-router/dev": "^7.9.4",
+    "@react-router/dev": "^7.18.4",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.1.13",
     "@testing-library/jest-dom": "^6.9.1",
@@ -51,7 +51,9 @@
     "vite": "^7.1.7",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^4.0.7",
-    "wawoff2": "^2.0.1",
-    "xlsx": "^0.18.5"
+    "wawoff2": "^2.0.1"
+  },
+  "overrides": {
+    "compression": "^1.8.2"
   }
 }
