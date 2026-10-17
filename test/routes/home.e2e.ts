@@ -1,5 +1,6 @@
 import { test, expect } from '../e2e-helpers';
 import type { Page } from '@playwright/test';
+import { APP_ORIGIN } from '../../playwright.config';
 
 async function handleConsentPopup(page: Page) {
   const dismissButton = page.getByTestId('consent-dismiss');
@@ -44,7 +45,7 @@ test.describe('Home Page E2E Tests', () => {
     await expect(page.locator('.hamburger-menu').locator('text=🌿 Plants')).toBeVisible();
 
     // Check URL has no query params initially
-    expect(page.url()).toBe('http://localhost:5173/');
+    expect(page.url()).toBe(`${APP_ORIGIN}/`);
 
     // Check preload links exist: front and back of next card, plus the font
     const imagePreloadLinks = page.locator('link[rel="preload"][as="image"]');
@@ -267,23 +268,23 @@ test.describe('Home Page E2E Tests', () => {
 
   test('URL state persistence', async ({ page }) => {
     // Initial URL has no params
-    expect(page.url()).toBe('http://localhost:5173/');
+    expect(page.url()).toBe(`${APP_ORIGIN}/`);
 
     // Switch to birds mode
     const menuButton = page.locator('.hamburger-menu button').first();
     await menuButton.click();
     await page.waitForTimeout(100); // Allow for state update
-    expect(page.url()).toBe('http://localhost:5173/?birds=true');
+    expect(page.url()).toBe(`${APP_ORIGIN}/?birds=true`);
 
     // Switch to both
     await menuButton.click();
     await page.waitForTimeout(100);
-    expect(page.url()).toBe('http://localhost:5173/?both=true');
+    expect(page.url()).toBe(`${APP_ORIGIN}/?both=true`);
 
     // Switch to plants (no params)
     await menuButton.click();
     await page.waitForTimeout(100);
-    expect(page.url()).toBe('http://localhost:5173/');
+    expect(page.url()).toBe(`${APP_ORIGIN}/`);
 
     // Reload page and check mode persists
     await page.reload();

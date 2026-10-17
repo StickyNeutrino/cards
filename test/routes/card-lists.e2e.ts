@@ -1,5 +1,6 @@
 import { test, expect } from '../e2e-helpers';
 import type { Page } from '@playwright/test';
+import { APP_ORIGIN } from '../../playwright.config';
 import { DECK_DEFS } from '~/data/decks';
 
 const canyonlands = DECK_DEFS.find((d) => d.id === 'canyonlands')!;
@@ -52,7 +53,7 @@ test.describe('Card Lists Page E2E Tests', () => {
     await cardListsLink.click();
 
     // Should navigate to card-lists
-    await expect(page).toHaveURL('http://localhost:5173/card-lists');
+    await expect(page).toHaveURL(`${APP_ORIGIN}/card-lists`);
   });
 
   test('Card selection and navigation back to home', async ({ page }) => {
@@ -71,7 +72,7 @@ test.describe('Card Lists Page E2E Tests', () => {
     });
 
     // Should navigate back to home with selected card
-    await expect(page).toHaveURL('http://localhost:5173/?card=Acorn%20Woodpecker');
+    await expect(page).toHaveURL(`${APP_ORIGIN}/?card=Acorn%20Woodpecker`);
     const currentCard = page.locator('[data-testid="card"]');
     await expect(currentCard).toHaveAttribute('data-card', cardName as string);
   });
@@ -139,7 +140,7 @@ test.describe('Card Lists Page E2E Tests', () => {
         el.click();
       }
     });
-    await expect(page).toHaveURL('http://localhost:5173/?card=Acorn%20Woodpecker');
+    await expect(page).toHaveURL(`${APP_ORIGIN}/?card=Acorn%20Woodpecker`);
   });
 
   test('Keyboard navigation', async ({ page }) => {
@@ -154,7 +155,7 @@ test.describe('Card Lists Page E2E Tests', () => {
 
     // Select with Enter
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL('http://localhost:5173/?card=American%20Robin');
+    await expect(page).toHaveURL(`${APP_ORIGIN}/?card=American%20Robin`);
   });
 
   test('Select bird card and switch to plants mode', async ({ page }) => {
@@ -171,7 +172,7 @@ test.describe('Card Lists Page E2E Tests', () => {
     });
 
     // Should navigate back to home with selected card
-    await expect(page).toHaveURL('http://localhost:5173/?card=Acorn%20Woodpecker');
+    await expect(page).toHaveURL(`${APP_ORIGIN}/?card=Acorn%20Woodpecker`);
     const currentCard = page.locator('[data-testid="card"]');
     await expect(currentCard).toHaveAttribute('data-card', cardName as string);
 

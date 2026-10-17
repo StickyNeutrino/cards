@@ -14,7 +14,6 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest --coverage",
-    "update-manifest": "node update-manifest.js",
     "sync:decks": "node scripts/sync-decks.ts"
   },
   "dependencies": {

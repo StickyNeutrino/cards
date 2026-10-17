@@ -1,5 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
+/** The origin every e2e URL is built from — the same value as baseURL
+ *  below, so tests assert against one source of truth instead of copying
+ *  a literal into each file. */
+export const APP_ORIGIN = 'http://localhost:5173';
+
 /**
  * @see https://playwright.dev/docs/test-configuration
  */
