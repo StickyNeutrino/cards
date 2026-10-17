@@ -6,6 +6,12 @@ import app from '../../error-receiver/server';
 vi.spyOn(console, 'log').mockImplementation(() => {});
 
 describe('Error Receiver Server', () => {
+  afterEach(() => {
+    delete process.env.RATE_LIMIT;
+    delete process.env.ALLOWED_ORIGINS;
+    delete process.env.TRUST_PROXY;
+  });
+
   describe('POST /report', () => {
     it('should accept valid error report and return 200', async () => {
       const errorReport = {
@@ -76,6 +82,81 @@ describe('Error Receiver Server', () => {
         'Received error report:',
         JSON.stringify(errorReport, null, 2)
       );
+    });
+
+    it('should reject a non-object report', async () => {
+      await request(app)
+        .post('/report')
+        .set('Content-Type', 'application/json')
+        .send('["not", "an object"]')
+        .expect(400);
+
+      await request(app)
+        .post('/report')
+        .set('Content-Type', 'application/json')
+        .send('"a string"')
+        .expect(400);
+    });
+
+    it('should truncate oversized report fields before logging them', async () => {
+      const oversized = 'x'.repeat(10 * 1024);
+
+      await request(app)
+        .post('/report')
+        .send({ message: oversized })
+        .expect(200);
+
+      const calls = console.log.mock.calls.filter(([label]) => label === 'Received error report:');
+      expect(calls.length).toBeGreaterThan(0);
+      const logged = JSON.parse(calls[calls.length - 1][1]);
+      expect(logged.message.length).toBeLessThanOrEqual(8 * 1024 + '…[truncated]'.length);
+      expect(logged.message.endsWith('…[truncated]')).toBe(true);
+    });
+  });
+
+  describe('Rate limiting', () => {
+    it('refuses reports past the configured ceiling for one address', async () => {
+      // A fresh app instance with a tiny ceiling and its own hit table, so
+      // the earlier requests of this file don't count against it.
+      vi.resetModules();
+      process.env.RATE_LIMIT = '3';
+      const limited = (await import('../../error-receiver/server')).default;
+
+      for (let i = 0; i < 3; i++) {
+        await request(limited)
+          .post('/report')
+          .send({ message: `report ${i}` })
+          .expect(200);
+      }
+      await request(limited)
+        .post('/report')
+        .send({ message: 'flood' })
+        .expect(429);
+
+      // The health endpoint is never rate limited.
+      await request(limited).get('/health').expect(200);
+    });
+  });
+
+  describe('Origin allowlist', () => {
+    it('pins CORS to the configured origins when ALLOWED_ORIGINS is set', async () => {
+      vi.resetModules();
+      process.env.ALLOWED_ORIGINS = 'https://cards.example.org';
+      const pinned = (await import('../../error-receiver/server')).default;
+
+      const allowed = await request(pinned)
+        .post('/report')
+        .set('Origin', 'https://cards.example.org')
+        .send({ message: 'hello' })
+        .expect(200);
+      expect(allowed.headers['access-control-allow-origin']).toBe('https://cards.example.org');
+
+      const stranger = await request(pinned)
+        .post('/report')
+        .set('Origin', 'https://evil.example')
+        .send({ message: 'hello' })
+        .expect(200);
+      expect(stranger.headers['access-control-allow-origin']).toBeUndefined();
     });
   });
 

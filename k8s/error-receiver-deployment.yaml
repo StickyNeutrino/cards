@@ -20,6 +20,15 @@ spec:
         env:
         - name: PORT
           value: "3000"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          capabilities:
+            drop:
+            - ALL
         resources:
           requests:
             memory: "128Mi"
