@@ -1795,6 +1795,35 @@ describe('Home', () => {
       });
     });
 
+    it('should unflip and navigate forward when ArrowRight is pressed while flipped', async () => {
+      render(<RouterProvider router={router} />);
+      const card = screen.getByTestId('card');
+      const initialCard = card.getAttribute('data-card');
+
+      // Flip with a click — this is the flip state the keyboard handler
+      // must see even though the keyboard didn't cause it.
+      await userEvent.click(card);
+      await waitFor(() => {
+        expect(card).toHaveAttribute('data-flipped', 'true');
+      });
+
+      // ArrowRight behaves like the next button: it unflips first and only
+      // advances once the flip-back has played (a handler pinned to stale
+      // closures would see flipped === false and advance immediately,
+      // leaving the next card flipped).
+      await userEvent.keyboard('{ArrowRight}');
+      await waitFor(() => {
+        expect(card).toHaveAttribute('data-flipped', 'false');
+      });
+
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 400)); // default flip / 2
+      });
+      await waitFor(() => {
+        expect(card.getAttribute('data-card')).not.toBe(initialCard);
+      });
+    });
+
     it('should handle invalid keys', async () => {
       render(<RouterProvider router={router} />);
       const card = screen.getByTestId('card');

@@ -287,6 +287,18 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deck, mode, modeCardKey]);
 
+  // A card view is recorded once at each new high-water mark of the index
+  // (max_index resets with the deck above and lives across mounts of the
+  // tab). This runs as an effect — the render body must stay free of side
+  // effects, and StrictMode's double render would double-report; the
+  // high-water mark dedupes the effect's own double-invocation the same way.
+  useEffect(() => {
+    if (cardIndex > max_index) {
+      max_index = cardIndex;
+      trackCardView();
+    }
+  }, [cardIndex]);
+
   // Light-deck photos that failed to cache this session: skipped by later
   // look-ahead runs so a dead photo can't be re-fetched on every flip (the
   // card still renders it from its remote URL when online). Cleared when
@@ -435,11 +447,6 @@ export default function Home() {
     }
   };
 
-  if (cardIndex > max_index) {
-    max_index = cardIndex;
-    trackCardView();
-  }
-
   const [flipped, setFlipped] = useState(false);
 
   const toggleFlipped = () => {
@@ -447,7 +454,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const handleKeyDown = (event: { key: any; preventDefault: () => void; }) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'ArrowUp':
           setFlipped(true)
@@ -466,7 +473,7 @@ export default function Home() {
           break;
       }
     };
-    const handleKeyUp = (event: { key: any; }) => {
+    const handleKeyUp = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'ArrowUp':
           setFlipped(false);
@@ -493,7 +500,15 @@ export default function Home() {
       window.removeEventListener('keyup', handleKeyUp);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showSettings]);
+    // The handlers must call the live nextAction/backAction (which read
+    // flipped and flipSpeed from their render): pinned to [showSettings]
+    // only, the effect kept the closures of whatever render it last ran in,
+    // so Arrow keys navigated with stale flip state — pressing ArrowRight
+    // while flipped advanced immediately instead of un-flipping first, and
+    // a changed flip speed was ignored until the settings opened. They
+    // change identity every render, so the listeners re-attach on each
+    // render; everything they touch is either state setters or refs.
+  }, [showSettings, nextAction, backAction]);
 
   // The nav button row matches the visible card's width. The card's width
   // element (back <img> for image decks, canvas for data decks) is replaced
@@ -538,6 +553,11 @@ export default function Home() {
     setFlipped(false);
     setIndex(0);
     setPreloadError(null);
+    // A download still running for the previous deck no longer touches state
+    // (its settle callbacks check the deck on screen); drop its affordances
+    // here so this deck starts clean.
+    setIsPreloading(false);
+    setPreloadProgress(prev => ({ ...prev, isVisible: false }));
   };
 
   const changeModeClicked = (e: React.MouseEvent) => {
@@ -583,17 +603,25 @@ export default function Home() {
           for (const objectUrl of cached.values()) uploadedObjectUrlsRef.current.push(objectUrl);
           if (failed.length > 0) {
             // Some photos never arrived in any size variant: report it and
-            // leave the button enabled for a retry.
-            setPreloadError(
-              `Could not fetch ${failed.length} photo${failed.length === 1 ? '' : 's'} — check your connection and try again.`,
-            );
+            // leave the button enabled for a retry. Only while this deck is
+            // still the one on screen — a deck switched mid-download must
+            // not surface this download's error.
+            if (deckRef.current === deck) {
+              setPreloadError(
+                `Could not fetch ${failed.length} photo${failed.length === 1 ? '' : 's'} — check your connection and try again.`,
+              );
+            }
             return;
           }
+          // The cache fill belongs to this deck regardless of what is on
+          // screen; only the active-deck state write is guarded.
           storeItem(preloadKeyFor(deck), 'true');
-          setIsPreloaded(true);
+          if (deckRef.current === deck) setIsPreloaded(true);
         })
         .catch(() => {
-          setPreloadError('Could not download the deck\u2019s photos — check your connection and try again.');
+          if (deckRef.current === deck) {
+            setPreloadError('Could not download the deck\u2019s photos — check your connection and try again.');
+          }
         })
         .finally(() => {
           setIsPreloading(false);
@@ -631,24 +659,34 @@ export default function Home() {
 
     const settle = () => {
       loadedCount++;
-      setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
+      // A deck switched mid-download stops receiving this download's UI
+      // updates (the progress affordance belongs to the deck on screen now),
+      // but the counting continues: whatever did load sits in the
+      // service-worker cache, so the flag is still recorded for the deck it
+      // downloaded.
+      const stale = deckRef.current !== deck;
+      if (!stale) setPreloadProgress(prev => ({ ...prev, current: loadedCount }));
       if (loadedCount < imageUrls.length) return;
-      setIsPreloading(false);
-      setTimeout(() => {
-        setPreloadProgress(prev => ({ ...prev, isVisible: false }));
-      }, 2000);
+      if (!stale) {
+        setIsPreloading(false);
+        setTimeout(() => {
+          setPreloadProgress(prev => ({ ...prev, isVisible: false }));
+        }, 2000);
+      }
       if (failedCount > 0) {
         // Failed card faces are not in the service-worker cache: recording
         // success would leave a deck that breaks offline with no way to
         // retry (the flag gates the button). Report and offer a retry,
         // like the light-deck flow does.
-        setPreloadError(
-          `Could not load ${failedCount} card image${failedCount === 1 ? '' : 's'} — check your connection and try again.`,
-        );
+        if (!stale) {
+          setPreloadError(
+            `Could not load ${failedCount} card image${failedCount === 1 ? '' : 's'} — check your connection and try again.`,
+          );
+        }
         return;
       }
       storeItem(preloadKeyFor(deck), 'true');
-      setIsPreloaded(true);
+      if (!stale) setIsPreloaded(true);
     };
 
     for (let i = 0; i < imageUrls.length; i++) {
