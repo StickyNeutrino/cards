@@ -1,11 +1,15 @@
 import { test, expect } from '../e2e-helpers';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { APP_ORIGIN } from '../../playwright.config';
 import { DECK_DEFS } from '~/data/decks';
 
 const canyonlands = DECK_DEFS.find((d) => d.id === 'canyonlands')!;
 const birds = canyonlands.categories.find((c) => c.id === 'birds')!.cards;
 const plants = canyonlands.categories.find((c) => c.id === 'plants')!.cards;
+
+/** The card names currently listed, in display order. */
+const listedNames = (cardItems: Locator) =>
+  cardItems.evaluateAll((items) => items.map((item) => item.getAttribute('data-card-name')));
 
 async function handleConsentPopup(page: Page) {
   const dismissButton = page.getByTestId('consent-dismiss');
@@ -78,33 +82,38 @@ test.describe('Card Lists Page E2E Tests', () => {
   });
 
   test('Filtering cards by type', async ({ page }) => {
-    // Assume there are filter buttons for plants/birds/both
-    const plantsFilter = page.locator('button').filter({ hasText: 'Plants' });
-    const birdsFilter = page.locator('button').filter({ hasText: 'Birds' });
-    const bothFilter = page.locator('button').filter({ hasText: 'Both' });
+    // The category filter is the "Filter by category" dropdown, not buttons:
+    // its first option is "both", followed by the deck's categories in the
+    // canonical plants-first ordering.
+    const modeSelect = page.getByTestId('mode-select');
+    const cardItems = page.locator('[data-testid="card-item"]');
+    const optionValues = await modeSelect.locator('option').evaluateAll((options) =>
+      options.map((option) => (option as HTMLOptionElement).value));
+    expect(optionValues).toEqual(['both', 'plants', 'birds']);
 
-    await page.waitForLoadState('networkidle');
+    // It opens on "both": every card of the deck, in manifest category order
+    // (canyonlands is birds first, then plants).
+    await expect(modeSelect).toHaveValue('both');
+    await expect(cardItems).toHaveCount(plants.length + birds.length);
+    expect(await listedNames(cardItems)).toEqual([...birds, ...plants].map((c) => c.name));
 
+    // Filtering to a category lists exactly that category's cards, in
+    // manifest order, and the closed control reports the selection.
+    await modeSelect.selectOption('plants');
+    await expect(modeSelect).toHaveValue('plants');
+    await expect(cardItems).toHaveCount(plants.length);
+    expect(await listedNames(cardItems)).toEqual(plants.map((c) => c.name));
 
-    // Default should show both or plants
-    const initialCount = await page.locator('[data-testid="card-item"]').count();
-    expect(initialCount).toBe(plants.length + birds.length);
+    await modeSelect.selectOption('birds');
+    await expect(modeSelect).toHaveValue('birds');
+    await expect(cardItems).toHaveCount(birds.length);
+    expect(await listedNames(cardItems)).toEqual(birds.map((c) => c.name));
 
-    // Filter to plants
-    await plantsFilter.click()
-    const plantsCount = await page.locator('[data-testid="card-item"]').count();
-    expect(plantsCount).toBe(plants.length);
-
-    // Filter to birds
-    await birdsFilter.click();
-    const birdsCount = await page.locator('[data-testid="card-item"]').count();
-    expect(birdsCount).toBe(birds.length);
-
-    // Filter to both
-    await bothFilter.click();
-    const bothCount = await page.locator('[data-testid="card-item"]').count();
-    expect(bothCount).toBe(plants.length + birds.length);
-  
+    // Back to "both": the full list again.
+    await modeSelect.selectOption('both');
+    await expect(modeSelect).toHaveValue('both');
+    await expect(cardItems).toHaveCount(plants.length + birds.length);
+    expect(await listedNames(cardItems)).toEqual([...birds, ...plants].map((c) => c.name));
   });
 
   test('Search functionality', async ({ page }) => {
