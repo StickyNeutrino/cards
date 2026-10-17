@@ -5,7 +5,6 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLocation,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -81,7 +80,10 @@ export default function App() {
 
   useEffect(() => {
     if('serviceWorker' in navigator && !import.meta.env.VITEST) {
-      navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+      // A blocked registration (some private modes), a scope conflict, or a
+      // dead cache is not a page crash: swallow the rejection instead of
+      // letting it surface through the global error handler as one.
+      navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).catch(() => {});
     }
   }, []);
 

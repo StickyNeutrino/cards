@@ -8,12 +8,35 @@ const STATIC_ASSETS = [
   '/manifest.json',
 ];
 
-self.addEventListener('install', event => {
+// Both runtime caches fill from traffic — every deck photo fetched while
+// studying, and every non-POST 200 response — rather than from a known
+// install set, so each write trims the oldest entries past a generous cap.
+// A deck ships a few hundred photos at most, so studying a deck never
+// evicts the deck's own images.
+const CARD_CACHE_LIMIT = 1000;
+const STATIC_CACHE_LIMIT = 300;
 
-  console.log('Service Worker installing.');
+// Deck photos are referenced as .jpg and .jpeg (both cases) across the
+// bundled and uploaded decks; the image strategy keys on the path alone,
+// so a cache-busting query does not hide the extension.
+const JPEG_PATH_PATTERN = /\.jpe?g$/i;
+
+/** Store a response and keep the cache within its cap. Cache.keys() lists
+ *  entries oldest-first in every shipping browser, so trimming from the
+ *  front evicts the least recently stored. */
+async function putAndTrim(cacheName, request, response, limit) {
+  const cache = await caches.open(cacheName);
+  await cache.put(request, response);
+  const keys = await cache.keys();
+  const excess = keys.length - limit;
+  for (let i = 0; i < excess; i++) {
+    await cache.delete(keys[i]);
+  }
+}
+
+self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(STATIC_CACHE_NAME).then(cache => {
-      console.log('Service Worker caching static assets.');
       return cache.addAll(STATIC_ASSETS);
     })
   );
@@ -21,86 +44,85 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-    console.log('Service Worker fetching:', event.request.url);
+    const url = new URL(event.request.url);
 
     // Handle JPEG images (existing logic)
-    if (event.request.url.endsWith('.jpg')) {
-        const url = new URL(event.request.url);
+    if (JPEG_PATH_PATTERN.test(url.pathname)) {
         const normalizedRequest = new Request(url.origin + url.pathname);
         event.respondWith((async () => {
             const cache = await caches.open(CACHE_NAME)
             let response = await cache.match(normalizedRequest)
-            
+
             // If image is in cache, return it
             if (response) {
-                console.log('Serving JPEG from cache:', event.request.url);
                 return response;
             }
 
             // Otherwise, fetch from network and add to cache
-            console.log('Fetching JPEG from network:', event.request.url);
-
             let network_response;
             try {
                 network_response = await fetch(event.request);
             } catch (error) {
-                console.log('Network failed, checking cache again:', event.request.url);
                 // Network failed, try cache again (might have been added by another request)
                 const old_cache = await caches.open(OLD_CACHE_NAME)
                 response = await old_cache.match(normalizedRequest)
                 if (response) {
-                    console.log('Serving JPEG from old cache:', event.request.url);
                     return response;
-                } else {
-                    return error;
-                }          
+                }
+                // Nothing in either cache: fail as a network error. respondWith
+                // must resolve with a Response — resolving with the caught Error
+                // object fails the request the same way but throws a TypeError
+                // inside the worker first.
+                return Response.error();
             }
 
             if (!network_response.ok) {
                 const old_cache = await caches.open(OLD_CACHE_NAME)
                 response = await old_cache.match(normalizedRequest)
                 if (response) {
-                    console.log('Serving JPEG from old cache:', event.request.url);
                     return response;
-                } else {
-                    return network_response;
                 }
+                return network_response;
             } else {
-                cache.put(normalizedRequest, network_response.clone()); // Store a clone
+                putAndTrim(CACHE_NAME, normalizedRequest, network_response.clone(), CARD_CACHE_LIMIT); // Store a clone
                 return network_response;
             }
         })());
     } else if (event.request.method !== "POST") {
         // For all other requests, network-first strategy
-        const url = new URL(event.request.url);
         let cacheKey = new Request(url.origin + url.pathname);
         event.respondWith(
             fetch(event.request).then(networkResponse => {
                 // Cache successful responses (status 200)
                 if (networkResponse.status === 200) {
-                    const responseClone = networkResponse.clone();
-                    caches.open(STATIC_CACHE_NAME).then(cache => {
-                        console.log('Caching response:', event.request.url);
-                        cache.put(cacheKey, responseClone);
-                    });
+                    putAndTrim(STATIC_CACHE_NAME, cacheKey, networkResponse.clone(), STATIC_CACHE_LIMIT);
                 }
                 return networkResponse;
-            }).catch(() => {
-                console.log('Network failed, checking cache:', event.request.url);
+            }).catch(async () => {
                 // Network failed, try cache
-                return caches.open(STATIC_CACHE_NAME).then(cache => cache.match(cacheKey));
+                const cache = await caches.open(STATIC_CACHE_NAME);
+                const cached = await cache.match(cacheKey);
+                if (cached) {
+                    return cached;
+                }
+                // A navigation to a route never visited online still gets the
+                // app shell: the SPA serves every route from the same
+                // index.html, which is what '/' precaches. Everything else
+                // fails as a network error.
+                if (event.request.mode === 'navigate') {
+                    return caches.match('/');
+                }
+                return Response.error();
             })
         );
     }
 });
 
 self.addEventListener('activate', event => {
-    console.log('Service Worker activating.');
     event.waitUntil(
         Promise.all([
             // Clean up old caches - but be more selective
             caches.keys().then(cacheNames => {
-                console.log('Available caches:', cacheNames);
                 return Promise.all(
                     cacheNames.map(cacheName => {
                         // Only delete caches that are clearly old versions (different version numbers).
