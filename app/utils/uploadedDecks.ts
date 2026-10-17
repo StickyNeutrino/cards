@@ -135,6 +135,32 @@ function validatePhotoUrl(value: unknown, what: string): string {
   return url;
 }
 
+/**
+ * A credit's optional link (the iNat observation page or the photo's source
+ * page). The credits page renders it as a link target, so it must be an
+ * absolute http(s) URL — any other scheme (javascript:, data:) would be an
+ * injection into the page. http is accepted alongside https: credit links
+ * are navigations, not fetches, so the secure-page mixed-content rule that
+ * binds light-deck photo urls doesn't apply, and real curated decks carry
+ * http iNat links (they redirect to https on click). An absent or empty
+ * value means "no link" and is fine.
+ */
+function validateCreditLink(value: unknown, what: string): void {
+  if (value === undefined || value === null || value === '') return;
+  if (typeof value !== 'string') {
+    throw new DeckImportError(`Invalid deck archive: ${what} must be a string.`);
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new DeckImportError(`Invalid deck archive: ${what} "${value}" is not an absolute URL.`);
+  }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    throw new DeckImportError(`Invalid deck archive: ${what} "${value}" must be an http or https URL.`);
+  }
+}
+
 function validateCredit(credit: unknown, where: string): void {
   if (typeof credit !== 'object' || credit === null) {
     throw new DeckImportError(`Invalid deck archive: ${where} is missing its photo credit.`);
@@ -148,12 +174,8 @@ function validateCredit(credit: unknown, where: string): void {
       '(expected a Creative Commons code such as cc-by-nc, cc0, or all-rights-reserved).',
     );
   }
-  if (raw.sourceUrl !== undefined && raw.sourceUrl !== null && typeof raw.sourceUrl !== 'string') {
-    throw new DeckImportError(`Invalid deck archive: ${where} credit sourceUrl must be a string.`);
-  }
-  if (raw.observationUrl !== undefined && raw.observationUrl !== null && typeof raw.observationUrl !== 'string') {
-    throw new DeckImportError(`Invalid deck archive: ${where} credit observationUrl must be a string.`);
-  }
+  validateCreditLink(raw.sourceUrl, `${where} credit sourceUrl`);
+  validateCreditLink(raw.observationUrl, `${where} credit observationUrl`);
   if (raw.observationId !== undefined && raw.observationId !== null && typeof raw.observationId !== 'number') {
     throw new DeckImportError(`Invalid deck archive: ${where} credit observationId must be a number.`);
   }

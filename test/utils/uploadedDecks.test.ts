@@ -426,6 +426,80 @@ describe('importDeckZip', () => {
     });
     await expect(importDeckZip(zipOf(m, { 'photos/a.jpg': JPEG }))).rejects.toThrow(/missing its photo credit/);
   });
+
+  it('rejects a credit whose observationUrl is not a web URL', async () => {
+    const m = manifestWithId(uniqueId(), {
+      categories: [{
+        id: 'plants', label: '🌿 Plants',
+        cards: [{
+          name: 'X', layout: 'photo-single',
+          photos: [{
+            file: 'photos/a.jpg', role: 'main',
+            credit: { observer: 'o', license: 'cc0', observationUrl: 'javascript:alert(1)' },
+          }],
+        }],
+      }],
+    });
+    // The credits page renders this field as a link target; a scheme like
+    // javascript: would be an injection into the page. http links are fine —
+    // real curated decks carry them, and clicking navigates (it is not a
+    // fetch, so the secure-page mixed-content rule doesn't apply).
+    await expect(importDeckZip(zipOf(m, { 'photos/a.jpg': JPEG })))
+      .rejects.toThrow(/observationUrl "javascript:alert\(1\)" must be an http or https URL/);
+  });
+
+  it('accepts a credit whose observationUrl is http', async () => {
+    const id = uniqueId();
+    const m = manifestWithId(id, {
+      categories: [{
+        id: 'plants', label: '🌿 Plants',
+        cards: [{
+          name: 'X', layout: 'photo-single',
+          photos: [{
+            file: 'photos/a.jpg', role: 'main',
+            credit: { observer: 'o', license: 'cc0', observationUrl: 'http://www.inaturalist.org/observations/2452813' },
+          }],
+        }],
+      }],
+    });
+    const { id: storedId } = await importDeckZip(zipOf(m, { 'photos/a.jpg': JPEG }));
+    expect(storedId).toBe(id);
+  });
+
+  it('rejects a credit whose sourceUrl is not an absolute URL', async () => {
+    const m = manifestWithId(uniqueId(), {
+      categories: [{
+        id: 'plants', label: '🌿 Plants',
+        cards: [{
+          name: 'X', layout: 'photo-single',
+          photos: [{
+            file: 'photos/a.jpg', role: 'main',
+            credit: { observer: 'o', license: 'cc0', sourceUrl: 'inaturalist.org/observations/1' },
+          }],
+        }],
+      }],
+    });
+    await expect(importDeckZip(zipOf(m, { 'photos/a.jpg': JPEG })))
+      .rejects.toThrow(/sourceUrl "inaturalist.org\/observations\/1" is not an absolute URL/);
+  });
+
+  it('accepts credits without links and with empty link strings', async () => {
+    const id = uniqueId();
+    const m = manifestWithId(id, {
+      categories: [{
+        id: 'plants', label: '🌿 Plants',
+        cards: [{
+          name: 'X', layout: 'photo-single',
+          photos: [{
+            file: 'photos/a.jpg', role: 'main',
+            credit: { observer: 'o', license: 'cc0', observationUrl: '', sourceUrl: null },
+          }],
+        }],
+      }],
+    });
+    const { id: storedId } = await importDeckZip(zipOf(m, { 'photos/a.jpg': JPEG }));
+    expect(storedId).toBe(id);
+  });
 });
 
 describe('re-import and deletion', () => {
